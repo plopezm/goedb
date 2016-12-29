@@ -1,0 +1,5 @@
+package goedb
+
+func init(){
+
+}
