@@ -362,6 +362,11 @@ func TestDB_First_Not_Found(t *testing.T){
 		t.Log(newUser)
 		t.Error("This user does not exist")
 	}
+
+	err = db.First(newUser, "Admin = 0")
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestDB_Find(t *testing.T) {
@@ -452,6 +457,24 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 
 	if count, _ := rs.RowsAffected(); count != 0 {
 		t.Error("Remove must returns an error because the record does not exist")
+	}
+}
+
+func TestDB_Remove_Relation(t *testing.T) {
+	err := db.Open("sqlite3", "./test.db")
+	if err != nil{
+		t.Error("DB couldn't be open")
+	}
+	defer db.Close()
+
+	newUC := &TestUserCompany{
+		Email:"Plm",
+		Cif:"asd2",
+	}
+
+	_, err = db.Remove(newUC)
+	if err != nil {
+		t.Error(err)
 	}
 }
 
