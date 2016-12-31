@@ -8,14 +8,19 @@ type TestUser struct{
 	Email		string	`goedb:"pk"`
 	Password	string
 	Role		string
-	DNI		int
+	DNI		int	`goedb:"unique"`
 	Admin		bool
 }
 
 type TestCompany struct {
 	UserEmail	string	`goedb:"pk,fk=User(Email)"`
 	Name		string
-	Cif		string
+	Cif		string 	`goedb:"unique"`
+}
+
+type OtherStruct struct {
+	Asd 	string
+	Other	string
 }
 
 var db *DB
@@ -73,6 +78,11 @@ func TestDB_Migrate(t *testing.T) {
 				t.Log(value)
 				t.Error("Column not valid")
 			}
+		case 3:
+			if !(value.title == "DNI" && value.unique){
+				t.Log(value)
+				t.Error("Column not valid")
+			}
 		}
 	}
 
@@ -94,7 +104,7 @@ func TestDB_Migrate(t *testing.T) {
 				t.Error("Column not valid")
 			}
 		case 2:
-			if !(value.title == "Cif" && value.ctype == "string"){
+			if !(value.title == "Cif" && value.ctype == "string" && value.unique){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -110,65 +120,30 @@ func TestDB_Model(t *testing.T) {
 	}
 	defer db.Close()
 
-	user := db.Model(&TestUser{})
+	user, err := db.Model(&TestUser{})
 	if user.name != "TestUser" || len(user.columns) == 0{
 		t.Error("Error getting db model")
 	}
 
-	company := db.Model(&TestCompany{})
+	company, err := db.Model(&TestCompany{})
 	if company.name != "TestCompany" || len(company.columns) == 0{
 		t.Error("Error getting db model")
 	}
 }
 
-/*func TestMigrate(t *testing.T) {
+func TestDB_Model_Not_Found(t *testing.T) {
 	err := db.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
 	defer db.Close()
 
-	newUser := TestUser{
-		Email:"Plm",
-		Password:"asd",
-		Role: "asd",
-		DNI:123,
-		Admin: true,
+	_, err = db.Model(&OtherStruct{})
+	if err == nil {
+		t.Error("The result must has a error because the struct was not created")
 	}
+}
 
-	_, err = db.Model(&newUser).Insert(&newUser)
-	if err != nil{
-		t.Error(err)
-	}
-	//t.Log("Insert Result: ",result)
-
-	var userFinded TestUser
-	userFinded.Email ="Plm"
-	err = db.Model(&TestUser{}).First(&userFinded, nil)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if userFinded.DNI != newUser.DNI {
-		t.Error("First: DNI does not match")
-	}
-
-	usersFound := make([]TestUser, 0)
-	err = db.Model(&TestUser{}).Find(&usersFound, nil)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if usersFound[0].DNI != newUser.DNI {
-		t.Error("First: DNI does not match")
-	}
-
-	_, err = db.Model(&TestUser{}).Remove(&newUser)
-	if err != nil{
-		t.Error(err)
-	}
-	//t.Log("Delete Result: ",result)
-}*/
 
 func TestDB_Insert(t *testing.T) {
 	err := db.Open("sqlite3", "./test.db")
@@ -235,6 +210,24 @@ func TestDB_First(t *testing.T) {
 	}
 }
 
+func TestDB_First_Not_Found(t *testing.T){
+	err := db.Open("sqlite3", "./test.db")
+	if err != nil{
+		t.Error("DB couldn't be open")
+	}
+	defer db.Close()
+
+	newUser := &TestUser{
+		Email:"Plm245",
+	}
+
+	err = db.First(newUser, "")
+	if err == nil {
+		t.Log(newUser)
+		t.Error("This user does not exist")
+	}
+}
+
 func TestDB_Find(t *testing.T) {
 	err := db.Open("sqlite3", "./test.db")
 	if err != nil{
@@ -272,6 +265,21 @@ func TestDB_Find(t *testing.T) {
 
 }
 
+func TestDB_Find_Not_Found(t *testing.T) {
+	err := db.Open("sqlite3", "./test.db")
+	if err != nil{
+		t.Error("DB couldn't be open")
+	}
+	defer db.Close()
+
+	foundUsers := make([]TestUser, 0)
+
+	err = db.Find(&foundUsers, "Admin = 3")
+	if err == nil {
+		t.Error("Find must return an error")
+	}
+}
+
 func TestDB_Remove(t *testing.T) {
 	err := db.Open("sqlite3", "./test.db")
 	if err != nil{
@@ -283,9 +291,31 @@ func TestDB_Remove(t *testing.T) {
 		Email:"Plm2",
 	}
 
-	_, err = db.Remove(newUser)
+	rs, err := db.Remove(newUser)
 	if err != nil {
 		t.Error(err)
+	}
+
+	if count, _ := rs.RowsAffected(); count != 1 {
+		t.Error("Error removing existing record")
+	}
+}
+
+func TestDB_Remove_Not_Found(t *testing.T) {
+	err := db.Open("sqlite3", "./test.db")
+	if err != nil{
+		t.Error("DB couldn't be open")
+	}
+	defer db.Close()
+
+	newUser := &TestUser{
+		Email:"Plm2421233",
+	}
+
+	rs, err := db.Remove(newUser)
+
+	if count, _ := rs.RowsAffected(); count != 0 {
+		t.Error("Remove must returns an error because the record does not exist")
 	}
 }
 

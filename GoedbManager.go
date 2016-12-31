@@ -126,7 +126,6 @@ func getPKs(gt GoedbTable, obj interface{}) (string, string, error){
 	return "", "", errors.New("No PK found")
 }
 
-
 func getType(i interface{}) (reflect.Type){
 	typ := reflect.TypeOf(i)
 
@@ -167,6 +166,8 @@ func parseModel(model interface{}) (GoedbTable){
 						tablecol.pk = true
 					case "autoincrement":
 						tablecol.autoinc = true
+					case "unique":
+						tablecol.unique = true
 					default:
 						if strings.Contains(val, "fk=") {
 							tablecol.fk = true
@@ -231,22 +232,26 @@ func (gdb *DB) Migrate(i interface{}) (error){
 }
 
 func (gdb *DB) DropTable(i interface{}){
-	typ := reflect.TypeOf(i)
-
-	// if a pointer to a struct is passed, get the type of the dereferenced object
-	if typ.Kind() == reflect.Ptr{
-		typ = typ.Elem()
-	}
+	typ := getType(i)
 
 	gdb.db.Exec("DROP TABLE "+typ.Name())
 }
 
-func (gdb *DB) Model(i interface{}) (GoedbTable){
-	return gdb.tables[getType(i).Name()]
+func (gdb *DB) Model(i interface{}) (GoedbTable, error){
+	var q GoedbTable
+	if q, ok := gdb.tables[getType(i).Name()]; ok{
+		return q, nil
+	}
+	return q, errors.New("Model not found")
 }
 
 func (gdb *DB) Insert(i interface{})(sql.Result, error){
-	model := gdb.Model(i)
+	var result sql.Result
+
+	model,err := gdb.Model(i)
+	if err != nil {
+		return result, err
+	}
 
 	columns, values := getColumnsAndValues(model, i)
 	sql := "INSERT INTO "+model.name+" ("+columns+") values("+values+")"
@@ -255,7 +260,12 @@ func (gdb *DB) Insert(i interface{})(sql.Result, error){
 
 
 func (gdb *DB) Remove(i interface{})(sql.Result, error){
-	model := gdb.Model(i)
+	var result sql.Result
+
+	model,err := gdb.Model(i)
+	if err != nil {
+		return result, err
+	}
 
 	pkc, pkv, err := getPKs(model, i)
 	if err != nil {
@@ -267,7 +277,10 @@ func (gdb *DB) Remove(i interface{})(sql.Result, error){
 }
 
 func (gdb *DB) First(i interface{}, where string) (error){
-	model := gdb.Model(i)
+	model,err := gdb.Model(i)
+	if err != nil {
+		return err
+	}
 
 	var sql string
 	if where == "" {
@@ -281,22 +294,26 @@ func (gdb *DB) First(i interface{}, where string) (error){
 	}
 
 	rows, err := gdb.db.Query(sql)
-	if err != nil {
+	if err != nil{
 		return err
 	}
 	defer rows.Close()
 
 	valuePtrs := structToSliceOfFieldAddress(i)
 
-	for rows.Next() {
-		rows.Scan(valuePtrs...)
-		break
+	if !rows.Next() {
+		return errors.New("Record not found")
 	}
+
+	rows.Scan(valuePtrs...)
 	return nil
 }
 
 func (gdb *DB) Find(i interface{}, where string) error{
-	model := gdb.Model(i)
+	model,err := gdb.Model(i)
+	if err != nil {
+		return err
+	}
 
 	var sql string
 
@@ -316,13 +333,19 @@ func (gdb *DB) Find(i interface{}, where string) error{
 
 	slType := getType(i)
 
-	for rows.Next() {
+	if !rows.Next() {
+		return errors.New("Records not found")
+	}
+
+	for {
 		ptr := reflect.New(slType)
 
 		valuePtrs := structToSliceOfFieldAddress(ptr)
 		rows.Scan(valuePtrs...)
 
 		slice.Set(reflect.Append(slice, ptr.Elem()))
+
+		if !rows.Next() { break }
 	}
 
 	return nil
