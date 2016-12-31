@@ -13,9 +13,14 @@ type TestUser struct{
 }
 
 type TestCompany struct {
-	UserEmail	string	`goedb:"pk,fk=User(Email)"`
+	UserEmail	string	`goedb:"pk,fk=TestUser(Email)"`
 	Name		string
 	Cif		string 	`goedb:"unique"`
+}
+
+type TestUserCompany struct {
+	Email 		string 	`goedb:"pk,fk=TestUser(Email)"`
+	Cif 		string	`goedb:"pk,fk=TestCompany(Cif)"`
 }
 
 type OtherStruct struct {
@@ -79,7 +84,7 @@ func TestDB_Migrate(t *testing.T) {
 				t.Error("Column not valid")
 			}
 		case 3:
-			if !(value.title == "DNI" && value.unique){
+			if !(value.title == "DNI" && value.ctype == "int" && value.unique){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -111,6 +116,26 @@ func TestDB_Migrate(t *testing.T) {
 		}
 	}
 
+
+	err = db.Migrate(&TestUserCompany{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	for key, value := range db.tables["TestUserCompany"].columns {
+		switch key{
+		case 0:
+			if !(value.title == "Email" && value.ctype == "string" && value.pk && value.fk){
+				t.Log(value)
+				t.Error("Column not valid")
+			}
+		case 1:
+			if !(value.title == "Cif" && value.ctype == "string" && value.pk && value.fk){
+				t.Log(value)
+				t.Error("Column not valid")
+			}
+		}
+	}
 }
 
 func TestDB_Model(t *testing.T) {

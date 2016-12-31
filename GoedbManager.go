@@ -183,8 +183,11 @@ func parseModel(model interface{}) (GoedbTable){
 }
 
 func getSQLTableModel(table GoedbTable) (string){
+	pksFound := ""
 	columns := ""
 	constraints := ""
+
+
 	for _, value := range table.columns {
 		columns += value.title
 
@@ -205,12 +208,16 @@ func getSQLTableModel(table GoedbTable) (string){
 			continue
 		}
 
+		if value.unique {
+			columns += " UNIQUE"
+		}
+
 		if value.autoinc {
 			columns += " AUTOINCREMENT"
 		}
 
 		if value.pk {
-			constraints += ", PRIMARY KEY ("+value.title +")"
+			pksFound += value.title+","
 		}
 
 		if value.fk {
@@ -218,8 +225,13 @@ func getSQLTableModel(table GoedbTable) (string){
 		}
 		columns += ","
 	}
-	last := len(columns)
-	return "CREATE TABLE "+table.name +" (" +columns[:last-1] + constraints+")"
+	if len(pksFound) > 0 {
+		pksFound = pksFound[:len(pksFound)-1]
+		constraints += ", PRIMARY KEY ("+ pksFound +")"
+	}
+
+	lastColumnIndex := len(columns)
+	return "CREATE TABLE "+table.name +" (" +columns[:lastColumnIndex-1] + constraints+")"
 }
 
 func (gdb *DB) Migrate(i interface{}) (error){
