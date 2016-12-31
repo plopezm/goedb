@@ -13,9 +13,9 @@ type TestUser struct{
 }
 
 type TestCompany struct {
-	UserEmail	string	`goedb:"pk,fk=TestUser(Email)"`
+	UserEmail	string	`goedb:"fk=TestUser(Email)"`
 	Name		string
-	Cif		string 	`goedb:"unique"`
+	Cif		string 	`goedb:"pk"`
 }
 
 type TestUserCompany struct {
@@ -99,7 +99,7 @@ func TestDB_Migrate(t *testing.T) {
 	for key, value := range db.tables["TestCompany"].columns {
 		switch key{
 		case 0:
-			if !(value.title == "UserEmail" && value.ctype == "string" && value.pk && value.fk){
+			if !(value.title == "UserEmail" && value.ctype == "string" && value.fk){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -109,7 +109,7 @@ func TestDB_Migrate(t *testing.T) {
 				t.Error("Column not valid")
 			}
 		case 2:
-			if !(value.title == "Cif" && value.ctype == "string" && value.unique){
+			if !(value.title == "Cif" && value.ctype == "string" && value.pk){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -214,6 +214,78 @@ func TestDB_Insert(t *testing.T) {
 	_, err = db.Insert(newUser3)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestDB_Insert_with_FKs(t *testing.T) {
+	err := db.Open("sqlite3", "./test.db")
+	if err != nil{
+		t.Error("DB couldn't be open")
+	}
+	defer db.Close()
+
+	newComp1 := &TestCompany{
+		UserEmail:"Plm",
+		Name:"asd",
+		Cif: "asd1",
+	}
+
+	newComp2 := &TestCompany{
+		UserEmail:"Plm",
+		Name:"asd",
+		Cif: "asd2",
+	}
+
+	_, err = db.Insert(newComp1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = db.Insert(newComp2)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDB_Insert_Constraints(t *testing.T) {
+
+	err := db.Open("sqlite3", "./test.db")
+	if err != nil{
+		t.Error("DB couldn't be open")
+	}
+	defer db.Close()
+
+	newComp1 := &TestCompany{
+		UserEmail:"Plm",
+		Name:"asd",
+		Cif: "asd1",
+	}
+
+	newComp2 := &TestCompany{
+		UserEmail:"Plm",
+		Name:"asd123",
+		Cif: "asd2",
+	}
+
+	newComp3 := &TestCompany{
+		UserEmail:"Plm23455",
+		Name:"asd",
+		Cif: "asd4",
+	}
+
+	_, err = db.Insert(newComp1)
+	if err == nil {
+		t.Error("The record already exists")
+	}
+
+	_, err = db.Insert(newComp2)
+	if err == nil {
+		t.Error("Cif is unique, this cannot be added")
+	}
+
+	_, err = db.Insert(newComp3)
+	if err == nil {
+		t.Error("User mail does not exists, this insert must returns an error")
 	}
 }
 
@@ -353,4 +425,5 @@ func TestDB_DropTable(t *testing.T) {
 
 	db.DropTable(&TestUser{})
 	db.DropTable(&TestCompany{})
+	db.DropTable(&TestUserCompany{})
 }

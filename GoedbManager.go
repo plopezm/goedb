@@ -33,6 +33,9 @@ func (gdb *DB)Open(driver string, params string) (error){
 		return err
 	}
 	gdb.db = db
+	if driver == "sqlite3" {
+		gdb.db.Exec("PRAGMA foreign_keys = ON")
+	}
 	return nil
 }
 
