@@ -289,6 +289,45 @@ func TestDB_Insert_Constraints(t *testing.T) {
 	}
 }
 
+func TestDB_Insert_Adding_Relations(t *testing.T) {
+
+	err := db.Open("sqlite3", "./test.db")
+	if err != nil{
+		t.Error("DB couldn't be open")
+	}
+	defer db.Close()
+
+	newUC := &TestUserCompany{
+		Email:"Plm",
+		Cif:"asd2",
+	}
+
+	_, err = db.Insert(newUC)
+	if err != nil {
+		t.Error(err)
+	}
+
+	newUC = &TestUserCompany{
+		Email:"Plm1",
+		Cif:"asd4",
+	}
+
+	_, err = db.Insert(newUC)
+	if err == nil {
+		t.Error("Cif does not exist")
+	}
+
+	newUC = &TestUserCompany{
+		Email:"Plm1123",
+		Cif:"asd1",
+	}
+
+	_, err = db.Insert(newUC)
+	if err == nil {
+		t.Error("User does not exist")
+	}
+}
+
 func TestDB_First(t *testing.T) {
 	err := db.Open("sqlite3", "./test.db")
 	if err != nil{
