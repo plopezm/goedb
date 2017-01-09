@@ -1,16 +1,19 @@
 package goedb
 
+import "reflect"
+
 type GoedbTable struct{
-	name    	string
-	columns 	[]GoedbColumn
+	Name    string
+	Columns []GoedbColumn
+	Model  	reflect.Type		`json:"-"`
 }
 
 type GoedbColumn struct{
-	title   	string
-	ctype   	string
-	pk      	bool
-	unique  	bool
-	fk      	bool
-	fkref   	string
-	autoinc 	bool
+	Title   	string
+	Ctype   	string
+	Pk      	bool
+	Unique  	bool
+	Fk      	bool
+	Fkref   	string
+	Autoinc 	bool
 }

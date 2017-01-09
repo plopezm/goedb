@@ -56,35 +56,35 @@ func TestDB_Migrate(t *testing.T) {
 		t.Error("Migrate storage failed")
 	}
 
-	if db.tables["TestUser"].name == "" {
+	if db.tables["TestUser"].Name == "" {
 		t.Log(db.tables)
 		t.Error("Table name unvalid")
 	}
 
-	if db.tables["TestUser"].columns == nil{
+	if db.tables["TestUser"].Columns == nil{
 		t.Log(db.tables)
 		t.Error("Migrate columns failed")
 	}
 
-	for key, value := range db.tables["TestUser"].columns {
+	for key, value := range db.tables["TestUser"].Columns {
 		switch key{
 		case 0:
-			if !(value.title == "Email" && value.ctype == "string" && value.pk){
+			if !(value.Title == "Email" && value.Ctype == "string" && value.Pk){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 1:
-			if !(value.title == "Password" && value.ctype == "string"){
+			if !(value.Title == "Password" && value.Ctype == "string"){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 2:
-			if !(value.title == "Role" && value.ctype == "string"){
+			if !(value.Title == "Role" && value.Ctype == "string"){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 3:
-			if !(value.title == "DNI" && value.ctype == "int" && value.unique){
+			if !(value.Title == "DNI" && value.Ctype == "int" && value.Unique){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -96,20 +96,20 @@ func TestDB_Migrate(t *testing.T) {
 		t.Error(err)
 	}
 
-	for key, value := range db.tables["TestCompany"].columns {
+	for key, value := range db.tables["TestCompany"].Columns {
 		switch key{
 		case 0:
-			if !(value.title == "UserEmail" && value.ctype == "string" && value.fk){
+			if !(value.Title == "UserEmail" && value.Ctype == "string" && value.Fk){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 1:
-			if !(value.title == "Name" && value.ctype == "string"){
+			if !(value.Title == "Name" && value.Ctype == "string"){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 2:
-			if !(value.title == "Cif" && value.ctype == "string" && value.pk){
+			if !(value.Title == "Cif" && value.Ctype == "string" && value.Pk){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -122,15 +122,15 @@ func TestDB_Migrate(t *testing.T) {
 		t.Error(err)
 	}
 
-	for key, value := range db.tables["TestUserCompany"].columns {
+	for key, value := range db.tables["TestUserCompany"].Columns {
 		switch key{
 		case 0:
-			if !(value.title == "Email" && value.ctype == "string" && value.pk && value.fk){
+			if !(value.Title == "Email" && value.Ctype == "string" && value.Pk && value.Fk){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 1:
-			if !(value.title == "Cif" && value.ctype == "string" && value.pk && value.fk){
+			if !(value.Title == "Cif" && value.Ctype == "string" && value.Pk && value.Fk){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -146,12 +146,12 @@ func TestDB_Model(t *testing.T) {
 	defer db.Close()
 
 	user, err := db.Model(&TestUser{})
-	if user.name != "TestUser" || len(user.columns) == 0{
+	if user.Name != "TestUser" || len(user.Columns) == 0{
 		t.Error("Error getting db model")
 	}
 
 	company, err := db.Model(&TestCompany{})
-	if company.name != "TestCompany" || len(company.columns) == 0{
+	if company.Name != "TestCompany" || len(company.Columns) == 0{
 		t.Error("Error getting db model")
 	}
 }
@@ -485,7 +485,31 @@ func TestDB_DropTable(t *testing.T) {
 	}
 	defer db.Close()
 
-	db.DropTable(&TestUser{})
-	db.DropTable(&TestCompany{})
-	db.DropTable(&TestUserCompany{})
+	err = db.DropTable(&TestUserCompany{})
+	if err != nil {
+		t.Error(err)
+	}
+	err = db.DropTable(&TestUser{})
+	if err != nil {
+		t.Error(err)
+	}
+	err = db.DropTable(&TestCompany{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = db.Model(&TestUser{})
+	if err == nil {
+		t.Error("Model still exists")
+	}
+
+	_, err = db.Model(&TestCompany{})
+	if err == nil {
+		t.Error("Model still exists")
+	}
+
+	_, err = db.Model(&TestUserCompany{})
+	if err == nil {
+		t.Error("Model still exists")
+	}
 }

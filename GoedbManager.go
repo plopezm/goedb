@@ -10,8 +10,8 @@ import (
 )
 
 type DB struct{
-	db 	*sql.DB
-	tables	map[string]GoedbTable
+	DB     *sql.DB
+	tables map[string]GoedbTable
 }
 
 
@@ -32,15 +32,15 @@ func (gdb *DB)Open(driver string, params string) (error){
 		db.Close()
 		return err
 	}
-	gdb.db = db
+	gdb.DB = db
 	if driver == "sqlite3" {
-		gdb.db.Exec("PRAGMA foreign_keys = ON")
+		gdb.DB.Exec("PRAGMA foreign_keys = ON")
 	}
 	return nil
 }
 
 func (gdb *DB) Close(){
-	gdb.db.Close()
+	gdb.DB.Close()
 }
 
 func structToSliceOfFieldAddress(s interface{}) []interface{} {
@@ -76,9 +76,9 @@ func getColumnsAndValues(gt GoedbTable, obj interface{}) (string, string){
 		val = val.Elem()
 	}
 
-	for i:=0;i<len(gt.columns);i++ {
+	for i:=0;i<len(gt.Columns);i++ {
 		v := val.Field(i)
-		switch gt.columns[i].ctype {
+		switch gt.Columns[i].Ctype {
 		case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint", "int64", "uint64":
 			strValues += strconv.FormatInt(v.Int(), 10)+","
 		case "float32", "float64":
@@ -92,7 +92,7 @@ func getColumnsAndValues(gt GoedbTable, obj interface{}) (string, string){
 		case "string","char":
 			strValues += "'"+v.String()+"',"
 		}
-		strCols += gt.columns[i].title + ","
+		strCols += gt.Columns[i].Title + ","
 
 	}
 
@@ -106,22 +106,22 @@ func getPKs(gt GoedbTable, obj interface{}) (string, string, error){
 		val = val.Elem()
 	}
 
-	for i:=0;i<len(gt.columns);i++ {
+	for i:=0;i<len(gt.Columns);i++ {
 		v := val.Field(i)
-		if gt.columns[i].pk {
-			switch gt.columns[i].ctype {
+		if gt.Columns[i].Pk {
+			switch gt.Columns[i].Ctype {
 			case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint", "int64", "uint64":
-				return gt.columns[i].title, strconv.FormatInt(v.Int(), 10), nil
+				return gt.Columns[i].Title, strconv.FormatInt(v.Int(), 10), nil
 			case "float32", "float64":
-				return gt.columns[i].title, strconv.FormatFloat(v.Float(), 'f', 6, 64), nil
+				return gt.Columns[i].Title, strconv.FormatFloat(v.Float(), 'f', 6, 64), nil
 			case "bool":
 				if v.Bool() {
-					return gt.columns[i].title, "1", nil
+					return gt.Columns[i].Title, "1", nil
 				}else{
-					return gt.columns[i].title, "0", nil
+					return gt.Columns[i].Title, "0", nil
 				}
 			case "string","char":
-				return gt.columns[i].title, "'"+v.String()+"'", nil
+				return gt.Columns[i].Title, "'"+v.String()+"'", nil
 			}
 		}
 	}
@@ -153,33 +153,33 @@ func parseModel(model interface{}) (GoedbTable){
 	}
 
 	table := GoedbTable{}
-	table.name = typ.Name()
-	table.columns = make([]GoedbColumn, 0)
+	table.Name = typ.Name()
+	table.Columns = make([]GoedbColumn, 0)
 
 	for i:=0;i<typ.NumField();i++ {
 		tablecol := GoedbColumn{}
-		tablecol.title = typ.Field(i).Name
-		tablecol.ctype = typ.Field(i).Type.Name()
+		tablecol.Title = typ.Field(i).Name
+		tablecol.Ctype = typ.Field(i).Type.Name()
 
 		if tag, ok := typ.Field(i).Tag.Lookup("goedb"); ok {
 			params := strings.Split(tag, ",")
 			for _, val := range params {
 				switch val {
 					case "pk":
-						tablecol.pk = true
+						tablecol.Pk = true
 					case "autoincrement":
-						tablecol.autoinc = true
+						tablecol.Autoinc = true
 					case "unique":
-						tablecol.unique = true
+						tablecol.Unique = true
 					default:
 						if strings.Contains(val, "fk=") {
-							tablecol.fk = true
-							tablecol.fkref = strings.Split(val, "=")[1]
+							tablecol.Fk = true
+							tablecol.Fkref = strings.Split(val, "=")[1]
 						}
 				}
 			}
 		}
-		table.columns = append(table.columns, tablecol)
+		table.Columns = append(table.Columns, tablecol)
 	}
 
 	return table
@@ -191,10 +191,10 @@ func getSQLTableModel(table GoedbTable) (string){
 	constraints := ""
 
 
-	for _, value := range table.columns {
-		columns += value.title
+	for _, value := range table.Columns {
+		columns += value.Title
 
-		switch value.ctype {
+		switch value.Ctype {
 		case "char":
 			columns += " CHARACTER"
 		case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint":
@@ -211,20 +211,20 @@ func getSQLTableModel(table GoedbTable) (string){
 			continue
 		}
 
-		if value.unique {
+		if value.Unique {
 			columns += " UNIQUE"
 		}
 
-		if value.autoinc {
+		if value.Autoinc {
 			columns += " AUTOINCREMENT"
 		}
 
-		if value.pk {
-			pksFound += value.title+","
+		if value.Pk {
+			pksFound += value.Title+","
 		}
 
-		if value.fk {
-			constraints += ", FOREIGN KEY ("+value.title +") REFERENCES "+value.fkref +" ON DELETE CASCADE"
+		if value.Fk {
+			constraints += ", FOREIGN KEY ("+value.Title +") REFERENCES "+value.Fkref +" ON DELETE CASCADE"
 		}
 		columns += ","
 	}
@@ -234,22 +234,30 @@ func getSQLTableModel(table GoedbTable) (string){
 	}
 
 	lastColumnIndex := len(columns)
-	return "CREATE TABLE "+table.name +" (" +columns[:lastColumnIndex-1] + constraints+")"
+	return "CREATE TABLE "+table.Name +" (" +columns[:lastColumnIndex-1] + constraints+")"
 }
 
 func (gdb *DB) Migrate(i interface{}) (error){
 	gdb.DropTable(i)
 	table := parseModel(i)
-	gdb.tables[table.name] = table
+	gdb.tables[table.Name] = table
 	sqltab := getSQLTableModel(table)
-	_, err := gdb.db.Exec(sqltab)
+	_, err := gdb.DB.Exec(sqltab)
 	return err
 }
 
-func (gdb *DB) DropTable(i interface{}){
+func (gdb *DB) DropTable(i interface{}) (error){
 	typ := getType(i)
 
-	gdb.db.Exec("DROP TABLE "+typ.Name())
+	name := typ.Name()
+
+	_, err := gdb.DB.Exec("DROP TABLE "+name)
+	if err != nil {
+		return err
+	}
+
+	delete(gdb.tables, name)
+	return nil
 }
 
 func (gdb *DB) Model(i interface{}) (GoedbTable, error){
@@ -269,8 +277,8 @@ func (gdb *DB) Insert(i interface{})(sql.Result, error){
 	}
 
 	columns, values := getColumnsAndValues(model, i)
-	sql := "INSERT INTO "+model.name+" ("+columns+") values("+values+")"
-	return gdb.db.Exec(sql)
+	sql := "INSERT INTO "+model.Name +" ("+columns+") values("+values+")"
+	return gdb.DB.Exec(sql)
 }
 
 
@@ -287,8 +295,8 @@ func (gdb *DB) Remove(i interface{})(sql.Result, error){
 		return nil,err
 	}
 
-	sql := "DELETE FROM "+model.name+" WHERE "+pkc+ "=" + pkv
-	return gdb.db.Exec(sql)
+	sql := "DELETE FROM "+model.Name +" WHERE "+pkc+ "=" + pkv
+	return gdb.DB.Exec(sql)
 }
 
 func (gdb *DB) First(i interface{}, where string) (error){
@@ -303,12 +311,12 @@ func (gdb *DB) First(i interface{}, where string) (error){
 		if err != nil {
 			return errors.New("Error getting primary key")
 		}
-		sql = "SELECT * FROM " + model.name + " WHERE " + pkc + "=" + pkv
+		sql = "SELECT * FROM " + model.Name + " WHERE " + pkc + "=" + pkv
 	}else{
-		sql = "SELECT * FROM " + model.name + " WHERE " + where
+		sql = "SELECT * FROM " + model.Name + " WHERE " + where
 	}
 
-	rows, err := gdb.db.Query(sql)
+	rows, err := gdb.DB.Query(sql)
 	if err != nil{
 		return err
 	}
@@ -333,12 +341,12 @@ func (gdb *DB) Find(i interface{}, where string) error{
 	var sql string
 
 	if where == "" {
-		sql = "SELECT * FROM " + model.name
+		sql = "SELECT * FROM " + model.Name
 	}else{
-		sql = "SELECT * FROM " + model.name + " WHERE " + where
+		sql = "SELECT * FROM " + model.Name + " WHERE " + where
 	}
 
-	rows, err := gdb.db.Query(sql)
+	rows, err := gdb.DB.Query(sql)
 	if err != nil {
 		return err
 	}
