@@ -1,5 +1,6 @@
 package goedb
 
+/*
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
@@ -372,4 +373,4 @@ func (gdb *DB) Find(i interface{}, where string) error{
 	}
 
 	return nil
-}
+}*/
