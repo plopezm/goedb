@@ -4,71 +4,47 @@ import (
 	"testing"
 )
 
-type TestUser struct{
-	Email		string	`goedb:"pk"`
-	Password	string
-	Role		string
-	DNI		int	`goedb:"unique"`
-	Admin		bool
-}
 
-type TestCompany struct {
-	UserEmail	string	`goedb:"fk=TestUser(Email)"`
-	Name		string
-	Cif		string 	`goedb:"pk"`
-}
+var dbSqlDriver *GoedbSQLDriver
 
-type TestUserCompany struct {
-	Email 		string 	`goedb:"pk,fk=TestUser(Email)"`
-	Cif 		string	`goedb:"pk,fk=TestCompany(Cif)"`
-}
+func TestGoedbSQLDriver_Open(t *testing.T) {
+	dbSqlDriver = new(GoedbSQLDriver)
 
-type OtherStruct struct {
-	Asd 	string
-	Other	string
-}
-
-var db *DBM
-
-func TestOpen(t *testing.T) {
-	db = new(DBM)
-	db.SetDriver(&GoedbSQLDriver{})
-
-	err := db.Open("sqlite3", "./test.db")
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error(err)
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 }
 
-func TestDB_Migrate(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Migrate(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error(err)
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
-	err = db.Migrate(&TestUser{})
+	err = dbSqlDriver.Migrate(&TestUser{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	/*if _, ok := db.tables["TestUser"]; !ok {
-		t.Log(db.tables)
+	if _, ok := dbSqlDriver.tables["TestUser"]; !ok {
+		t.Log(dbSqlDriver.tables)
 		t.Error("Migrate storage failed")
 	}
 
-	if db.tables["TestUser"].Name == "" {
-		t.Log(db.tables)
+	if dbSqlDriver.tables["TestUser"].Name == "" {
+		t.Log(dbSqlDriver.tables)
 		t.Error("Table name unvalid")
 	}
 
-	if db.tables["TestUser"].Columns == nil{
-		t.Log(db.tables)
+	if dbSqlDriver.tables["TestUser"].Columns == nil{
+		t.Log(dbSqlDriver.tables)
 		t.Error("Migrate columns failed")
 	}
 
-	for key, value := range db.tables["TestUser"].Columns {
+	for key, value := range dbSqlDriver.tables["TestUser"].Columns {
 		switch key{
 		case 0:
 			if !(value.Title == "Email" && value.Ctype == "string" && value.Pk){
@@ -91,14 +67,14 @@ func TestDB_Migrate(t *testing.T) {
 				t.Error("Column not valid")
 			}
 		}
-	}*/
+	}
 
-	err = db.Migrate(&TestCompany{})
+	err = dbSqlDriver.Migrate(&TestCompany{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	/*for key, value := range db.tables["TestCompany"].Columns {
+	for key, value := range dbSqlDriver.tables["TestCompany"].Columns {
 		switch key{
 		case 0:
 			if !(value.Title == "UserEmail" && value.Ctype == "string" && value.Fk){
@@ -116,15 +92,15 @@ func TestDB_Migrate(t *testing.T) {
 				t.Error("Column not valid")
 			}
 		}
-	}*/
+	}
 
 
-	err = db.Migrate(&TestUserCompany{})
+	err = dbSqlDriver.Migrate(&TestUserCompany{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	/*for key, value := range db.tables["TestUserCompany"].Columns {
+	for key, value := range dbSqlDriver.tables["TestUserCompany"].Columns {
 		switch key{
 		case 0:
 			if !(value.Title == "Email" && value.Ctype == "string" && value.Pk && value.Fk){
@@ -137,47 +113,47 @@ func TestDB_Migrate(t *testing.T) {
 				t.Error("Column not valid")
 			}
 		}
-	}*/
+	}
 }
 
-func TestDB_Model(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Model(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
-	user, err := db.Model(&TestUser{})
+	user, err := dbSqlDriver.Model(&TestUser{})
 	if user.Name != "TestUser" || len(user.Columns) == 0{
 		t.Error("Error getting db model")
 	}
 
-	company, err := db.Model(&TestCompany{})
+	company, err := dbSqlDriver.Model(&TestCompany{})
 	if company.Name != "TestCompany" || len(company.Columns) == 0{
 		t.Error("Error getting db model")
 	}
 }
 
-func TestDB_Model_Not_Found(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Model_Not_Found(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
-	_, err = db.Model(&OtherStruct{})
+	_, err = dbSqlDriver.Model(&OtherStruct{})
 	if err == nil {
 		t.Error("The result must has a error because the struct was not created")
 	}
 }
 
 
-func TestDB_Insert(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Insert(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newUser1 := &TestUser{
 		Email:"Plm",
@@ -203,28 +179,28 @@ func TestDB_Insert(t *testing.T) {
 		Admin: false,
 	}
 
-	_, err = db.Insert(newUser1)
+	_, err = dbSqlDriver.Insert(newUser1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = db.Insert(newUser2)
+	_, err = dbSqlDriver.Insert(newUser2)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = db.Insert(newUser3)
+	_, err = dbSqlDriver.Insert(newUser3)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestDB_Insert_with_FKs(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Insert_with_FKs(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newComp1 := &TestCompany{
 		UserEmail:"Plm",
@@ -238,24 +214,24 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 		Cif: "asd2",
 	}
 
-	_, err = db.Insert(newComp1)
+	_, err = dbSqlDriver.Insert(newComp1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = db.Insert(newComp2)
+	_, err = dbSqlDriver.Insert(newComp2)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestDB_Insert_Constraints(t *testing.T) {
+func TestGoedbSQLDriver_Insert_Constraints(t *testing.T) {
 
-	err := db.Open("sqlite3", "./test.db")
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newComp1 := &TestCompany{
 		UserEmail:"Plm",
@@ -275,36 +251,36 @@ func TestDB_Insert_Constraints(t *testing.T) {
 		Cif: "asd4",
 	}
 
-	_, err = db.Insert(newComp1)
+	_, err = dbSqlDriver.Insert(newComp1)
 	if err == nil {
 		t.Error("The record already exists")
 	}
 
-	_, err = db.Insert(newComp2)
+	_, err = dbSqlDriver.Insert(newComp2)
 	if err == nil {
 		t.Error("Cif is unique, this cannot be added")
 	}
 
-	_, err = db.Insert(newComp3)
+	_, err = dbSqlDriver.Insert(newComp3)
 	if err == nil {
 		t.Error("User mail does not exists, this insert must returns an error")
 	}
 }
 
-func TestDB_Insert_Adding_Relations(t *testing.T) {
+func TestGoedbSQLDriver_Insert_Adding_Relations(t *testing.T) {
 
-	err := db.Open("sqlite3", "./test.db")
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newUC := &TestUserCompany{
 		Email:"Plm",
 		Cif:"asd2",
 	}
 
-	_, err = db.Insert(newUC)
+	_, err = dbSqlDriver.Insert(newUC)
 	if err != nil {
 		t.Error(err)
 	}
@@ -314,7 +290,7 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 		Cif:"asd4",
 	}
 
-	_, err = db.Insert(newUC)
+	_, err = dbSqlDriver.Insert(newUC)
 	if err == nil {
 		t.Error("Cif does not exist")
 	}
@@ -324,64 +300,64 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 		Cif:"asd1",
 	}
 
-	_, err = db.Insert(newUC)
+	_, err = dbSqlDriver.Insert(newUC)
 	if err == nil {
 		t.Error("User does not exist")
 	}
 }
 
-func TestDB_First(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_First(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newUser := &TestUser{
 		Email:"Plm",
 	}
 
-	db.First(newUser, "")
+	dbSqlDriver.First(newUser, "")
 
 	if newUser.DNI != 123 {
 		t.Error("DNI Unmatch")
 	}
 }
 
-func TestDB_First_Not_Found(t *testing.T){
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_First_Not_Found(t *testing.T){
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newUser := &TestUser{
 		Email:"Plm245",
 	}
 
-	err = db.First(newUser, "")
+	err = dbSqlDriver.First(newUser, "")
 	if err == nil {
 		t.Log(newUser)
 		t.Error("This user does not exist")
 	}
 
-	err = db.First(newUser, "Admin = 0")
+	err = dbSqlDriver.First(newUser, "Admin = 0")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestDB_Find(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Find(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	foundUsers := make([]TestUser, 0)
 
 
-	err = db.Find(&foundUsers, "")
+	err = dbSqlDriver.Find(&foundUsers, "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -396,7 +372,7 @@ func TestDB_Find(t *testing.T) {
 
 	foundUsers = make([]TestUser, 0)
 
-	err = db.Find(&foundUsers, where)
+	err = dbSqlDriver.Find(&foundUsers, where)
 	if err != nil {
 		t.Error(err)
 	}
@@ -408,33 +384,33 @@ func TestDB_Find(t *testing.T) {
 
 }
 
-func TestDB_Find_Not_Found(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Find_Not_Found(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	foundUsers := make([]TestUser, 0)
 
-	err = db.Find(&foundUsers, "Admin = 3")
+	err = dbSqlDriver.Find(&foundUsers, "Admin = 3")
 	if err == nil {
 		t.Error("Find must return an error")
 	}
 }
 
-func TestDB_Remove(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Remove(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newUser := &TestUser{
 		Email:"Plm2",
 	}
 
-	rs, err := db.Remove(newUser)
+	rs, err := dbSqlDriver.Remove(newUser)
 	if err != nil {
 		t.Error(err)
 	}
@@ -444,73 +420,73 @@ func TestDB_Remove(t *testing.T) {
 	}
 }
 
-func TestDB_Remove_Not_Found(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Remove_Not_Found(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newUser := &TestUser{
 		Email:"Plm2421233",
 	}
 
-	rs, err := db.Remove(newUser)
+	rs, err := dbSqlDriver.Remove(newUser)
 
 	if rs.NumRecordsAffected != 0 {
 		t.Error("Remove must returns an error because the record does not exist")
 	}
 }
 
-func TestDB_Remove_Relation(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_Remove_Relation(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
 	newUC := &TestUserCompany{
 		Email:"Plm",
 		Cif:"asd2",
 	}
 
-	_, err = db.Remove(newUC)
+	_, err = dbSqlDriver.Remove(newUC)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestDB_DropTable(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
+func TestGoedbSQLDriver_DropTable(t *testing.T) {
+	err := dbSqlDriver.Open("sqlite3", "./test.db")
 	if err != nil{
 		t.Error("DB couldn't be open")
 	}
-	defer db.Close()
+	defer dbSqlDriver.Close()
 
-	err = db.DropTable(&TestUserCompany{})
+	err = dbSqlDriver.DropTable(&TestUserCompany{})
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.DropTable(&TestUser{})
+	err = dbSqlDriver.DropTable(&TestUser{})
 	if err != nil {
 		t.Error(err)
 	}
-	err = db.DropTable(&TestCompany{})
+	err = dbSqlDriver.DropTable(&TestCompany{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = db.Model(&TestUser{})
+	_, err = dbSqlDriver.Model(&TestUser{})
 	if err == nil {
 		t.Error("Model still exists")
 	}
 
-	_, err = db.Model(&TestCompany{})
+	_, err = dbSqlDriver.Model(&TestCompany{})
 	if err == nil {
 		t.Error("Model still exists")
 	}
 
-	_, err = db.Model(&TestUserCompany{})
+	_, err = dbSqlDriver.Model(&TestUserCompany{})
 	if err == nil {
 		t.Error("Model still exists")
 	}
