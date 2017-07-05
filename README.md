@@ -1,4 +1,4 @@
-#GOEDB (Go Easy Database Manager)
+# GOEDB (Go Easy Database Manager)
 
 Goedb is a simple ORM.
 
