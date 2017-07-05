@@ -2,6 +2,7 @@ package goedb
 
 import (
 	"testing"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type TestUser struct{

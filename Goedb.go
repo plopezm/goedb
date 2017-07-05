@@ -5,7 +5,6 @@ type DBM struct {
 }
 
 func init(){
-
 }
 
 func (dbm *DBM) SetDriver(driver GoedbDriver){

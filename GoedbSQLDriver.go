@@ -2,7 +2,6 @@ package goedb
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
 	"reflect"
 	"errors"
 	"strconv"
