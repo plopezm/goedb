@@ -2,6 +2,7 @@ package goedb
 
 import (
 	"testing"
+	"goedb/drivers"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -33,7 +34,7 @@ var db *DBM
 
 func TestOpen(t *testing.T) {
 	db = new(DBM)
-	db.SetDriver(&GoedbSQLDriver{})
+	db.SetDriver(&drivers.GoedbSQLDriver{})
 
 	err := db.Open("sqlite3", "./test.db")
 	if err != nil{

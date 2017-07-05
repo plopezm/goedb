@@ -1,13 +1,15 @@
 package goedb
 
+import "goedb/drivers"
+
 type DBM struct {
-	driver GoedbDriver
+	driver drivers.GoedbDriver
 }
 
 func init(){
 }
 
-func (dbm *DBM) SetDriver(driver GoedbDriver){
+func (dbm *DBM) SetDriver(driver drivers.GoedbDriver){
 	dbm.driver = driver
 }
 
@@ -23,15 +25,15 @@ func (dbm *DBM) Migrate(i interface{}) (error){
 	return dbm.driver.Migrate(i)
 }
 
-func (dbm *DBM) Model(i interface{}) (GoedbTable, error){
+func (dbm *DBM) Model(i interface{}) (drivers.GoedbTable, error){
 	return dbm.driver.Model(i)
 }
 
-func (dbm *DBM) Insert(i interface{})(GoedbResult, error){
+func (dbm *DBM) Insert(i interface{})(drivers.GoedbResult, error){
 	return dbm.driver.Insert(i)
 }
 
-func (dbm *DBM) Remove(i interface{})(GoedbResult, error){
+func (dbm *DBM) Remove(i interface{})(drivers.GoedbResult, error){
 	return dbm.driver.Remove(i)
 }
 

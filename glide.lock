@@ -1,5 +1,5 @@
-hash: 9b85dce78e84b47c5816bbd1cf5f8aadb31b7e11cd07209a9658cde841e598b3
-updated: 2017-07-05T22:57:46.441914242+02:00
+hash: 2113c5f4899fd8cda84f8740cec0acaccfad88db16e428675d2a7a2468aacaf3
+updated: 2017-07-05T23:48:01.449579882+02:00
 imports: []
 testImports:
 - name: github.com/mattn/go-sqlite3

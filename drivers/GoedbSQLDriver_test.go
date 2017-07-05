@@ -1,10 +1,33 @@
-package goedb
+package drivers
 
 import (
 	"testing"
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type TestUser struct{
+	Email		string	`goedb:"pk"`
+	Password	string
+	Role		string
+	DNI		int	`goedb:"unique"`
+	Admin		bool
+}
+
+type TestCompany struct {
+	UserEmail	string	`goedb:"fk=TestUser(Email)"`
+	Name		string
+	Cif		string 	`goedb:"pk"`
+}
+
+type TestUserCompany struct {
+	Email 		string 	`goedb:"pk,fk=TestUser(Email)"`
+	Cif 		string	`goedb:"pk,fk=TestCompany(Cif)"`
+}
+
+type OtherStruct struct {
+	Asd 	string
+	Other	string
+}
 
 var dbSqlDriver *GoedbSQLDriver
 

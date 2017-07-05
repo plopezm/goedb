@@ -1,4 +1,4 @@
-package goedb
+package drivers
 
 import (
 	"database/sql"
