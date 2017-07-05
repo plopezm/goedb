@@ -1,6 +1,10 @@
-#GOEDB
+#GOEDB (Go Easy Database Manager)
 
-Goedb is a simple ORM designed to work with standard SQL. Currently is under development.
+Goedb is a simple ORM.
+
+# How To Use
+
+TBC (Meanwhile, you can check the tests)
 
 #License
 
