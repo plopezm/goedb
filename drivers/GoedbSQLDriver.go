@@ -141,41 +141,42 @@ func (sqld *GoedbSQLDriver) First(i interface{}, where string) (error){
 	return nil
 }
 
-func (sqld *GoedbSQLDriver) Find(i interface{}, where string) error{
-	model,err := sqld.Model(i)
+func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string) error{
+	model,err := sqld.Model(resultEntitySlice)
 	if err != nil {
 		return err
 	}
 
-	var sql string
+	var sqlQuery string
 
-	if where == "" {
-		sql = "SELECT * FROM " + model.Name
-	}else{
-		sql = "SELECT * FROM " + model.Name + " WHERE " + where
+	if where != "" {
+		where = " WHERE "+ where
 	}
 
-	rows, err := sqld.db.Query(sql)
+	sqlQuery = "SELECT * FROM " + model.Name + where
+	rows, err := sqld.db.Query(sqlQuery)
 	if err != nil {
 		return err
 	}
 
-	slicePtr := reflect.ValueOf(i)
+	//Creates a new pointer with the same type that resultEntitySlice
+	slicePtr := reflect.ValueOf(resultEntitySlice)
+	//it gets the value of the slice pointer
 	slice := reflect.Indirect(slicePtr)
 
-	slType := getType(i)
+	entityType := getType(resultEntitySlice)
 
 	if !rows.Next() {
 		return errors.New("Records not found")
 	}
 
 	for {
-		ptr := reflect.New(slType)
+		entityPtr := reflect.New(entityType)
 
-		valuePtrs := structToSliceOfFieldAddress(ptr)
-		rows.Scan(valuePtrs...)
+		entityFieldsAsSlice := structToSliceOfFieldAddress(entityPtr)
+		rows.Scan(entityFieldsAsSlice...)
 
-		slice.Set(reflect.Append(slice, ptr.Elem()))
+		slice.Set(reflect.Append(slice, entityPtr.Elem()))
 
 		if !rows.Next() { break }
 	}
@@ -262,7 +263,6 @@ func getSQLTableModel(table GoedbTable) (string){
 	pksFound := ""
 	constraints := ""
 
-
 	for _, value := range table.Columns {
 		columnModel, pksColModel, constModel, err := getSQLColumnModel(value)
 		if err != nil {
@@ -271,8 +271,8 @@ func getSQLTableModel(table GoedbTable) (string){
 		columns += columnModel
 		pksFound += pksColModel
 		constraints += constModel
-
 	}
+
 	if len(pksFound) > 0 {
 		pksFound = pksFound[:len(pksFound)-1]
 		constraints += ", PRIMARY KEY ("+ pksFound +")"
@@ -312,13 +312,17 @@ func getPKs(gt GoedbTable, obj interface{}) (string, string, error){
 	return "", "", errors.New("No PK found")
 }
 
-func structToSliceOfFieldAddress(s interface{}) []interface{} {
+/*
+	Returns a slice with the addresses of each struct field,
+	so any modification on the slide will modify the source struct fields
+ */
+func structToSliceOfFieldAddress(structPtr interface{}) []interface{} {
 
 	var fieldArr reflect.Value
-	if _, ok  := s.(reflect.Value); ok{
-		fieldArr = s.(reflect.Value)
+	if _, ok  := structPtr.(reflect.Value); ok{
+		fieldArr = structPtr.(reflect.Value)
 	}else{
-		fieldArr = reflect.ValueOf(s).Elem()
+		fieldArr = reflect.ValueOf(structPtr).Elem()
 	}
 
 	if fieldArr.Kind() == reflect.Ptr{
@@ -335,6 +339,9 @@ func structToSliceOfFieldAddress(s interface{}) []interface{} {
 	return fieldAddrArr
 }
 
+/*
+	Returns columns names and values for inserting values
+ */
 func getColumnsAndValues(gt GoedbTable, obj interface{}) (string, string){
 	strCols := ""
 	strValues := ""
@@ -362,7 +369,6 @@ func getColumnsAndValues(gt GoedbTable, obj interface{}) (string, string){
 			strValues += "'"+v.String()+"',"
 		}
 		strCols += gt.Columns[i].Title + ","
-
 	}
 
 	return strCols[:len(strCols)-1], strValues[:len(strValues)-1]
