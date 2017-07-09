@@ -1,4 +1,4 @@
-package drivers
+package manager
 
 import "reflect"
 
@@ -22,7 +22,7 @@ type GoedbResult struct {
 	NumRecordsAffected int64
 }
 
-type GoedbDriver interface {
+type EntityManager interface {
 	Open(driver string, params string) error
 	Close() error
 	Migrate(i interface{}) error

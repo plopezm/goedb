@@ -2,7 +2,7 @@ package goedb
 
 import (
 	"testing"
-	"goedb/drivers"
+	"goedb/manager"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -30,68 +30,62 @@ type OtherStruct struct {
 	Other	string
 }
 
-var db *DBM
-
 func TestOpen(t *testing.T) {
-	db = new(DBM)
-	db.SetDriver(&drivers.GoedbSQLDriver{})
-
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
+	_, err := GetEntityManager("testSQLite3")
+	if err != nil {
 		t.Error(err)
 	}
-	defer db.Close()
 }
 
 func TestDB_Migrate(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error(err)
-	}
-	defer db.Close()
-
-	err = db.Migrate(&TestUser{})
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = db.Migrate(&TestCompany{})
+	err = em.Migrate(&TestUser{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = db.Migrate(&TestUserCompany{})
+	err = em.Migrate(&TestCompany{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = em.Migrate(&TestUserCompany{})
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_Model(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
-	user, err := db.Model(&TestUser{})
+	user, err := em.Model(&TestUser{})
 	if user.Name != "TestUser" || len(user.Columns) == 0{
 		t.Error("Error getting db model")
 	}
 
-	company, err := db.Model(&TestCompany{})
+	company, err := em.Model(&TestCompany{})
 	if company.Name != "TestCompany" || len(company.Columns) == 0{
 		t.Error("Error getting db model")
 	}
 }
 
 func TestDB_Model_Not_Found(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
-	_, err = db.Model(&OtherStruct{})
+	_, err = em.Model(&OtherStruct{})
 	if err == nil {
 		t.Error("The result must has a error because the struct was not created")
 	}
@@ -99,11 +93,10 @@ func TestDB_Model_Not_Found(t *testing.T) {
 
 
 func TestDB_Insert(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newUser1 := &TestUser{
 		Email:"Plm",
@@ -129,28 +122,28 @@ func TestDB_Insert(t *testing.T) {
 		Admin: false,
 	}
 
-	_, err = db.Insert(newUser1)
+	_, err = em.Insert(newUser1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = db.Insert(newUser2)
+	_, err = em.Insert(newUser2)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = db.Insert(newUser3)
+	_, err = em.Insert(newUser3)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_Insert_with_FKs(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newComp1 := &TestCompany{
 		UserEmail:"Plm",
@@ -164,12 +157,12 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 		Cif: "asd2",
 	}
 
-	_, err = db.Insert(newComp1)
+	_, err = em.Insert(newComp1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = db.Insert(newComp2)
+	_, err = em.Insert(newComp2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -177,11 +170,11 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 
 func TestDB_Insert_Constraints(t *testing.T) {
 
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newComp1 := &TestCompany{
 		UserEmail:"Plm",
@@ -201,17 +194,17 @@ func TestDB_Insert_Constraints(t *testing.T) {
 		Cif: "asd4",
 	}
 
-	_, err = db.Insert(newComp1)
+	_, err = em.Insert(newComp1)
 	if err == nil {
 		t.Error("The record already exists")
 	}
 
-	_, err = db.Insert(newComp2)
+	_, err = em.Insert(newComp2)
 	if err == nil {
 		t.Error("Cif is unique, this cannot be added")
 	}
 
-	_, err = db.Insert(newComp3)
+	_, err = em.Insert(newComp3)
 	if err == nil {
 		t.Error("User mail does not exists, this insert must returns an error")
 	}
@@ -219,18 +212,18 @@ func TestDB_Insert_Constraints(t *testing.T) {
 
 func TestDB_Insert_Adding_Relations(t *testing.T) {
 
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newUC := &TestUserCompany{
 		Email:"Plm",
 		Cif:"asd2",
 	}
 
-	_, err = db.Insert(newUC)
+	_, err = em.Insert(newUC)
 	if err != nil {
 		t.Error(err)
 	}
@@ -240,7 +233,7 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 		Cif:"asd4",
 	}
 
-	_, err = db.Insert(newUC)
+	_, err = em.Insert(newUC)
 	if err == nil {
 		t.Error("Cif does not exist")
 	}
@@ -250,24 +243,24 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 		Cif:"asd1",
 	}
 
-	_, err = db.Insert(newUC)
+	_, err = em.Insert(newUC)
 	if err == nil {
 		t.Error("User does not exist")
 	}
 }
 
 func TestDB_First(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newUser := &TestUser{
 		Email:"Plm",
 	}
 
-	db.First(newUser, "")
+	em.First(newUser, "")
 
 	if newUser.DNI != 123 {
 		t.Error("DNI Unmatch")
@@ -275,39 +268,39 @@ func TestDB_First(t *testing.T) {
 }
 
 func TestDB_First_Not_Found(t *testing.T){
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newUser := &TestUser{
 		Email:"Plm245",
 	}
 
-	err = db.First(newUser, "")
+	err = em.First(newUser, "")
 	if err == nil {
 		t.Log(newUser)
 		t.Error("This user does not exist")
 	}
 
-	err = db.First(newUser, "Admin = 0")
+	err = em.First(newUser, "Admin = 0")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_Find(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	foundUsers := make([]TestUser, 0)
 
 
-	err = db.Find(&foundUsers, "")
+	err = em.Find(&foundUsers, "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -322,7 +315,7 @@ func TestDB_Find(t *testing.T) {
 
 	foundUsers = make([]TestUser, 0)
 
-	err = db.Find(&foundUsers, where)
+	err = em.Find(&foundUsers, where)
 	if err != nil {
 		t.Error(err)
 	}
@@ -335,32 +328,32 @@ func TestDB_Find(t *testing.T) {
 }
 
 func TestDB_Find_Not_Found(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	foundUsers := make([]TestUser, 0)
 
-	err = db.Find(&foundUsers, "Admin = 3")
+	err = em.Find(&foundUsers, "Admin = 3")
 	if err == nil {
 		t.Error("Find must return an error")
 	}
 }
 
 func TestDB_Remove(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newUser := &TestUser{
 		Email:"Plm2",
 	}
 
-	rs, err := db.Remove(newUser)
+	rs, err := em.Remove(newUser)
 	if err != nil {
 		t.Error(err)
 	}
@@ -371,17 +364,17 @@ func TestDB_Remove(t *testing.T) {
 }
 
 func TestDB_Remove_Not_Found(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newUser := &TestUser{
 		Email:"Plm2421233",
 	}
 
-	rs, err := db.Remove(newUser)
+	rs, err := em.Remove(newUser)
 
 	if rs.NumRecordsAffected != 0 {
 		t.Error("Remove must returns an error because the record does not exist")
@@ -389,54 +382,54 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 }
 
 func TestDB_Remove_Relation(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
+	if err != nil {
+		t.Error(err)
 	}
-	defer db.Close()
 
 	newUC := &TestUserCompany{
 		Email:"Plm",
 		Cif:"asd2",
 	}
 
-	_, err = db.Remove(newUC)
+	_, err = em.Remove(newUC)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_DropTable(t *testing.T) {
-	err := db.Open("sqlite3", "./test.db")
-	if err != nil{
-		t.Error("DB couldn't be open")
-	}
-	defer db.Close()
-
-	err = db.DropTable(&TestUserCompany{})
-	if err != nil {
-		t.Error(err)
-	}
-	err = db.DropTable(&TestUser{})
-	if err != nil {
-		t.Error(err)
-	}
-	err = db.DropTable(&TestCompany{})
+	var em manager.EntityManager
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = db.Model(&TestUser{})
+	err = em.DropTable(&TestUserCompany{})
+	if err != nil {
+		t.Error(err)
+	}
+	err = em.DropTable(&TestUser{})
+	if err != nil {
+		t.Error(err)
+	}
+	err = em.DropTable(&TestCompany{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = em.Model(&TestUser{})
 	if err == nil {
 		t.Error("Model still exists")
 	}
 
-	_, err = db.Model(&TestCompany{})
+	_, err = em.Model(&TestCompany{})
 	if err == nil {
 		t.Error("Model still exists")
 	}
 
-	_, err = db.Model(&TestUserCompany{})
+	_, err = em.Model(&TestUserCompany{})
 	if err == nil {
 		t.Error("Model still exists")
 	}
