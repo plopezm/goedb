@@ -1,12 +1,47 @@
 package goedb
 
-import "goedb/drivers"
+import (
+	"goedb/drivers"
+	"goedb/utils"
+)
 
 type DBM struct {
-	driver drivers.GoedbDriver
+	//driver drivers.GoedbDriver
+	drivers		map[string]drivers.GoedbDriver
+
 }
 
+type Persistence struct{
+	datasources		 []Datasource
+}
+
+type Datasource struct{
+	Name	string  	`json:"name"`
+	Driver 	string		`json:"driver"`
+	Url		string		`json:"url"`
+}
+
+
+
+var goedbStandalone *DBM
+
+
 func init(){
+	goedbStandalone = new(DBM);
+	persistence := utils.GetPersistenceConfig()
+
+	goedbStandalone.drivers = make(map[string]drivers.GoedbDriver)
+	for _, datasource := range persistence.datasources{
+		var driver = &drivers.GoedbSQLDriver{}
+		driver.Open(datasource.Driver, datasource.Url)
+		goedbStandalone.drivers[datasource.Name] = driver
+	}
+
+}
+
+
+func GetInstance() *DBM {
+
 }
 
 func (dbm *DBM) SetDriver(driver drivers.GoedbDriver){
