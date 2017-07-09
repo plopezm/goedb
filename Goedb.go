@@ -5,9 +5,12 @@ import (
 	"goedb/utils"
 )
 
+
+var goedbStandalone *DBM
+
+
 type DBM struct {
-	//driver drivers.GoedbDriver
-	drivers		map[string]drivers.GoedbDriver
+	drivers	map[string]drivers.GoedbDriver
 
 }
 
@@ -21,9 +24,6 @@ type Datasource struct{
 	Url		string		`json:"url"`
 }
 
-
-
-var goedbStandalone *DBM
 
 
 func init(){
@@ -41,16 +41,20 @@ func init(){
 
 
 func GetInstance() *DBM {
-
+	return goedbStandalone;
 }
 
+/*
 func (dbm *DBM) SetDriver(driver drivers.GoedbDriver){
 	dbm.driver = driver
 }
+*/
 
+/*
 func (dbm *DBM) Open(driver string, params string) error{
 	return dbm.driver.Open(driver, params)
 }
+*/
 
 func (dbm *DBM) Close() error{
 	return dbm.driver.Close()
