@@ -32,6 +32,20 @@ Once datasource is defined the next step is to get an instance of a entity manag
 	}
 ```
 
+Now the manager is ready to work with him, for example:
+
+```
+	newUC := &TestUserCompany{
+		Email:"Plm",
+		Cif:"asd2",
+	}
+
+	_, err = em.Insert(newUC)
+	if err != nil {
+		t.Error(err)
+	}
+```
+
 In the current version, entity manager functionality is as follows:
 
 ```
