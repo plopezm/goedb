@@ -61,15 +61,18 @@ func (sqld *GoedbSQLDriver) Model(i interface{}) (metadata.GoedbTable, error){
 	return q, errors.New("Model not found")
 }
 
-func (sqld *GoedbSQLDriver) Insert(i interface{})(GoedbResult, error){
+func (sqld *GoedbSQLDriver) Insert(instance interface{})(GoedbResult, error){
 	var result sql.Result
 	var goedbres GoedbResult
 
-	model,err := sqld.Model(i)
+	model,err := sqld.Model(instance)
 	if err != nil {
 		return goedbres, err
 	}
-	columns, values := getColumnsAndValues(model, i)
+	columns, values, err := getColumnsAndValues(model, instance)
+	if err != nil {
+		return GoedbResult{}, err
+	}
 	sql := "INSERT INTO "+model.Name +" ("+columns+") values("+values+")"
 	result, err = sqld.db.Exec(sql)
 	if err != nil {
@@ -323,36 +326,43 @@ func structToSliceOfFieldAddress(structPtr interface{}) []interface{} {
 /*
 	Returns columns names and values for inserting values
  */
-func getColumnsAndValues(gt metadata.GoedbTable, obj interface{}) (string, string){
+func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (string, string, error){
 	strCols := ""
 	strValues := ""
 
-	val := reflect.ValueOf(obj)
+	instanceType := metadata.GetType(instance)
+	intanceValue := metadata.GetValue(instance)
 
-	if val.Kind() == reflect.Ptr{
-		val = val.Elem()
-	}
+	for i:=0;i<len(metatable.Columns);i++ {
+		var value reflect.Value
+		if metatable.Columns[i].IsComplexType {
+			var err error
+			value, err = metadata.GetForeignKeyItsPrimaryKeyValue(instanceType, intanceValue, i)
+			if err != nil {
+				return "", "", err
+			}
+		}else{
+			value = intanceValue.Field(i)
+		}
 
-	for i:=0;i<len(gt.Columns);i++ {
-		v := val.Field(i)
-		switch gt.Columns[i].ColumnType {
+		switch metatable.Columns[i].ColumnType {
 		case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint", "int64", "uint64":
-			strValues += strconv.FormatInt(v.Int(), 10)+","
+			strValues += strconv.FormatInt(value.Int(), 10)+","
 		case "float32", "float64":
-			strValues += strconv.FormatFloat(v.Float(), 'f', 6, 64)+","
+			strValues += strconv.FormatFloat(value.Float(), 'f', 6, 64)+","
 		case "bool":
-			if v.Bool() {
+			if value.Bool() {
 				strValues += "1,"
 			}else{
 				strValues += "0,"
 			}
 		case "string","char":
-			strValues += "'"+v.String()+"',"
+			strValues += "'"+ value.String()+"',"
 		}
-		strCols += gt.Columns[i].Title + ","
+		strCols += metatable.Columns[i].Title + ","
 	}
 
-	return strCols[:len(strCols)-1], strValues[:len(strValues)-1]
+	return strCols[:len(strCols)-1], strValues[:len(strValues)-1], nil
 }
 
 

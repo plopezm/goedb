@@ -20,6 +20,7 @@ type GoedbColumn struct{
 	ForeignKey          bool
 	ForeignKeyReference string
 	AutoIncrement       bool
+	IsComplexType		bool
 }
 
 func GetType(i interface{}) (reflect.Type){
@@ -37,6 +38,18 @@ func GetType(i interface{}) (reflect.Type){
 	return typ
 }
 
+
+func GetValue(i interface{}) (reflect.Value){
+	val := reflect.ValueOf(i)
+
+	if val.Kind() == reflect.Ptr{
+		val = val.Elem()
+	}
+
+	return val
+}
+
+
 func tagAttributeExists(tag reflect.StructTag, attribute string) bool{
 
 	if tag, ok := tag.Lookup("goedb"); ok {
@@ -50,17 +63,56 @@ func tagAttributeExists(tag reflect.StructTag, attribute string) bool{
 	return false
 
 }
-
-func getPrimaryKeyType(structType reflect.Type) (reflect.Type, error) {
+/*
+	Returns the primary key type from a struct type
+ */
+func GetPrimaryKeyType(structType reflect.Type) (reflect.Type, error) {
 
 	for i:=0;i< structType.NumField();i++ {
-		fieldValue := structType.Field(i)
-		if tagAttributeExists(fieldValue.Tag, "pk"){
-			return fieldValue.Type, nil
+		field := structType.Field(i)
+		if tagAttributeExists(field.Tag, "pk"){
+			return field.Type, nil
 		}
 	}
 
 	return nil, errors.New("Primary key not found")
+}
+
+func GetPrimaryKeyValue(instanceType reflect.Type, instanceValue reflect.Value) (reflect.Value, error) {
+
+	for i:=0;i< instanceType.NumField();i++ {
+		field := instanceType.Field(i)
+		fieldValue := instanceValue.Field(i)
+		if tagAttributeExists(field.Tag, "pk"){
+			return fieldValue, nil
+		}
+	}
+
+	return reflect.Value{}, errors.New("Primary key not found")
+}
+
+func GetForeignKeyValue(instanceType reflect.Type, instanceValue reflect.Value) (reflect.Value, error) {
+
+	for i:=0;i< instanceType.NumField();i++ {
+		field := instanceType.Field(i)
+		fieldValue := instanceValue.Field(i)
+		if tagAttributeExists(field.Tag, "fk"){
+			return fieldValue, nil
+		}
+	}
+
+	return reflect.Value{}, errors.New("Primary key not found")
+}
+
+/*
+	Returns the primary key type and value from a struct type and value
+ */
+func GetForeignKeyItsPrimaryKeyValue(instanceType reflect.Type, instanceValue reflect.Value, fieldId int) (reflect.Value, error) {
+
+	fieldType := instanceType.Field(fieldId).Type
+	fieldValue := instanceValue.Field(fieldId)
+
+	return GetForeignKeyValue(fieldType, fieldValue)
 }
 
 func processColumnType(column *GoedbColumn, columnType reflect.Type) error{
@@ -68,12 +120,12 @@ func processColumnType(column *GoedbColumn, columnType reflect.Type) error{
 		column.ColumnType = columnType.Name()
 		return nil
 	}
-	//TODO: Parse struct and get primary-key
-	primaryKeyType, err := getPrimaryKeyType(columnType)
+	primaryKeyType, err := GetPrimaryKeyType(columnType)
 	if err != nil {
 		return err
 	}
 	column.ColumnType = primaryKeyType.Name()
+	column.IsComplexType = true
 	return nil
 }
 
@@ -93,7 +145,6 @@ func ParseModel(entity interface{}) (GoedbTable){
 		tablecol := GoedbColumn{}
 		tablecol.Title = entityType.Field(i).Name
 		processColumnType(&tablecol, entityType.Field(i).Type)
-		//tablecol.ColumnType = entityType.Field(i).Type.Name()
 
 		if tag, ok := entityType.Field(i).Tag.Lookup("goedb"); ok {
 			params := strings.Split(tag, ",")
