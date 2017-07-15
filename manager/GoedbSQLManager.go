@@ -5,16 +5,12 @@ import (
 	"reflect"
 	"errors"
 	"strconv"
-	"strings"
+	"goedb/metadata"
 )
 
 type GoedbSQLDriver struct{
 	db     *sql.DB
-	tables map[string]GoedbTable
-}
-
-func init(){
-
+	tables map[string]metadata.GoedbTable
 }
 
 func (sqld *GoedbSQLDriver) Open(driver string, params string) error{
@@ -31,7 +27,7 @@ func (sqld *GoedbSQLDriver) Open(driver string, params string) error{
 
 	sqld.db = db
 	if sqld.tables == nil {
-		sqld.tables = make(map[string]GoedbTable)
+		sqld.tables = make(map[string]metadata.GoedbTable)
 	}
 
 	if driver == "sqlite3" {
@@ -50,16 +46,16 @@ func (sqld *GoedbSQLDriver) Close() error{
 
 func (sqld *GoedbSQLDriver) Migrate(i interface{}) (error){
 	sqld.DropTable(i)
-	table := parseModel(i)
+	table := metadata.ParseModel(i)
 	sqld.tables[table.Name] = table
 	sqltab := getSQLTableModel(table)
 	_, err := sqld.db.Exec(sqltab)
 	return err
 }
 
-func (sqld *GoedbSQLDriver) Model(i interface{}) (GoedbTable, error){
-	var q GoedbTable
-	if q, ok := sqld.tables[getType(i).Name()]; ok{
+func (sqld *GoedbSQLDriver) Model(i interface{}) (metadata.GoedbTable, error){
+	var q metadata.GoedbTable
+	if q, ok := sqld.tables[metadata.GetType(i).Name()]; ok{
 		return q, nil
 	}
 	return q, errors.New("Model not found")
@@ -114,15 +110,15 @@ func (sqld *GoedbSQLDriver) First(i interface{}, where string) (error){
 		return err
 	}
 
-	var sql string
+	sql := "SELECT * FROM " + model.Name + " WHERE "
 	if where == "" {
 		pkc, pkv, err := getPKs(model, i)
 		if err != nil {
 			return errors.New("Error getting primary key")
 		}
-		sql = "SELECT * FROM " + model.Name + " WHERE " + pkc + "=" + pkv
+		sql += pkc + "=" + pkv
 	}else{
-		sql = "SELECT * FROM " + model.Name + " WHERE " + where
+		sql += where
 	}
 
 	rows, err := sqld.db.Query(sql)
@@ -164,7 +160,7 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string) er
 	//it gets the value of the slice pointer
 	slice := reflect.Indirect(slicePtr)
 
-	entityType := getType(resultEntitySlice)
+	entityType := metadata.GetType(resultEntitySlice)
 
 	if !rows.Next() {
 		return errors.New("Records not found")
@@ -185,7 +181,7 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string) er
 }
 
 func (sqld *GoedbSQLDriver) DropTable(i interface{}) error{
-	typ := getType(i)
+	typ := metadata.GetType(i)
 	name := typ.Name()
 
 	_, err := sqld.db.Exec("DROP TABLE "+name)
@@ -201,27 +197,12 @@ func (sqld *GoedbSQLDriver) DropTable(i interface{}) error{
 	    Support functions
    ====================================== */
 
-func getType(i interface{}) (reflect.Type){
-	typ := reflect.TypeOf(i)
-
-	// if a pointer to a struct is passed, get the type of the dereferenced object
-	if typ.Kind() == reflect.Ptr{
-		typ = typ.Elem()
-	}
-
-	if typ.Kind() == reflect.Slice{
-		typ = typ.Elem()
-	}
-
-	return typ
-}
-
-func getSQLColumnModel(value GoedbColumn) (string, string, string, error){
+func getSQLColumnModel(value metadata.GoedbColumn) (string, string, string, error){
 	var pksFound string
 	var constraints string
 	column := value.Title
 
-	switch value.Ctype {
+	switch value.ColumnType {
 	case "char":
 		column += " CHARACTER"
 	case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint":
@@ -235,30 +216,30 @@ func getSQLColumnModel(value GoedbColumn) (string, string, string, error){
 	case "string":
 		column += " VARCHAR"
 	default:
-		return "","","",errors.New("Type unkown")
+		return "","","",errors.New("Type unknown")
 	}
 
 	if value.Unique {
 		column += " UNIQUE"
 	}
 
-	if value.Autoinc {
+	if value.AutoIncrement {
 		column += " AUTOINCREMENT"
 	}
 
-	if value.Pk {
+	if value.PrimaryKey {
 		pksFound += value.Title+","
 	}
 
-	if value.Fk {
-		constraints += ", FOREIGN KEY ("+value.Title +") REFERENCES "+value.Fkref +" ON DELETE CASCADE"
+	if value.ForeignKey {
+		constraints += ", FOREIGN KEY ("+value.Title +") REFERENCES "+value.ForeignKeyReference +" ON DELETE CASCADE"
 	}
 	column += ","
 
 	return column, pksFound, constraints, nil
 }
 
-func getSQLTableModel(table GoedbTable) (string){
+func getSQLTableModel(table metadata.GoedbTable) (string){
 	columns := ""
 	pksFound := ""
 	constraints := ""
@@ -282,7 +263,7 @@ func getSQLTableModel(table GoedbTable) (string){
 	return "CREATE TABLE "+table.Name +" (" +columns[:lastColumnIndex-1] + constraints+")"
 }
 
-func getPKs(gt GoedbTable, obj interface{}) (string, string, error){
+func getPKs(gt metadata.GoedbTable, obj interface{}) (string, string, error){
 	val := reflect.ValueOf(obj)
 
 	if val.Kind() == reflect.Ptr{
@@ -291,8 +272,8 @@ func getPKs(gt GoedbTable, obj interface{}) (string, string, error){
 
 	for i:=0;i<len(gt.Columns);i++ {
 		v := val.Field(i)
-		if gt.Columns[i].Pk {
-			switch gt.Columns[i].Ctype {
+		if gt.Columns[i].PrimaryKey {
+			switch gt.Columns[i].ColumnType {
 			case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint", "int64", "uint64":
 				return gt.Columns[i].Title, strconv.FormatInt(v.Int(), 10), nil
 			case "float32", "float64":
@@ -342,7 +323,7 @@ func structToSliceOfFieldAddress(structPtr interface{}) []interface{} {
 /*
 	Returns columns names and values for inserting values
  */
-func getColumnsAndValues(gt GoedbTable, obj interface{}) (string, string){
+func getColumnsAndValues(gt metadata.GoedbTable, obj interface{}) (string, string){
 	strCols := ""
 	strValues := ""
 
@@ -354,7 +335,7 @@ func getColumnsAndValues(gt GoedbTable, obj interface{}) (string, string){
 
 	for i:=0;i<len(gt.Columns);i++ {
 		v := val.Field(i)
-		switch gt.Columns[i].Ctype {
+		switch gt.Columns[i].ColumnType {
 		case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint", "int64", "uint64":
 			strValues += strconv.FormatInt(v.Int(), 10)+","
 		case "float32", "float64":
@@ -374,43 +355,5 @@ func getColumnsAndValues(gt GoedbTable, obj interface{}) (string, string){
 	return strCols[:len(strCols)-1], strValues[:len(strValues)-1]
 }
 
-func parseModel(model interface{}) (GoedbTable){
-	typ := reflect.TypeOf(model)
 
-	// if a pointer to a struct is passed, get the type of the dereferenced object
-	if typ.Kind() == reflect.Ptr{
-		typ = typ.Elem()
-	}
 
-	table := GoedbTable{}
-	table.Name = typ.Name()
-	table.Columns = make([]GoedbColumn, 0)
-
-	for i:=0;i<typ.NumField();i++ {
-		tablecol := GoedbColumn{}
-		tablecol.Title = typ.Field(i).Name
-		tablecol.Ctype = typ.Field(i).Type.Name()
-
-		if tag, ok := typ.Field(i).Tag.Lookup("goedb"); ok {
-			params := strings.Split(tag, ",")
-			for _, val := range params {
-				switch val {
-				case "pk":
-					tablecol.Pk = true
-				case "autoincrement":
-					tablecol.Autoinc = true
-				case "unique":
-					tablecol.Unique = true
-				default:
-					if strings.Contains(val, "fk=") {
-						tablecol.Fk = true
-						tablecol.Fkref = strings.Split(val, "=")[1]
-					}
-				}
-			}
-		}
-		table.Columns = append(table.Columns, tablecol)
-	}
-
-	return table
-}

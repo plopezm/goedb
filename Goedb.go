@@ -1,33 +1,34 @@
 package goedb
 
 import (
-	"goedb/manager"
-	"goedb/config"
 	"errors"
+	"fmt"
+	"goedb/config"
+	"goedb/manager"
+	"os"
 )
-
 
 var goedbStandalone *DBM
 
-
 type DBM struct {
-	drivers	map[string]manager.EntityManager
+	drivers map[string]manager.EntityManager
 }
 
-
-
-func init(){
+func init() {
 	var persistence config.Persistence
-	goedbStandalone = new(DBM);
+	goedbStandalone = new(DBM)
 	persistence = config.GetPersistenceConfig()
 
 	goedbStandalone.drivers = make(map[string]manager.EntityManager)
-	for _, datasource := range persistence.Datasources{
+	for _, datasource := range persistence.Datasources {
 		driver := new(manager.GoedbSQLDriver)
-		driver.Open(datasource.Driver, datasource.Url)
+		err := driver.Open(datasource.Driver, datasource.Url)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 		goedbStandalone.drivers[datasource.Name] = driver
 	}
-
 }
 
 func GetEntityManager(persistenceUnit string) (manager.EntityManager, error) {
@@ -35,10 +36,5 @@ func GetEntityManager(persistenceUnit string) (manager.EntityManager, error) {
 	if !ok {
 		return nil, errors.New("Persistence unit not found in persistence.json")
 	}
-	return entityManager, nil;
+	return entityManager, nil
 }
-
-
-
-
-

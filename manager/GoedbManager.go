@@ -1,22 +1,8 @@
 package manager
 
-import "reflect"
-
-type GoedbTable struct{
-	Name    string
-	Columns []GoedbColumn
-	Model  	reflect.Type		`json:"-"`
-}
-
-type GoedbColumn struct{
-	Title   	string
-	Ctype   	string
-	Pk      	bool
-	Unique  	bool
-	Fk      	bool
-	Fkref   	string
-	Autoinc 	bool
-}
+import (
+	"goedb/metadata"
+)
 
 type GoedbResult struct {
 	NumRecordsAffected int64
@@ -27,7 +13,7 @@ type EntityManager interface {
 	Close() error
 	Migrate(i interface{}) error
 	DropTable(i interface{}) error
-	Model(i interface{})(GoedbTable, error)
+	Model(i interface{})(metadata.GoedbTable, error)
 	Insert(i interface{}) (GoedbResult, error)
 	Remove(i interface{}) (GoedbResult, error)
 	First(i interface{}, params string) error

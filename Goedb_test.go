@@ -1,33 +1,33 @@
 package goedb
 
 import (
-	"testing"
-	"goedb/manager"
 	_ "github.com/mattn/go-sqlite3"
+	"goedb/manager"
+	"testing"
 )
 
-type TestUser struct{
-	Email		string	`goedb:"pk"`
-	Password	string
-	Role		string
-	DNI		int	`goedb:"unique"`
-	Admin		bool
+type TestUser struct {
+	Email    string `goedb:"pk"`
+	Password string
+	Role     string
+	DNI      int `goedb:"unique"`
+	Admin    bool
 }
 
 type TestCompany struct {
-	UserEmail	string	`goedb:"fk=TestUser(Email)"`
-	Name		string
-	Cif		string 	`goedb:"pk"`
+	UserEmail string `goedb:"fk=TestUser(Email)"`
+	Name      string
+	Cif       string `goedb:"pk"`
 }
 
 type TestUserCompany struct {
-	Email 		string 	`goedb:"pk,fk=TestUser(Email)"`
-	Cif 		string	`goedb:"pk,fk=TestCompany(Cif)"`
+	Email string `goedb:"pk,fk=TestUser(Email)"`
+	Cif   string `goedb:"pk,fk=TestCompany(Cif)"`
 }
 
 type OtherStruct struct {
-	Asd 	string
-	Other	string
+	Asd   string
+	Other string
 }
 
 func TestOpen(t *testing.T) {
@@ -38,7 +38,6 @@ func TestOpen(t *testing.T) {
 }
 
 func TestDB_Migrate(t *testing.T) {
-	var em manager.EntityManager
 	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
@@ -68,12 +67,12 @@ func TestDB_Model(t *testing.T) {
 	}
 
 	user, err := em.Model(&TestUser{})
-	if user.Name != "TestUser" || len(user.Columns) == 0{
+	if user.Name != "TestUser" || len(user.Columns) == 0 {
 		t.Error("Error getting db model")
 	}
 
 	company, err := em.Model(&TestCompany{})
-	if company.Name != "TestCompany" || len(company.Columns) == 0{
+	if company.Name != "TestCompany" || len(company.Columns) == 0 {
 		t.Error("Error getting db model")
 	}
 }
@@ -91,7 +90,6 @@ func TestDB_Model_Not_Found(t *testing.T) {
 	}
 }
 
-
 func TestDB_Insert(t *testing.T) {
 	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
@@ -99,27 +97,27 @@ func TestDB_Insert(t *testing.T) {
 	}
 
 	newUser1 := &TestUser{
-		Email:"Plm",
-		Password:"asd",
-		Role: "asd",
-		DNI:123,
-		Admin: true,
+		Email:    "Plm",
+		Password: "asd",
+		Role:     "asd",
+		DNI:      123,
+		Admin:    true,
 	}
 
 	newUser2 := &TestUser{
-		Email:"Plm2",
-		Password:"asd",
-		Role: "asd",
-		DNI:1234,
-		Admin: true,
+		Email:    "Plm2",
+		Password: "asd",
+		Role:     "asd",
+		DNI:      1234,
+		Admin:    true,
 	}
 
 	newUser3 := &TestUser{
-		Email:"Plm3",
-		Password:"asd",
-		Role: "asd",
-		DNI:1235,
-		Admin: false,
+		Email:    "Plm3",
+		Password: "asd",
+		Role:     "asd",
+		DNI:      1235,
+		Admin:    false,
 	}
 
 	_, err = em.Insert(newUser1)
@@ -146,15 +144,15 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 	}
 
 	newComp1 := &TestCompany{
-		UserEmail:"Plm",
-		Name:"asd",
-		Cif: "asd1",
+		UserEmail: "Plm",
+		Name:      "asd",
+		Cif:       "asd1",
 	}
 
 	newComp2 := &TestCompany{
-		UserEmail:"Plm",
-		Name:"asd",
-		Cif: "asd2",
+		UserEmail: "Plm",
+		Name:      "asd",
+		Cif:       "asd2",
 	}
 
 	_, err = em.Insert(newComp1)
@@ -177,21 +175,21 @@ func TestDB_Insert_Constraints(t *testing.T) {
 	}
 
 	newComp1 := &TestCompany{
-		UserEmail:"Plm",
-		Name:"asd",
-		Cif: "asd1",
+		UserEmail: "Plm",
+		Name:      "asd",
+		Cif:       "asd1",
 	}
 
 	newComp2 := &TestCompany{
-		UserEmail:"Plm",
-		Name:"asd123",
-		Cif: "asd2",
+		UserEmail: "Plm",
+		Name:      "asd123",
+		Cif:       "asd2",
 	}
 
 	newComp3 := &TestCompany{
-		UserEmail:"Plm23455",
-		Name:"asd",
-		Cif: "asd4",
+		UserEmail: "Plm23455",
+		Name:      "asd",
+		Cif:       "asd4",
 	}
 
 	_, err = em.Insert(newComp1)
@@ -219,8 +217,8 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 	}
 
 	newUC := &TestUserCompany{
-		Email:"Plm",
-		Cif:"asd2",
+		Email: "Plm",
+		Cif:   "asd2",
 	}
 
 	_, err = em.Insert(newUC)
@@ -229,8 +227,8 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 	}
 
 	newUC = &TestUserCompany{
-		Email:"Plm1",
-		Cif:"asd4",
+		Email: "Plm1",
+		Cif:   "asd4",
 	}
 
 	_, err = em.Insert(newUC)
@@ -239,8 +237,8 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 	}
 
 	newUC = &TestUserCompany{
-		Email:"Plm1123",
-		Cif:"asd1",
+		Email: "Plm1123",
+		Cif:   "asd1",
 	}
 
 	_, err = em.Insert(newUC)
@@ -257,7 +255,7 @@ func TestDB_First(t *testing.T) {
 	}
 
 	newUser := &TestUser{
-		Email:"Plm",
+		Email: "Plm",
 	}
 
 	em.First(newUser, "")
@@ -267,7 +265,7 @@ func TestDB_First(t *testing.T) {
 	}
 }
 
-func TestDB_First_Not_Found(t *testing.T){
+func TestDB_First_Not_Found(t *testing.T) {
 	var em manager.EntityManager
 	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
@@ -275,7 +273,7 @@ func TestDB_First_Not_Found(t *testing.T){
 	}
 
 	newUser := &TestUser{
-		Email:"Plm245",
+		Email: "Plm245",
 	}
 
 	err = em.First(newUser, "")
@@ -299,7 +297,6 @@ func TestDB_Find(t *testing.T) {
 
 	foundUsers := make([]TestUser, 0)
 
-
 	err = em.Find(&foundUsers, "")
 	if err != nil {
 		t.Error(err)
@@ -309,7 +306,6 @@ func TestDB_Find(t *testing.T) {
 		t.Log(foundUsers)
 		t.Error("Find not working")
 	}
-
 
 	where := "Admin = 1"
 
@@ -350,7 +346,7 @@ func TestDB_Remove(t *testing.T) {
 	}
 
 	newUser := &TestUser{
-		Email:"Plm2",
+		Email: "Plm2",
 	}
 
 	rs, err := em.Remove(newUser)
@@ -371,7 +367,7 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 	}
 
 	newUser := &TestUser{
-		Email:"Plm2421233",
+		Email: "Plm2421233",
 	}
 
 	rs, err := em.Remove(newUser)
@@ -389,8 +385,8 @@ func TestDB_Remove_Relation(t *testing.T) {
 	}
 
 	newUC := &TestUserCompany{
-		Email:"Plm",
-		Cif:"asd2",
+		Email: "Plm",
+		Cif:   "asd2",
 	}
 
 	_, err = em.Remove(newUC)
