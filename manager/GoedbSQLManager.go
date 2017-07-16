@@ -10,7 +10,6 @@ import (
 
 type GoedbSQLDriver struct{
 	db     *sql.DB
-	tables map[string]metadata.GoedbTable
 }
 
 func (sqld *GoedbSQLDriver) Open(driver string, params string) error{
@@ -26,9 +25,6 @@ func (sqld *GoedbSQLDriver) Open(driver string, params string) error{
 	}
 
 	sqld.db = db
-	if sqld.tables == nil {
-		sqld.tables = make(map[string]metadata.GoedbTable)
-	}
 
 	if driver == "sqlite3" {
 		sqld.db.Exec("PRAGMA foreign_keys = ON")
@@ -47,15 +43,16 @@ func (sqld *GoedbSQLDriver) Close() error{
 func (sqld *GoedbSQLDriver) Migrate(i interface{}) (error){
 	sqld.DropTable(i)
 	table := metadata.ParseModel(i)
-	sqld.tables[table.Name] = table
+	metadata.Models[table.Name] = table
 	sqltab := getSQLTableModel(table)
+	print("CREATE: "+sqltab+"\n")
 	_, err := sqld.db.Exec(sqltab)
 	return err
 }
 
 func (sqld *GoedbSQLDriver) Model(i interface{}) (metadata.GoedbTable, error){
 	var q metadata.GoedbTable
-	if q, ok := sqld.tables[metadata.GetType(i).Name()]; ok{
+	if q, ok := metadata.Models[metadata.GetType(i).Name()]; ok{
 		return q, nil
 	}
 	return q, errors.New("Model not found")
@@ -108,21 +105,31 @@ func (sqld *GoedbSQLDriver) Remove(i interface{})(GoedbResult, error){
 }
 
 
+func referenceSQLEntity(from *string, query *string, referencedTable metadata.GoedbTable){
+	*from += referencedTable.Name+","
+	for _, referencedColumn := range referencedTable.Columns{
+
+		if !referencedColumn.IsComplex {
+			*query += referencedTable.Name+"."+referencedColumn.Title + ","
+			continue
+		}
+		referenceSQLEntity(from, query, metadata.Models[referencedColumn.ColumnTypeName])
+	}
+}
+
 func generateSQLQuery(model metadata.GoedbTable) (query string){
 	from := " FROM "+model.Name+","
 	query = "SELECT "
 
 	for _, column := range model.Columns {
 
-		if column.ComplexColumn == nil {
+		if !column.IsComplex {
+
 			query += model.Name+"."+column.Title + ","
 			continue
 		}
-
-		from += column.ComplexColumn.ReferencedStructName+ ","
-		for _, columnName := range column.ComplexColumn.ReferencedStructAttrNames {
-			query += column.ComplexColumn.ReferencedStructName+"."+columnName + ","
-		}
+		referencedTable := metadata.Models[column.ColumnTypeName]
+		referenceSQLEntity(&from, &query, referencedTable)
 
 	}
 	//Removing the last ','
@@ -136,8 +143,6 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string) (error){
 	if err != nil {
 		return err
 	}
-
-	//sql := "SELECT * FROM " + model.Name + " WHERE "
 	sql := generateSQLQuery(model)
 	if where == "" {
 		pkc, pkv, err := getPKs(model, instance)
@@ -216,7 +221,7 @@ func (sqld *GoedbSQLDriver) DropTable(i interface{}) error{
 	if err != nil {
 		return err
 	}
-	delete(sqld.tables, name)
+	delete(metadata.Models, name)
 	return nil
 }
 
@@ -331,7 +336,7 @@ func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (s
 
 	for i:=0;i<len(metatable.Columns);i++ {
 		var value reflect.Value
-		if metatable.Columns[i].ComplexColumn != nil {
+		if metatable.Columns[i].IsComplex {
 			var err error
 			_, value, err =  metadata.GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)
 			if err != nil {

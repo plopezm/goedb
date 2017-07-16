@@ -6,6 +6,12 @@ import (
 	"errors"
 )
 
+var Models map[string]GoedbTable
+
+func init(){
+	Models = make(map[string]GoedbTable)
+}
+
 type GoedbTable struct{
 	Name    string
 	Columns []GoedbColumn
@@ -15,18 +21,17 @@ type GoedbTable struct{
 type GoedbColumn struct{
 	Title               string
 	ColumnType          reflect.Kind
+	ColumnTypeName		string
 	PrimaryKey          bool
 	Unique              bool
 	ForeignKey          bool
 	ForeignKeyReference string
 	AutoIncrement       bool
-	ComplexColumn		*GoedbComplexColumn
+	IsComplex			bool
 }
 
 type GoedbComplexColumn struct {
 	MappedFKValue				reflect.Value
-	ReferencedStructName		string
-	ReferencedStructAttrNames	[]string
 }
 
 func GetType(i interface{}) (reflect.Type){
@@ -67,7 +72,6 @@ func tagAttributeExists(tag reflect.StructTag, attribute string) bool{
 		}
 	}
 	return false
-
 }
 
 func GetGoedbTagTypeAndValue(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string) (reflect.Type, reflect.Value, error){
@@ -89,25 +93,26 @@ func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValu
 }
 
 func processColumnType(column *GoedbColumn, columnType reflect.Type, columnValue reflect.Value) error{
+
+	column.ColumnTypeName = columnType.Name()
 	if columnType.Kind() != reflect.Struct {
 		column.ColumnType = columnType.Kind()
 		return nil
 	}
-	primaryKeyType, primaryKeyValue, err := GetGoedbTagTypeAndValue(columnType, columnValue, "pk")
+	primaryKeyType, _, err := GetGoedbTagTypeAndValue(columnType, columnValue, "pk")
 	if err != nil {
 		return err
 	}
 
-
-	//TODO: ONLY WORKS WITH 1 SUBSTRUCT
 	column.ColumnType = primaryKeyType.Kind()
-	column.ComplexColumn = new(GoedbComplexColumn)
-	column.ComplexColumn.MappedFKValue = primaryKeyValue
-	column.ComplexColumn.ReferencedStructName = columnType.Name()
-	column.ComplexColumn.ReferencedStructAttrNames = make([]string, columnType.NumField())
-	for i:=0;i < columnType.NumField();i++{
-		column.ComplexColumn.ReferencedStructAttrNames[i] = columnType.Field(i).Name
-	}
+	column.IsComplex = true
+	//column.ComplexColumn = new(GoedbComplexColumn)
+	//column.ComplexColumn.MappedFKValue = primaryKeyValue
+	//column.ComplexColumn.ReferencedStructName = columnType.Name()
+	//column.ComplexColumn.ReferencedStructAttrNames = make([]string, columnType.NumField())
+	//for i:=0;i < columnType.NumField();i++{
+	//	column.ComplexColumn.ReferencedStructAttrNames[i] = columnType.Field(i).Name
+	//}
 
 	return nil
 }
@@ -145,7 +150,7 @@ func ParseModel(entity interface{}) (GoedbTable){
 		}
 		table.Columns = append(table.Columns, tablecol)
 	}
-
+	Models[table.Name] = table
 	return table
 }
 
