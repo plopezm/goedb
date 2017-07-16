@@ -71,22 +71,22 @@ func TestGoedbSQLDriver_Migrate(t *testing.T) {
 	for key, value := range dbSqlDriver.tables["TestUser"].Columns {
 		switch key{
 		case 0:
-			if !(value.Title == "Email" && value.Ctype == "string" && value.Pk){
+			if !(value.Title == "Email" && value.ColumnType == "string" && value.PrimaryKey){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 1:
-			if !(value.Title == "Password" && value.Ctype == "string"){
+			if !(value.Title == "Password" && value.ColumnType == "string"){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 2:
-			if !(value.Title == "Role" && value.Ctype == "string"){
+			if !(value.Title == "Role" && value.ColumnType == "string"){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 3:
-			if !(value.Title == "DNI" && value.Ctype == "int" && value.Unique){
+			if !(value.Title == "DNI" && value.ColumnType == "int" && value.Unique){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -101,17 +101,17 @@ func TestGoedbSQLDriver_Migrate(t *testing.T) {
 	for key, value := range dbSqlDriver.tables["TestCompany"].Columns {
 		switch key{
 		case 0:
-			if !(value.Title == "UserEmail" && value.Ctype == "string" && value.Fk){
+			if !(value.Title == "UserEmail" && value.ColumnType == "string" && value.ForeignKey){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 1:
-			if !(value.Title == "Name" && value.Ctype == "string"){
+			if !(value.Title == "Name" && value.ColumnType == "string"){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 2:
-			if !(value.Title == "Cif" && value.Ctype == "string" && value.Pk){
+			if !(value.Title == "Cif" && value.ColumnType == "string" && value.PrimaryKey){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
@@ -127,12 +127,12 @@ func TestGoedbSQLDriver_Migrate(t *testing.T) {
 	for key, value := range dbSqlDriver.tables["TestUserCompany"].Columns {
 		switch key{
 		case 0:
-			if !(value.Title == "Email" && value.Ctype == "string" && value.Pk && value.Fk){
+			if !(value.Title == "Email" && value.ColumnType == "string" && value.PrimaryKey && value.ForeignKey){
 				t.Log(value)
 				t.Error("Column not valid")
 			}
 		case 1:
-			if !(value.Title == "Cif" && value.Ctype == "string" && value.Pk && value.Fk){
+			if !(value.Title == "Cif" && value.ColumnType == "string" && value.PrimaryKey && value.ForeignKey){
 				t.Log(value)
 				t.Error("Column not valid")
 			}

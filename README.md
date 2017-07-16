@@ -26,10 +26,11 @@ Currently multiple datasources can be defined. The name will be used as index to
 Once datasource is defined the next step is to get an instance of a entity manager. It requires the name of the datasource as input.
 
 ```
-    em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
+    em, err = goedb.GetEntityManager("testSQLite3")
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "error: %v\n", err)
+        os.Exit(1)
+    }
 ```
 
 Now the manager is ready to work with him, for example:
@@ -59,10 +60,16 @@ type EntityManager interface {
 	Remove(i interface{}) (GoedbResult, error)
 	First(i interface{}, params string) error
 	Find(i interface{}, params string) error
+	TxBegin() (*sql.Tx, error)
 }
 ```
 
+# What is currently supported:
 
+- For simple entities: All
+- For composed entities: All
+
+Polymorphism is not supported
 
 # License
 
