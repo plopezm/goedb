@@ -107,15 +107,40 @@ func (sqld *GoedbSQLDriver) Remove(i interface{})(GoedbResult, error){
 	return goedbres, err
 }
 
-func (sqld *GoedbSQLDriver) First(i interface{}, where string) (error){
-	model,err := sqld.Model(i)
+
+func generateSQLQuery(model metadata.GoedbTable) (query string){
+	from := " FROM "+model.Name+","
+	query = "SELECT "
+
+	for _, column := range model.Columns {
+
+		if column.ComplexColumn == nil {
+			query += model.Name+"."+column.Title + ","
+			continue
+		}
+
+		from += column.ComplexColumn.ReferencedStructName+ ","
+		for _, columnName := range column.ComplexColumn.ReferencedStructAttrNames {
+			query += column.ComplexColumn.ReferencedStructName+"."+columnName + ","
+		}
+
+	}
+	//Removing the last ','
+	query = query[:len(query)-1] + from[:len(from)-1] + " WHERE "
+
+	return query
+}
+
+func (sqld *GoedbSQLDriver) First(instance interface{}, where string) (error){
+	model,err := sqld.Model(instance)
 	if err != nil {
 		return err
 	}
 
-	sql := "SELECT * FROM " + model.Name + " WHERE "
+	//sql := "SELECT * FROM " + model.Name + " WHERE "
+	sql := generateSQLQuery(model)
 	if where == "" {
-		pkc, pkv, err := getPKs(model, i)
+		pkc, pkv, err := getPKs(model, instance)
 		if err != nil {
 			return errors.New("Error getting primary key")
 		}
@@ -123,20 +148,20 @@ func (sqld *GoedbSQLDriver) First(i interface{}, where string) (error){
 	}else{
 		sql += where
 	}
-
+	println("[First method]: QUERY: "+sql)
 	rows, err := sqld.db.Query(sql)
 	if err != nil{
 		return err
 	}
 	defer rows.Close()
 
-	valuePtrs := structToSliceOfFieldAddress(i)
+	instanceValuesAddresses := metadata.StructToSliceOfAddresses(instance)
 
 	if !rows.Next() {
 		return errors.New("Record not found")
 	}
 
-	rows.Scan(valuePtrs...)
+	rows.Scan(instanceValuesAddresses...)
 	return nil
 }
 
@@ -172,7 +197,7 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string) er
 	for {
 		entityPtr := reflect.New(entityType)
 
-		entityFieldsAsSlice := structToSliceOfFieldAddress(entityPtr)
+		entityFieldsAsSlice := metadata.StructToSliceOfAddresses(entityPtr)
 		rows.Scan(entityFieldsAsSlice...)
 
 		slice.Set(reflect.Append(slice, entityPtr.Elem()))
@@ -206,17 +231,15 @@ func getSQLColumnModel(value metadata.GoedbColumn) (string, string, string, erro
 	column := value.Title
 
 	switch value.ColumnType {
-	case "char":
-		column += " CHARACTER"
-	case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint":
+	case  reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int,  reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint:
 		column += " INTEGER"
-	case "int64", "uint64":
+	case reflect.Int64, reflect.Uint64:
 		column += " BIGINT"
-	case "float32", "float64":
+	case reflect.Float32, reflect.Float64:
 		column += " FLOAT"
-	case "bool":
+	case reflect.Bool:
 		column += " BOOLEAN"
-	case "string":
+	case reflect.String:
 		column += " VARCHAR"
 	default:
 		return "","","",errors.New("Type unknown")
@@ -277,50 +300,23 @@ func getPKs(gt metadata.GoedbTable, obj interface{}) (string, string, error){
 		v := val.Field(i)
 		if gt.Columns[i].PrimaryKey {
 			switch gt.Columns[i].ColumnType {
-			case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint", "int64", "uint64":
+			case  reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
 				return gt.Columns[i].Title, strconv.FormatInt(v.Int(), 10), nil
-			case "float32", "float64":
+			case reflect.Float32, reflect.Float64:
 				return gt.Columns[i].Title, strconv.FormatFloat(v.Float(), 'f', 6, 64), nil
-			case "bool":
+			case reflect.Bool:
 				if v.Bool() {
 					return gt.Columns[i].Title, "1", nil
 				}else{
 					return gt.Columns[i].Title, "0", nil
 				}
-			case "string","char":
+			case reflect.String:
 				return gt.Columns[i].Title, "'"+v.String()+"'", nil
 			}
 		}
 	}
 
 	return "", "", errors.New("No PK found")
-}
-
-/*
-	Returns a slice with the addresses of each struct field,
-	so any modification on the slide will modify the source struct fields
- */
-func structToSliceOfFieldAddress(structPtr interface{}) []interface{} {
-
-	var fieldArr reflect.Value
-	if _, ok  := structPtr.(reflect.Value); ok{
-		fieldArr = structPtr.(reflect.Value)
-	}else{
-		fieldArr = reflect.ValueOf(structPtr).Elem()
-	}
-
-	if fieldArr.Kind() == reflect.Ptr{
-		fieldArr = fieldArr.Elem()
-	}
-
-	fieldAddrArr := make([]interface{}, fieldArr.NumField())
-
-	for i := 0; i < fieldArr.NumField(); i++ {
-		f := fieldArr.Field(i)
-		fieldAddrArr[i] = f.Addr().Interface()
-	}
-
-	return fieldAddrArr
 }
 
 /*
@@ -335,9 +331,9 @@ func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (s
 
 	for i:=0;i<len(metatable.Columns);i++ {
 		var value reflect.Value
-		if metatable.Columns[i].IsComplexType {
+		if metatable.Columns[i].ComplexColumn != nil {
 			var err error
-			value, err = metadata.GetForeignKeyItsPrimaryKeyValue(instanceType, intanceValue, i)
+			_, value, err =  metadata.GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)
 			if err != nil {
 				return "", "", err
 			}
@@ -346,17 +342,17 @@ func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (s
 		}
 
 		switch metatable.Columns[i].ColumnType {
-		case  "int8", "int16", "int32", "int",  "uint8", "uint16", "uint32", "uint", "int64", "uint64":
+		case  reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
 			strValues += strconv.FormatInt(value.Int(), 10)+","
-		case "float32", "float64":
+		case reflect.Float32, reflect.Float64:
 			strValues += strconv.FormatFloat(value.Float(), 'f', 6, 64)+","
-		case "bool":
+		case reflect.Bool:
 			if value.Bool() {
 				strValues += "1,"
 			}else{
 				strValues += "0,"
 			}
-		case "string","char":
+		case reflect.String:
 			strValues += "'"+ value.String()+"',"
 		}
 		strCols += metatable.Columns[i].Title + ","
