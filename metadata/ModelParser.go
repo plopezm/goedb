@@ -152,6 +152,10 @@ func ParseModel(entity interface{}) (GoedbTable){
 func getSubStructAddresses(slice *[]interface{}, value reflect.Value){
 	for j := 0; j < value.NumField(); j++ {
 		subField := value.Field(j)
+		if subField.Kind() == reflect.Struct {
+			getSubStructAddresses(slice, subField)
+			continue
+		}
 		*slice = append(*slice, subField.Addr().Interface())
 	}
 }
