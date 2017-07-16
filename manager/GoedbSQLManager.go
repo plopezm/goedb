@@ -230,6 +230,9 @@ func (sqld *GoedbSQLDriver) DropTable(i interface{}) error{
 	return nil
 }
 
+func (sqld *GoedbSQLDriver)TxBegin() (*sql.Tx, error){
+	return sqld.db.Begin();
+}
 
 /* ======================================
 	    Support functions

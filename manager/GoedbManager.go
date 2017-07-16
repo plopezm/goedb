@@ -2,6 +2,7 @@ package manager
 
 import (
 	"goedb/metadata"
+	"database/sql"
 )
 
 type GoedbResult struct {
@@ -18,4 +19,5 @@ type EntityManager interface {
 	Remove(i interface{}) (GoedbResult, error)
 	First(i interface{}, params string) error
 	Find(i interface{}, params string) error
+	TxBegin() (*sql.Tx, error)
 }
