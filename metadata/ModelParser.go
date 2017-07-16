@@ -13,9 +13,10 @@ func init(){
 }
 
 type GoedbTable struct{
-	Name    string
-	Columns []GoedbColumn
-	Model  	reflect.Type		`json:"-"`
+	Name    		string
+	Columns 		[]GoedbColumn
+	PrimaryKeyName	string				`json:"-"`
+	PrimaryKeyType	reflect.Kind		`json:"-"`
 }
 
 type GoedbColumn struct{
@@ -106,14 +107,6 @@ func processColumnType(column *GoedbColumn, columnType reflect.Type, columnValue
 
 	column.ColumnType = primaryKeyType.Kind()
 	column.IsComplex = true
-	//column.ComplexColumn = new(GoedbComplexColumn)
-	//column.ComplexColumn.MappedFKValue = primaryKeyValue
-	//column.ComplexColumn.ReferencedStructName = columnType.Name()
-	//column.ComplexColumn.ReferencedStructAttrNames = make([]string, columnType.NumField())
-	//for i:=0;i < columnType.NumField();i++{
-	//	column.ComplexColumn.ReferencedStructAttrNames[i] = columnType.Field(i).Name
-	//}
-
 	return nil
 }
 
@@ -136,6 +129,8 @@ func ParseModel(entity interface{}) (GoedbTable){
 				switch val {
 				case "pk":
 					tablecol.PrimaryKey = true
+					table.PrimaryKeyName = tablecol.Title
+					table.PrimaryKeyType = tablecol.ColumnType
 				case "autoincrement":
 					tablecol.AutoIncrement = true
 				case "unique":

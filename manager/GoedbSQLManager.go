@@ -105,7 +105,7 @@ func (sqld *GoedbSQLDriver) Remove(i interface{})(GoedbResult, error){
 }
 
 
-func referenceSQLEntity(from *string, query *string, referencedTable metadata.GoedbTable){
+func referenceSQLEntity(from *string, query *string, constraints *string, referencedTable metadata.GoedbTable){
 	*from += referencedTable.Name+","
 	for _, referencedColumn := range referencedTable.Columns{
 
@@ -113,29 +113,28 @@ func referenceSQLEntity(from *string, query *string, referencedTable metadata.Go
 			*query += referencedTable.Name+"."+referencedColumn.Title + ","
 			continue
 		}
-		referenceSQLEntity(from, query, metadata.Models[referencedColumn.ColumnTypeName])
+		*constraints += " AND " + referencedTable.Name+"."+referencedColumn.Title + " = " + metadata.Models[referencedColumn.ColumnTypeName].Name+"."+metadata.Models[referencedColumn.ColumnTypeName].PrimaryKeyName
+		referenceSQLEntity(from, query, constraints, metadata.Models[referencedColumn.ColumnTypeName])
 	}
 }
 
-func generateSQLQuery(model metadata.GoedbTable) (query string){
-	from := " FROM "+model.Name+","
+func generateSQLQuery(model metadata.GoedbTable) (query string, constraints string){
 	query = "SELECT "
+	from := " FROM "+model.Name+","
+	constraints = ""
 
 	for _, column := range model.Columns {
-
 		if !column.IsComplex {
-
 			query += model.Name+"."+column.Title + ","
 			continue
 		}
 		referencedTable := metadata.Models[column.ColumnTypeName]
-		referenceSQLEntity(&from, &query, referencedTable)
-
+		constraints += model.Name+"."+column.Title + " = " + referencedTable.Name+"."+referencedTable.PrimaryKeyName
+		referenceSQLEntity(&from, &query, &constraints, referencedTable)
 	}
 	//Removing the last ','
 	query = query[:len(query)-1] + from[:len(from)-1] + " WHERE "
-
-	return query
+	return query, constraints
 }
 
 func (sqld *GoedbSQLDriver) First(instance interface{}, where string) (error){
@@ -143,7 +142,7 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string) (error){
 	if err != nil {
 		return err
 	}
-	sql := generateSQLQuery(model)
+	sql, constraints := generateSQLQuery(model)
 	if where == "" {
 		pkc, pkv, err := getPKs(model, instance)
 		if err != nil {
@@ -153,6 +152,9 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string) (error){
 	}else{
 		sql += where
 	}
+
+	sql += " AND " + constraints
+
 	println("[First method]: QUERY: "+sql)
 	rows, err := sqld.db.Query(sql)
 	if err != nil{
