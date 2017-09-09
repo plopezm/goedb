@@ -3,8 +3,8 @@ package goedb
 import (
 	"errors"
 	"fmt"
-	"goedb/config"
-	"goedb/manager"
+	"github.com/plopezm/goedb/config"
+	"github.com/plopezm/goedb/manager"
 	"os"
 )
 

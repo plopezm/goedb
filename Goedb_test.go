@@ -2,7 +2,7 @@ package goedb
 
 import (
 	_ "github.com/mattn/go-sqlite3"
-	"goedb/manager"
+	"github.com/plopezm/goedb/manager"
 	"testing"
 )
 
@@ -10,7 +10,7 @@ type TestUser struct {
 	Email    string `goedb:"pk"`
 	Password string
 	Role     string
-	DNI      int `goedb:"unique"`
+	DNI      int 	`goedb:"unique"`
 	Admin    bool
 }
 

@@ -5,7 +5,8 @@ import (
 	"reflect"
 	"errors"
 	"strconv"
-	"goedb/metadata"
+	"github.com/plopezm/goedb/metadata"
+	"fmt"
 )
 
 type GoedbSQLDriver struct{
@@ -45,6 +46,7 @@ func (sqld *GoedbSQLDriver) Migrate(i interface{}) (error){
 	table := metadata.ParseModel(i)
 	metadata.Models[table.Name] = table
 	sqltab := getSQLTableModel(table)
+	fmt.Println(sqltab)
 	_, err := sqld.db.Exec(sqltab)
 	return err
 }
@@ -70,6 +72,9 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{})(GoedbResult, error){
 		return GoedbResult{}, err
 	}
 	sql := "INSERT INTO "+model.Name +" ("+columns+") values("+values+")"
+
+	fmt.Println(sql)
+
 	result, err = sqld.db.Exec(sql)
 	if err != nil {
 		return goedbres, err
@@ -147,7 +152,7 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string) (error){
 		if err != nil {
 			return errors.New("Error getting primary key")
 		}
-		sql += " WHERE "+pkc + "=" + pkv
+		sql += " WHERE "+model.Name+"."+pkc + "=" + pkv
 	}else{
 		sql += " WHERE "+where
 	}
@@ -262,11 +267,9 @@ func getSQLColumnModel(value metadata.GoedbColumn) (string, string, string, erro
 		column += " UNIQUE"
 	}
 
-	if value.AutoIncrement {
-		column += " AUTOINCREMENT"
-	}
-
-	if value.PrimaryKey {
+	if value.PrimaryKey && value.AutoIncrement{
+		column += " PRIMARY KEY AUTOINCREMENT"
+	} else if value.PrimaryKey {
 		pksFound += value.Title+","
 	}
 
@@ -274,7 +277,6 @@ func getSQLColumnModel(value metadata.GoedbColumn) (string, string, string, erro
 		constraints += ", FOREIGN KEY ("+value.Title +") REFERENCES "+value.ForeignKeyReference +" ON DELETE CASCADE"
 	}
 	column += ","
-
 	return column, pksFound, constraints, nil
 }
 
@@ -344,6 +346,11 @@ func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (s
 
 	for i:=0;i<len(metatable.Columns);i++ {
 		var value reflect.Value
+
+		if metatable.Columns[i].AutoIncrement {
+			continue
+		}
+
 		if metatable.Columns[i].IsComplex {
 			var err error
 			_, value, err =  metadata.GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)

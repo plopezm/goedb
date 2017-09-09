@@ -1,7 +1,7 @@
 package manager
 
 import (
-	"goedb/metadata"
+	"github.com/plopezm/goedb/metadata"
 	"database/sql"
 )
 
