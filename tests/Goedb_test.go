@@ -316,7 +316,7 @@ func TestDB_Remove(t *testing.T) {
 		Email: "Plm2",
 	}
 
-	rs, err := em.Remove(newUser)
+	rs, err := em.Remove(newUser, "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -337,7 +337,7 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 		Email: "Plm2421233",
 	}
 
-	rs, err := em.Remove(newUser)
+	rs, err := em.Remove(newUser, "")
 
 	if rs.NumRecordsAffected != 0 {
 		t.Error("Remove must returns an error because the record does not exist")
@@ -356,7 +356,7 @@ func TestDB_Remove_Relation(t *testing.T) {
 		Cif:   "asd2",
 	}
 
-	_, err = em.Remove(newUC)
+	_, err = em.Remove(newUC, "")
 	if err != nil {
 		t.Error(err)
 	}

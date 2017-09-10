@@ -10,7 +10,7 @@ import (
 )
 
 type TestTroop struct {
-	Id		int		`goedb:"pk,autoincrement"`
+	Id		int			`goedb:"pk,autoincrement"`
 	Name	string		`goedb:"unique"`
 }
 
@@ -75,7 +75,7 @@ func Test_Goedb_Insert(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func Test_Goedb_First_By_Id(t *testing.T){
+func Test_Goedb_First_By_PrimaryKey(t *testing.T){
 	soldier1 := &TestSoldier{
 		Id: 1,
 	}
@@ -138,4 +138,39 @@ func Test_Find_All_Soldiers(t *testing.T){
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 5, len(foundSoldiers))
+}
+
+func Test_Find_One_Soldier(t *testing.T){
+	foundSoldiers := make([]TestSoldier, 0)
+	err := em.Find(&foundSoldiers, "TestSoldier.Id = :soldier_id", sql.Named("soldier_id", 3))
+	assert.Nil(t, err)
+	assert.NotNil(t, foundSoldiers)
+	assert.Equal(t, 1, len(foundSoldiers))
+}
+
+func Test_Delete_Soldier_By_PrimaryKey(t *testing.T){
+	soldier1 := &TestSoldier{
+		Id: 3,
+	}
+	result, err := em.Remove(soldier1, "")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1),result.NumRecordsAffected)
+}
+
+func Test_Delete_Soldier_By_OtherField(t *testing.T){
+	soldier1 := &TestSoldier{}
+	result, err := em.Remove(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Bryan"))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1),result.NumRecordsAffected)
+}
+
+func Test_DropTable(t *testing.T) {
+	err := em.DropTable(&TestTroop{})
+	assert.Nil(t, err)
+	err = em.DropTable(&TestSoldier{})
+	assert.Nil(t, err)
+	_, err = em.Model(&TestTroop{})
+	assert.NotNil(t, err)
+	_, err = em.Model(&TestSoldier{})
+	assert.NotNil(t, err)
 }

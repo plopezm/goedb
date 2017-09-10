@@ -80,7 +80,7 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{})(GoedbResult, error){
 	return goedbres, nil
 }
 
-func (sqld *GoedbSQLDriver) Remove(i interface{})(GoedbResult, error){
+func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params ...interface{})(GoedbResult, error){
 	var result sql.Result
 	var goedbres GoedbResult
 
@@ -89,13 +89,24 @@ func (sqld *GoedbSQLDriver) Remove(i interface{})(GoedbResult, error){
 		return goedbres, err
 	}
 
-	pkc, pkv, err := getPKs(model, i)
+	sql := "DELETE FROM "+model.Name +" WHERE "
+	if where == "" {
+		pkc, pkv, err := getPKs(model, i)
+		if err != nil {
+			return goedbres, err
+		}
+		sql += pkc+ "=" + pkv
+	}else{
+		sql += where
+	}
+
+	stmt, err := sqld.db.Prepare(sql)
 	if err != nil {
 		return goedbres, err
 	}
+	defer stmt.Close()
 
-	sql := "DELETE FROM "+model.Name +" WHERE "+pkc+ "=" + pkv
-	result, err = sqld.db.Exec(sql)
+	result, err = stmt.Exec(params...)
 	if err != nil {
 		return goedbres, err
 	}
