@@ -29,7 +29,7 @@ func init(){
 	}
 }
 
-func TestD_ComplexStructs_Migrate(t *testing.T) {
+func Test_Goedb_Migrate(t *testing.T) {
 	err := em.Migrate(&TestSoldier{})
 	if err != nil {
 		t.Error(err)
@@ -41,7 +41,7 @@ func TestD_ComplexStructs_Migrate(t *testing.T) {
 	}
 }
 
-func TestDB_Complex_Model(t *testing.T) {
+func Test_Goedb_Model(t *testing.T) {
 	soldier1, err := em.Model(&TestSoldier{})
 	assert.Nil(t, err)
 	assert.Equal(t, "TestSoldier", soldier1.Name)
@@ -51,7 +51,7 @@ func TestDB_Complex_Model(t *testing.T) {
 	assert.Equal(t, "TestTroop", troop1.Name)
 }
 
-func TestDB_Complex_Insert(t *testing.T) {
+func Test_Goedb_Insert(t *testing.T) {
 	troop1 := &TestTroop{
 		Name: "TheBestTeam",
 	}
@@ -68,4 +68,30 @@ func TestDB_Complex_Insert(t *testing.T) {
 
 	_, err = em.Insert(soldier1)
 	assert.Nil(t, err)
+
+	soldier1.Troop.Id = 2
+	_, err = em.Insert(soldier1)
+	assert.NotNil(t, err)
+}
+
+func Test_Goedb_First_By_Id(t *testing.T){
+	soldier1 := &TestSoldier{
+		Id: 1,
+	}
+
+	err := em.First(soldier1, "")
+	assert.Nil(t, err)
+	assert.Equal(t, "Ryan", soldier1.Name)
+	assert.Equal(t, 1, soldier1.Troop.Id)
+}
+
+func Test_Goedb_First_By_Name(t *testing.T){
+	soldier1 := &TestSoldier{
+		Name: "Ryan",
+	}
+
+	err := em.First(soldier1, "TestSoldier.Name='Ryan'")
+	assert.Nil(t, err)
+	assert.Equal(t, 1, soldier1.Id)
+	assert.Equal(t, 1, soldier1.Troop.Id)
 }
