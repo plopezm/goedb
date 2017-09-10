@@ -1,9 +1,10 @@
-package goedb
+package tests
 
 import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/plopezm/goedb/manager"
 	"testing"
+	"github.com/plopezm/goedb"
 )
 
 type TestUser struct {
@@ -30,20 +31,23 @@ type OtherStruct struct {
 	Other string
 }
 
+func init(){
+	var err error
+	em, err = goedb.GetEntityManager("testSQLite3")
+	if err != nil {
+		panic("Persistence unit not defined in persistence.json")
+	}
+}
+
 func TestOpen(t *testing.T) {
-	_, err := GetEntityManager("testSQLite3")
+	_, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_Migrate(t *testing.T) {
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
-	err = em.Migrate(&TestUser{})
+	err := em.Migrate(&TestUser{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,42 +64,25 @@ func TestDB_Migrate(t *testing.T) {
 }
 
 func TestDB_Model(t *testing.T) {
-	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
-	user, err := em.Model(&TestUser{})
+	user, _ := em.Model(&TestUser{})
 	if user.Name != "TestUser" || len(user.Columns) == 0 {
 		t.Error("Error getting db model")
 	}
 
-	company, err := em.Model(&TestCompany{})
+	company, _ := em.Model(&TestCompany{})
 	if company.Name != "TestCompany" || len(company.Columns) == 0 {
 		t.Error("Error getting db model")
 	}
 }
 
 func TestDB_Model_Not_Found(t *testing.T) {
-	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
-	_, err = em.Model(&OtherStruct{})
+	_, err := em.Model(&OtherStruct{})
 	if err == nil {
 		t.Error("The result must has a error because the struct was not created")
 	}
 }
 
 func TestDB_Insert(t *testing.T) {
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
 	newUser1 := &TestUser{
 		Email:    "Plm",
 		Password: "asd",
@@ -120,7 +107,7 @@ func TestDB_Insert(t *testing.T) {
 		Admin:    false,
 	}
 
-	_, err = em.Insert(newUser1)
+	_, err := em.Insert(newUser1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -137,12 +124,6 @@ func TestDB_Insert(t *testing.T) {
 }
 
 func TestDB_Insert_with_FKs(t *testing.T) {
-	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
 	newComp1 := &TestCompany{
 		UserEmail: "Plm",
 		Name:      "asd",
@@ -155,7 +136,7 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 		Cif:       "asd2",
 	}
 
-	_, err = em.Insert(newComp1)
+	_, err := em.Insert(newComp1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -167,13 +148,6 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 }
 
 func TestDB_Insert_Constraints(t *testing.T) {
-
-	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
 	newComp1 := &TestCompany{
 		UserEmail: "Plm",
 		Name:      "asd",
@@ -192,7 +166,7 @@ func TestDB_Insert_Constraints(t *testing.T) {
 		Cif:       "asd4",
 	}
 
-	_, err = em.Insert(newComp1)
+	_, err := em.Insert(newComp1)
 	if err == nil {
 		t.Error("The record already exists")
 	}
@@ -209,19 +183,12 @@ func TestDB_Insert_Constraints(t *testing.T) {
 }
 
 func TestDB_Insert_Adding_Relations(t *testing.T) {
-
-	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
 	newUC := &TestUserCompany{
 		Email: "Plm",
 		Cif:   "asd2",
 	}
 
-	_, err = em.Insert(newUC)
+	_, err := em.Insert(newUC)
 	if err != nil {
 		t.Error(err)
 	}
@@ -249,7 +216,7 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 
 func TestDB_First(t *testing.T) {
 	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
+	em, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -267,7 +234,7 @@ func TestDB_First(t *testing.T) {
 
 func TestDB_First_Not_Found(t *testing.T) {
 	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
+	em, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -290,7 +257,7 @@ func TestDB_First_Not_Found(t *testing.T) {
 
 func TestDB_Find(t *testing.T) {
 	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
+	em, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -325,7 +292,7 @@ func TestDB_Find(t *testing.T) {
 
 func TestDB_Find_Not_Found(t *testing.T) {
 	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
+	em, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -340,7 +307,7 @@ func TestDB_Find_Not_Found(t *testing.T) {
 
 func TestDB_Remove(t *testing.T) {
 	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
+	em, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -361,7 +328,7 @@ func TestDB_Remove(t *testing.T) {
 
 func TestDB_Remove_Not_Found(t *testing.T) {
 	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
+	em, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -379,7 +346,7 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 
 func TestDB_Remove_Relation(t *testing.T) {
 	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
+	em, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -397,7 +364,7 @@ func TestDB_Remove_Relation(t *testing.T) {
 
 func TestDB_DropTable(t *testing.T) {
 	var em manager.EntityManager
-	em, err := GetEntityManager("testSQLite3")
+	em, err := goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}

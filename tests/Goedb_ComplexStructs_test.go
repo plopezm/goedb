@@ -1,10 +1,11 @@
-package goedb
+package tests
 
 import (
 	_ "github.com/mattn/go-sqlite3"
 	"testing"
 	"github.com/plopezm/goedb/manager"
 	"github.com/stretchr/testify/assert"
+	"github.com/plopezm/goedb"
 )
 
 type TestTroop struct {
@@ -22,19 +23,14 @@ var em manager.EntityManager
 
 func init(){
 	var err error
-	em, err = GetEntityManager("testSQLite3")
+	em, err = goedb.GetEntityManager("testSQLite3")
 	if err != nil {
 		panic("Persistence unit not defined in persistence.json")
 	}
 }
 
 func TestD_ComplexStructs_Migrate(t *testing.T) {
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
-	err = em.Migrate(&TestSoldier{})
+	err := em.Migrate(&TestSoldier{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,11 +52,6 @@ func TestDB_Complex_Model(t *testing.T) {
 }
 
 func TestDB_Complex_Insert(t *testing.T) {
-	em, err := GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
 	troop1 := &TestTroop{
 		Name: "TheBestTeam",
 	}
@@ -70,7 +61,7 @@ func TestDB_Complex_Insert(t *testing.T) {
 		Troop: *troop1,
 	}
 
-	_, err = em.Insert(troop1)
+	_, err := em.Insert(troop1)
 	assert.Nil(t, err)
 
 	soldier1.Troop.Id = 1
