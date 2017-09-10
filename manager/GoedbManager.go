@@ -18,6 +18,6 @@ type EntityManager interface {
 	Insert(i interface{}) (GoedbResult, error)
 	Remove(i interface{}) (GoedbResult, error)
 	First(i interface{}, where string, params ...interface{}) error
-	Find(i interface{}, params string) error
+	Find(i interface{}, where string, params ...interface{}) error
 	TxBegin() (*sql.Tx, error)
 }

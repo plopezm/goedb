@@ -96,3 +96,46 @@ func Test_Goedb_First_By_Name(t *testing.T){
 	assert.Equal(t, 1, soldier1.Id)
 	assert.Equal(t, 1, soldier1.Troop.Id)
 }
+
+func weapon_call() (*TestSoldier, *TestSoldier, *TestSoldier, *TestSoldier){
+	soldier2 := &TestSoldier{
+		Name:"Bryan",
+		Troop: TestTroop{
+			Id:1,
+		},
+	}
+	soldier3 := &TestSoldier{
+		Name:"Steve",
+		Troop: TestTroop{
+			Id:1,
+		},
+	}
+	soldier4 := &TestSoldier{
+		Name:"Eduard",
+		Troop: TestTroop{
+			Id:1,
+		},
+	}
+	soldier5 := &TestSoldier{
+		Name:"Chuck",
+		Troop: TestTroop{
+			Id:1,
+		},
+	}
+	return soldier2,soldier3,soldier4,soldier5
+}
+
+func Test_Find_All_Soldiers(t *testing.T){
+	s1,s2,s3,s4 := weapon_call()
+	em.Insert(s1)
+	em.Insert(s2)
+	em.Insert(s3)
+	em.Insert(s4)
+
+	foundSoldiers := make([]TestSoldier, 0)
+
+	err := em.Find(&foundSoldiers, "TestTroop.Id = :troop_id", sql.Named("troop_id", 1))
+	assert.Nil(t, err)
+	assert.NotNil(t, foundSoldiers)
+	assert.Equal(t, 5, len(foundSoldiers))
+}
