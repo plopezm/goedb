@@ -14,6 +14,11 @@ The file persistence.json will be used to define the datasource used at certain 
           "name": "testSQLite3",
           "driver": "sqlite3",
           "url": "./test.db"
+        },
+        {
+          "name": "testSQLite3Test",
+          "driver": "sqlite3",
+          "url": ":memory:"
         }
       ]
     }
@@ -55,19 +60,19 @@ type EntityManager interface {
 	Close() error
 	Migrate(i interface{}) error
 	DropTable(i interface{}) error
-	Model(i interface{})(GoedbTable, error)
+	Model(i interface{})(metadata.GoedbTable, error)
 	Insert(i interface{}) (GoedbResult, error)
 	Remove(i interface{}) (GoedbResult, error)
-	First(i interface{}, params string) error
-	Find(i interface{}, params string) error
+	First(i interface{}, where string, params ...interface{}) error
+	Find(i interface{}, where string, params ...interface{}) error
 	TxBegin() (*sql.Tx, error)
 }
 ```
 
 # What is currently supported:
 
-- For simple entities: All
-- For composed entities: All
+- For simple entities: All -> Tests in tests/Goedb_test.go
+- For composed entities: All -> Tests in Goedb_ComplexStructs_test.go
 
 Polymorphism is not supported
 
