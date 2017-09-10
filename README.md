@@ -74,7 +74,13 @@ type EntityManager interface {
 - For simple entities: All -> Tests in tests/Goedb_test.go
 - For composed entities: All -> Tests in Goedb_ComplexStructs_test.go
 
-Polymorphism is not supported
+
+- Polymorphism is not supported
+- Named query supported in where clause. 
+```
+	err := em.First(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Ryan"))
+```
+
 
 # License
 
