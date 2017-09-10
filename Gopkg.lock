@@ -8,6 +8,18 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/gwenn/gosqlite"
+  packages = ["."]
+  revision = "eb1ee648415ab7ecb7551509ffacef71ff8a98c1"
+  version = "v1.7"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/gwenn/yacr"
+  packages = ["."]
+  revision = "7e83aeb0c27f6243b500812de9857c6448aef72b"
+
+[[projects]]
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
   revision = "ca5e3819723d8eeaf170ad510e7da1d6d2e94a08"
@@ -34,6 +46,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a85a821e98e22c3186bf91396fa7c5ef4d659e4122fd5a5b3ade6b7a9c2327c5"
+  inputs-digest = "a92c815655a6b0873a08d725cab53f4cb3f82df46bdd4aee5df0fe9bcb5c5f85"
   solver-name = "gps-cdcl"
   solver-version = 1

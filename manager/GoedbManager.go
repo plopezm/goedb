@@ -17,7 +17,7 @@ type EntityManager interface {
 	Model(i interface{})(metadata.GoedbTable, error)
 	Insert(i interface{}) (GoedbResult, error)
 	Remove(i interface{}) (GoedbResult, error)
-	First(i interface{}, params string) error
+	First(i interface{}, where string, params ...interface{}) error
 	Find(i interface{}, params string) error
 	TxBegin() (*sql.Tx, error)
 }

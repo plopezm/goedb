@@ -6,6 +6,7 @@ import (
 	"github.com/plopezm/goedb/manager"
 	"github.com/stretchr/testify/assert"
 	"github.com/plopezm/goedb"
+	"database/sql"
 )
 
 type TestTroop struct {
@@ -90,7 +91,7 @@ func Test_Goedb_First_By_Name(t *testing.T){
 		Name: "Ryan",
 	}
 
-	err := em.First(soldier1, "TestSoldier.Name='Ryan'")
+	err := em.First(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Ryan"))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, soldier1.Id)
 	assert.Equal(t, 1, soldier1.Troop.Id)
