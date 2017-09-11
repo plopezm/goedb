@@ -2,17 +2,17 @@ package manager
 
 import (
 	"database/sql"
-	"reflect"
 	"errors"
-	"strconv"
 	"github.com/plopezm/goedb/metadata"
+	"reflect"
+	"strconv"
 )
 
-type GoedbSQLDriver struct{
-	db     *sql.DB
+type GoedbSQLDriver struct {
+	db *sql.DB
 }
 
-func (sqld *GoedbSQLDriver) Open(driver string, params string) error{
+func (sqld *GoedbSQLDriver) Open(driver string, params string) error {
 	db, err := sql.Open(driver, params)
 	if err != nil {
 		return err
@@ -33,14 +33,14 @@ func (sqld *GoedbSQLDriver) Open(driver string, params string) error{
 
 }
 
-func (sqld *GoedbSQLDriver) Close() error{
+func (sqld *GoedbSQLDriver) Close() error {
 	if sqld.db == nil {
 		return errors.New("DB is closed")
 	}
 	return sqld.db.Close()
 }
 
-func (sqld *GoedbSQLDriver) Migrate(i interface{}) (error){
+func (sqld *GoedbSQLDriver) Migrate(i interface{}) error {
 	sqld.DropTable(i)
 	table := metadata.ParseModel(i)
 	metadata.Models[table.Name] = table
@@ -49,19 +49,19 @@ func (sqld *GoedbSQLDriver) Migrate(i interface{}) (error){
 	return err
 }
 
-func (sqld *GoedbSQLDriver) Model(i interface{}) (metadata.GoedbTable, error){
+func (sqld *GoedbSQLDriver) Model(i interface{}) (metadata.GoedbTable, error) {
 	var q metadata.GoedbTable
-	if q, ok := metadata.Models[metadata.GetType(i).Name()]; ok{
+	if q, ok := metadata.Models[metadata.GetType(i).Name()]; ok {
 		return q, nil
 	}
 	return q, errors.New("Model not found")
 }
 
-func (sqld *GoedbSQLDriver) Insert(instance interface{})(GoedbResult, error){
+func (sqld *GoedbSQLDriver) Insert(instance interface{}) (GoedbResult, error) {
 	var result sql.Result
 	var goedbres GoedbResult
 
-	model,err := sqld.Model(instance)
+	model, err := sqld.Model(instance)
 	if err != nil {
 		return goedbres, err
 	}
@@ -69,7 +69,7 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{})(GoedbResult, error){
 	if err != nil {
 		return GoedbResult{}, err
 	}
-	sql := "INSERT INTO "+model.Name +" ("+columns+") values("+values+")"
+	sql := "INSERT INTO " + model.Name + " (" + columns + ") values(" + values + ")"
 
 	result, err = sqld.db.Exec(sql)
 	if err != nil {
@@ -80,23 +80,23 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{})(GoedbResult, error){
 	return goedbres, nil
 }
 
-func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params ...interface{})(GoedbResult, error){
+func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params ...interface{}) (GoedbResult, error) {
 	var result sql.Result
 	var goedbres GoedbResult
 
-	model,err := sqld.Model(i)
+	model, err := sqld.Model(i)
 	if err != nil {
 		return goedbres, err
 	}
 
-	sql := "DELETE FROM "+model.Name +" WHERE "
+	sql := "DELETE FROM " + model.Name + " WHERE "
 	if where == "" {
 		pkc, pkv, err := getPKs(model, i)
 		if err != nil {
 			return goedbres, err
 		}
-		sql += pkc+ "=" + pkv
-	}else{
+		sql += pkc + "=" + pkv
+	} else {
 		sql += where
 	}
 
@@ -115,32 +115,31 @@ func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params ...interf
 	return goedbres, err
 }
 
-
-func referenceSQLEntity(from *string, query *string, constraints *string, referencedTable metadata.GoedbTable){
-	*from += referencedTable.Name+","
-	for _, referencedColumn := range referencedTable.Columns{
+func referenceSQLEntity(from *string, query *string, constraints *string, referencedTable metadata.GoedbTable) {
+	*from += referencedTable.Name + ","
+	for _, referencedColumn := range referencedTable.Columns {
 
 		if !referencedColumn.IsComplex {
-			*query += referencedTable.Name+"."+referencedColumn.Title + ","
+			*query += referencedTable.Name + "." + referencedColumn.Title + ","
 			continue
 		}
-		*constraints += " AND " + referencedTable.Name+"."+referencedColumn.Title + " = " + metadata.Models[referencedColumn.ColumnTypeName].Name+"."+metadata.Models[referencedColumn.ColumnTypeName].PrimaryKeyName
+		*constraints += " AND " + referencedTable.Name + "." + referencedColumn.Title + " = " + metadata.Models[referencedColumn.ColumnTypeName].Name + "." + metadata.Models[referencedColumn.ColumnTypeName].PrimaryKeyName
 		referenceSQLEntity(from, query, constraints, metadata.Models[referencedColumn.ColumnTypeName])
 	}
 }
 
-func generateSQLQuery(model metadata.GoedbTable) (query string, constraints string){
+func generateSQLQuery(model metadata.GoedbTable) (query string, constraints string) {
 	query = "SELECT "
-	from := " FROM "+model.Name+","
+	from := " FROM " + model.Name + ","
 	constraints = ""
 
 	for _, column := range model.Columns {
 		if !column.IsComplex {
-			query += model.Name+"."+column.Title + ","
+			query += model.Name + "." + column.Title + ","
 			continue
 		}
 		referencedTable := metadata.Models[column.ColumnTypeName]
-		constraints +=  " AND "+model.Name+"."+column.Title + " = " + referencedTable.Name+"."+referencedTable.PrimaryKeyName
+		constraints += " AND " + model.Name + "." + column.Title + " = " + referencedTable.Name + "." + referencedTable.PrimaryKeyName
 		referenceSQLEntity(&from, &query, &constraints, referencedTable)
 	}
 	//Removing the last ','
@@ -148,8 +147,8 @@ func generateSQLQuery(model metadata.GoedbTable) (query string, constraints stri
 	return query, constraints
 }
 
-func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params ...interface{}) (error){
-	model,err := sqld.Model(instance)
+func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params ...interface{}) error {
+	model, err := sqld.Model(instance)
 	if err != nil {
 		return err
 	}
@@ -159,16 +158,16 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params ...
 		if err != nil {
 			return errors.New("Error getting primary key")
 		}
-		sql += " WHERE "+model.Name+"."+pkc + "=" + pkv
-	}else{
-		sql += " WHERE "+where
+		sql += " WHERE " + model.Name + "." + pkc + "=" + pkv
+	} else {
+		sql += " WHERE " + where
 	}
 
 	//contraints are generated by relations between objects
 	sql += relationContraints
 
 	stmt, err := sqld.db.Prepare(sql)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	defer stmt.Close()
@@ -181,25 +180,25 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params ...
 	return err
 }
 
-func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, params ...interface{}) error{
-	model,err := sqld.Model(resultEntitySlice)
+func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, params ...interface{}) error {
+	model, err := sqld.Model(resultEntitySlice)
 	if err != nil {
 		return err
 	}
 	//SQL generated by entity
 	sql, relationContraints := generateSQLQuery(model)
 
-	if where != ""{
+	if where != "" {
 		//where clause
-		sql += " WHERE "+where
+		sql += " WHERE " + where
 		//contraints are generated by relations between objects
 		sql += relationContraints
-	} else if relationContraints != ""{
+	} else if relationContraints != "" {
 		sql += relationContraints
 	}
 
 	stmt, err := sqld.db.Prepare(sql)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	defer stmt.Close()
@@ -229,17 +228,19 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, pa
 
 		slice.Set(reflect.Append(slice, entityPtr.Elem()))
 
-		if !rows.Next() { break }
+		if !rows.Next() {
+			break
+		}
 	}
 
 	return nil
 }
 
-func (sqld *GoedbSQLDriver) DropTable(i interface{}) error{
+func (sqld *GoedbSQLDriver) DropTable(i interface{}) error {
 	typ := metadata.GetType(i)
 	name := typ.Name()
 
-	_, err := sqld.db.Exec("DROP TABLE "+name)
+	_, err := sqld.db.Exec("DROP TABLE " + name)
 	if err != nil {
 		return err
 	}
@@ -247,21 +248,21 @@ func (sqld *GoedbSQLDriver) DropTable(i interface{}) error{
 	return nil
 }
 
-func (sqld *GoedbSQLDriver)TxBegin() (*sql.Tx, error){
-	return sqld.db.Begin();
+func (sqld *GoedbSQLDriver) TxBegin() (*sql.Tx, error) {
+	return sqld.db.Begin()
 }
 
 /* ======================================
 	    Support functions
    ====================================== */
 
-func getSQLColumnModel(value metadata.GoedbColumn) (string, string, string, error){
+func getSQLColumnModel(value metadata.GoedbColumn) (string, string, string, error) {
 	var pksFound string
 	var constraints string
 	column := value.Title
 
 	switch value.ColumnType {
-	case  reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int,  reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint:
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint:
 		column += " INTEGER"
 	case reflect.Int64, reflect.Uint64:
 		column += " BIGINT"
@@ -272,27 +273,27 @@ func getSQLColumnModel(value metadata.GoedbColumn) (string, string, string, erro
 	case reflect.String:
 		column += " VARCHAR"
 	default:
-		return "","","",errors.New("Type unknown")
+		return "", "", "", errors.New("Type unknown")
 	}
 
 	if value.Unique {
 		column += " UNIQUE"
 	}
 
-	if value.PrimaryKey && value.AutoIncrement{
+	if value.PrimaryKey && value.AutoIncrement {
 		column += " PRIMARY KEY AUTOINCREMENT"
 	} else if value.PrimaryKey {
-		pksFound += value.Title+","
+		pksFound += value.Title + ","
 	}
 
 	if value.ForeignKey {
-		constraints += ", FOREIGN KEY ("+value.Title +") REFERENCES "+value.ForeignKeyReference +" ON DELETE CASCADE"
+		constraints += ", FOREIGN KEY (" + value.Title + ") REFERENCES " + value.ForeignKeyReference + " ON DELETE CASCADE"
 	}
 	column += ","
 	return column, pksFound, constraints, nil
 }
 
-func getSQLTableModel(table metadata.GoedbTable) (string){
+func getSQLTableModel(table metadata.GoedbTable) string {
 	columns := ""
 	pksFound := ""
 	constraints := ""
@@ -309,36 +310,36 @@ func getSQLTableModel(table metadata.GoedbTable) (string){
 
 	if len(pksFound) > 0 {
 		pksFound = pksFound[:len(pksFound)-1]
-		constraints += ", PRIMARY KEY ("+ pksFound +")"
+		constraints += ", PRIMARY KEY (" + pksFound + ")"
 	}
 
 	lastColumnIndex := len(columns)
-	return "CREATE TABLE "+table.Name +" (" +columns[:lastColumnIndex-1] + constraints+")"
+	return "CREATE TABLE " + table.Name + " (" + columns[:lastColumnIndex-1] + constraints + ")"
 }
 
-func getPKs(gt metadata.GoedbTable, obj interface{}) (string, string, error){
+func getPKs(gt metadata.GoedbTable, obj interface{}) (string, string, error) {
 	val := reflect.ValueOf(obj)
 
-	if val.Kind() == reflect.Ptr{
+	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 
-	for i:=0;i<len(gt.Columns);i++ {
+	for i := 0; i < len(gt.Columns); i++ {
 		v := val.Field(i)
 		if gt.Columns[i].PrimaryKey {
 			switch gt.Columns[i].ColumnType {
-			case  reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
+			case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
 				return gt.Columns[i].Title, strconv.FormatInt(v.Int(), 10), nil
 			case reflect.Float32, reflect.Float64:
 				return gt.Columns[i].Title, strconv.FormatFloat(v.Float(), 'f', 6, 64), nil
 			case reflect.Bool:
 				if v.Bool() {
 					return gt.Columns[i].Title, "1", nil
-				}else{
+				} else {
 					return gt.Columns[i].Title, "0", nil
 				}
 			case reflect.String:
-				return gt.Columns[i].Title, "'"+v.String()+"'", nil
+				return gt.Columns[i].Title, "'" + v.String() + "'", nil
 			}
 		}
 	}
@@ -348,15 +349,15 @@ func getPKs(gt metadata.GoedbTable, obj interface{}) (string, string, error){
 
 /*
 	Returns columns names and values for inserting values
- */
-func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (string, string, error){
+*/
+func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (string, string, error) {
 	strCols := ""
 	strValues := ""
 
 	instanceType := metadata.GetType(instance)
 	intanceValue := metadata.GetValue(instance)
 
-	for i:=0;i<len(metatable.Columns);i++ {
+	for i := 0; i < len(metatable.Columns); i++ {
 		var value reflect.Value
 
 		if metatable.Columns[i].AutoIncrement {
@@ -365,33 +366,30 @@ func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (s
 
 		if metatable.Columns[i].IsComplex {
 			var err error
-			_, value, err =  metadata.GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)
+			_, value, err = metadata.GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)
 			if err != nil {
 				return "", "", err
 			}
-		}else{
+		} else {
 			value = intanceValue.Field(i)
 		}
 
 		switch metatable.Columns[i].ColumnType {
-		case  reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
-			strValues += strconv.FormatInt(value.Int(), 10)+","
+		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
+			strValues += strconv.FormatInt(value.Int(), 10) + ","
 		case reflect.Float32, reflect.Float64:
-			strValues += strconv.FormatFloat(value.Float(), 'f', 6, 64)+","
+			strValues += strconv.FormatFloat(value.Float(), 'f', 6, 64) + ","
 		case reflect.Bool:
 			if value.Bool() {
 				strValues += "1,"
-			}else{
+			} else {
 				strValues += "0,"
 			}
 		case reflect.String:
-			strValues += "'"+ value.String()+"',"
+			strValues += "'" + value.String() + "',"
 		}
 		strCols += metatable.Columns[i].Title + ","
 	}
 
 	return strCols[:len(strCols)-1], strValues[:len(strValues)-1], nil
 }
-
-
-

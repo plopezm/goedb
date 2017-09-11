@@ -1,8 +1,8 @@
 package manager
 
 import (
-	"github.com/plopezm/goedb/metadata"
 	"database/sql"
+	"github.com/plopezm/goedb/metadata"
 )
 
 type GoedbResult struct {
@@ -14,7 +14,7 @@ type EntityManager interface {
 	Close() error
 	Migrate(i interface{}) error
 	DropTable(i interface{}) error
-	Model(i interface{})(metadata.GoedbTable, error)
+	Model(i interface{}) (metadata.GoedbTable, error)
 	Insert(i interface{}) (GoedbResult, error)
 	Remove(i interface{}, where string, params ...interface{}) (GoedbResult, error)
 	First(i interface{}, where string, params ...interface{}) error

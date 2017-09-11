@@ -1,28 +1,28 @@
 package tests
 
 import (
+	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"testing"
+	"github.com/plopezm/goedb"
 	"github.com/plopezm/goedb/manager"
 	"github.com/stretchr/testify/assert"
-	"github.com/plopezm/goedb"
-	"database/sql"
+	"testing"
 )
 
 type TestTroop struct {
-	Id		int			`goedb:"pk,autoincrement"`
-	Name	string		`goedb:"unique"`
+	Id   int    `goedb:"pk,autoincrement"`
+	Name string `goedb:"unique"`
 }
 
 type TestSoldier struct {
-	Id    	int 		`goedb:"pk,autoincrement"`
-	Name    string		`goedb:"unique"`
-	Troop	TestTroop	`goedb:"fk=TestTroop(Id)"`
+	Id    int       `goedb:"pk,autoincrement"`
+	Name  string    `goedb:"unique"`
+	Troop TestTroop `goedb:"fk=TestTroop(Id)"`
 }
 
 var em manager.EntityManager
 
-func init(){
+func init() {
 	var err error
 	em, err = goedb.GetEntityManager("testSQLite3")
 	if err != nil {
@@ -58,7 +58,7 @@ func Test_Goedb_Insert(t *testing.T) {
 	}
 
 	soldier1 := &TestSoldier{
-		Name: "Ryan",
+		Name:  "Ryan",
 		Troop: *troop1,
 	}
 
@@ -75,7 +75,7 @@ func Test_Goedb_Insert(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func Test_Goedb_First_By_PrimaryKey(t *testing.T){
+func Test_Goedb_First_By_PrimaryKey(t *testing.T) {
 	soldier1 := &TestSoldier{
 		Id: 1,
 	}
@@ -86,7 +86,7 @@ func Test_Goedb_First_By_PrimaryKey(t *testing.T){
 	assert.Equal(t, 1, soldier1.Troop.Id)
 }
 
-func Test_Goedb_First_By_Name(t *testing.T){
+func Test_Goedb_First_By_Name(t *testing.T) {
 	soldier1 := &TestSoldier{
 		Name: "Ryan",
 	}
@@ -97,36 +97,36 @@ func Test_Goedb_First_By_Name(t *testing.T){
 	assert.Equal(t, 1, soldier1.Troop.Id)
 }
 
-func weapon_call() (*TestSoldier, *TestSoldier, *TestSoldier, *TestSoldier){
+func weapon_call() (*TestSoldier, *TestSoldier, *TestSoldier, *TestSoldier) {
 	soldier2 := &TestSoldier{
-		Name:"Bryan",
+		Name: "Bryan",
 		Troop: TestTroop{
-			Id:1,
+			Id: 1,
 		},
 	}
 	soldier3 := &TestSoldier{
-		Name:"Steve",
+		Name: "Steve",
 		Troop: TestTroop{
-			Id:1,
+			Id: 1,
 		},
 	}
 	soldier4 := &TestSoldier{
-		Name:"Eduard",
+		Name: "Eduard",
 		Troop: TestTroop{
-			Id:1,
+			Id: 1,
 		},
 	}
 	soldier5 := &TestSoldier{
-		Name:"Chuck",
+		Name: "Chuck",
 		Troop: TestTroop{
-			Id:1,
+			Id: 1,
 		},
 	}
-	return soldier2,soldier3,soldier4,soldier5
+	return soldier2, soldier3, soldier4, soldier5
 }
 
-func Test_Find_All_Soldiers(t *testing.T){
-	s1,s2,s3,s4 := weapon_call()
+func Test_Find_All_Soldiers(t *testing.T) {
+	s1, s2, s3, s4 := weapon_call()
 	em.Insert(s1)
 	em.Insert(s2)
 	em.Insert(s3)
@@ -140,7 +140,7 @@ func Test_Find_All_Soldiers(t *testing.T){
 	assert.Equal(t, 5, len(foundSoldiers))
 }
 
-func Test_Find_One_Soldier(t *testing.T){
+func Test_Find_One_Soldier(t *testing.T) {
 	foundSoldiers := make([]TestSoldier, 0)
 	err := em.Find(&foundSoldiers, "TestSoldier.Id = :soldier_id", sql.Named("soldier_id", 3))
 	assert.Nil(t, err)
@@ -148,20 +148,20 @@ func Test_Find_One_Soldier(t *testing.T){
 	assert.Equal(t, 1, len(foundSoldiers))
 }
 
-func Test_Delete_Soldier_By_PrimaryKey(t *testing.T){
+func Test_Delete_Soldier_By_PrimaryKey(t *testing.T) {
 	soldier1 := &TestSoldier{
 		Id: 3,
 	}
 	result, err := em.Remove(soldier1, "")
 	assert.Nil(t, err)
-	assert.Equal(t, int64(1),result.NumRecordsAffected)
+	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }
 
-func Test_Delete_Soldier_By_OtherField(t *testing.T){
+func Test_Delete_Soldier_By_OtherField(t *testing.T) {
 	soldier1 := &TestSoldier{}
 	result, err := em.Remove(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Bryan"))
 	assert.Nil(t, err)
-	assert.Equal(t, int64(1),result.NumRecordsAffected)
+	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }
 
 func Test_DropTable(t *testing.T) {

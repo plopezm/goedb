@@ -2,16 +2,16 @@ package tests
 
 import (
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/plopezm/goedb"
 	"github.com/plopezm/goedb/manager"
 	"testing"
-	"github.com/plopezm/goedb"
 )
 
 type TestUser struct {
 	Email    string `goedb:"pk"`
 	Password string
 	Role     string
-	DNI      int 	`goedb:"unique"`
+	DNI      int `goedb:"unique"`
 	Admin    bool
 }
 
@@ -31,7 +31,7 @@ type OtherStruct struct {
 	Other string
 }
 
-func init(){
+func init() {
 	var err error
 	em, err = goedb.GetEntityManager("testSQLite3")
 	if err != nil {

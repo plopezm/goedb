@@ -1,68 +1,66 @@
 package metadata
 
 import (
+	"errors"
 	"reflect"
 	"strings"
-	"errors"
 )
 
 var Models map[string]GoedbTable
 
-func init(){
+func init() {
 	Models = make(map[string]GoedbTable)
 }
 
-type GoedbTable struct{
-	Name    		string
-	Columns 		[]GoedbColumn
-	PrimaryKeyName	string				`json:"-"`
-	PrimaryKeyType	reflect.Kind		`json:"-"`
+type GoedbTable struct {
+	Name           string
+	Columns        []GoedbColumn
+	PrimaryKeyName string       `json:"-"`
+	PrimaryKeyType reflect.Kind `json:"-"`
 }
 
-type GoedbColumn struct{
+type GoedbColumn struct {
 	Title               string
 	ColumnType          reflect.Kind
-	ColumnTypeName		string
+	ColumnTypeName      string
 	PrimaryKey          bool
 	Unique              bool
 	ForeignKey          bool
 	ForeignKeyReference string
 	AutoIncrement       bool
-	IsComplex			bool
+	IsComplex           bool
 }
 
 type GoedbComplexColumn struct {
-	MappedFKValue				reflect.Value
+	MappedFKValue reflect.Value
 }
 
-func GetType(i interface{}) (reflect.Type){
+func GetType(i interface{}) reflect.Type {
 	typ := reflect.TypeOf(i)
 
 	// if a pointer to a struct is passed, get the type of the dereferenced object
-	if typ.Kind() == reflect.Ptr{
+	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
 
-	if typ.Kind() == reflect.Slice{
+	if typ.Kind() == reflect.Slice {
 		typ = typ.Elem()
 	}
 
 	return typ
 }
 
-
-func GetValue(i interface{}) (reflect.Value){
+func GetValue(i interface{}) reflect.Value {
 	val := reflect.ValueOf(i)
 
-	if val.Kind() == reflect.Ptr{
+	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 
 	return val
 }
 
-
-func tagAttributeExists(tag reflect.StructTag, attribute string) bool{
+func tagAttributeExists(tag reflect.StructTag, attribute string) bool {
 
 	if tag, ok := tag.Lookup("goedb"); ok {
 		params := strings.Split(tag, ",")
@@ -75,25 +73,25 @@ func tagAttributeExists(tag reflect.StructTag, attribute string) bool{
 	return false
 }
 
-func GetGoedbTagTypeAndValue(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string) (reflect.Type, reflect.Value, error){
-	for i:=0;i< instanceType.NumField();i++ {
+func GetGoedbTagTypeAndValue(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string) (reflect.Type, reflect.Value, error) {
+	for i := 0; i < instanceType.NumField(); i++ {
 		field := instanceType.Field(i)
 		value := instanceValue.Field(i)
-		if tagAttributeExists(field.Tag, goedbTag){
+		if tagAttributeExists(field.Tag, goedbTag) {
 			return field.Type, value, nil
 		}
 	}
-	return nil, reflect.Value{}, errors.New(" Goedb:"+goedbTag+" not found")
+	return nil, reflect.Value{}, errors.New(" Goedb:" + goedbTag + " not found")
 }
 
-func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, fieldId int) (reflect.Type, reflect.Value, error){
+func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, fieldId int) (reflect.Type, reflect.Value, error) {
 	fieldType := instanceType.Field(fieldId).Type
 	fieldValue := instanceValue.Field(fieldId)
 
 	return GetGoedbTagTypeAndValue(fieldType, fieldValue, goedbTag)
 }
 
-func processColumnType(column *GoedbColumn, columnType reflect.Type, columnValue reflect.Value) error{
+func processColumnType(column *GoedbColumn, columnType reflect.Type, columnValue reflect.Value) error {
 
 	column.ColumnTypeName = columnType.Name()
 	if columnType.Kind() != reflect.Struct {
@@ -110,7 +108,7 @@ func processColumnType(column *GoedbColumn, columnType reflect.Type, columnValue
 	return nil
 }
 
-func ParseModel(entity interface{}) (GoedbTable){
+func ParseModel(entity interface{}) GoedbTable {
 	entityType := GetType(entity)
 	entityValue := GetValue(entity)
 
@@ -118,7 +116,7 @@ func ParseModel(entity interface{}) (GoedbTable){
 	table.Name = entityType.Name()
 	table.Columns = make([]GoedbColumn, 0)
 
-	for i:=0;i< entityType.NumField();i++ {
+	for i := 0; i < entityType.NumField(); i++ {
 		tablecol := GoedbColumn{}
 		tablecol.Title = entityType.Field(i).Name
 		processColumnType(&tablecol, entityType.Field(i).Type, entityValue)
@@ -149,7 +147,7 @@ func ParseModel(entity interface{}) (GoedbTable){
 	return table
 }
 
-func getSubStructAddresses(slice *[]interface{}, value reflect.Value){
+func getSubStructAddresses(slice *[]interface{}, value reflect.Value) {
 	for j := 0; j < value.NumField(); j++ {
 		subField := value.Field(j)
 		if subField.Kind() == reflect.Struct {
@@ -163,17 +161,17 @@ func getSubStructAddresses(slice *[]interface{}, value reflect.Value){
 /*
 	Returns a slice with the addresses of each struct field,
 	so any modification on the slide will modify the source struct fields
- */
+*/
 func StructToSliceOfAddresses(structPtr interface{}) []interface{} {
 
 	var fieldArr reflect.Value
-	if _, ok  := structPtr.(reflect.Value); ok{
+	if _, ok := structPtr.(reflect.Value); ok {
 		fieldArr = structPtr.(reflect.Value)
-	}else{
+	} else {
 		fieldArr = reflect.ValueOf(structPtr).Elem()
 	}
 
-	if fieldArr.Kind() == reflect.Ptr{
+	if fieldArr.Kind() == reflect.Ptr {
 		fieldArr = fieldArr.Elem()
 	}
 
