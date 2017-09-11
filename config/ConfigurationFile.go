@@ -7,16 +7,19 @@ import (
 	"os"
 )
 
+// Persistence represents the collection of datasources defined by the developer in persistence.json
 type Persistence struct {
 	Datasources []Datasource
 }
 
+// Datasource represents the metadata of a connection pool
 type Datasource struct {
 	Name   string `json:"name"`
 	Driver string `json:"driver"`
-	Url    string `json:"url"`
+	URL    string `json:"url"`
 }
 
+// GetPersistenceConfig generates the persistence struct from persistence.json
 func GetPersistenceConfig() Persistence {
 	raw, err := ioutil.ReadFile("./persistence.json")
 	if err != nil {

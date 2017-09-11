@@ -6,12 +6,14 @@ import (
 	"strings"
 )
 
+// Models contains every model migrated
 var Models map[string]GoedbTable
 
 func init() {
 	Models = make(map[string]GoedbTable)
 }
 
+// GoedbTable represents the metadata of a table
 type GoedbTable struct {
 	Name           string
 	Columns        []GoedbColumn
@@ -19,6 +21,7 @@ type GoedbTable struct {
 	PrimaryKeyType reflect.Kind `json:"-"`
 }
 
+// GoedbColumn represents the metadata of a column
 type GoedbColumn struct {
 	Title               string
 	ColumnType          reflect.Kind
@@ -31,10 +34,7 @@ type GoedbColumn struct {
 	IsComplex           bool
 }
 
-type GoedbComplexColumn struct {
-	MappedFKValue reflect.Value
-}
-
+// GetType returns the type of a struct
 func GetType(i interface{}) reflect.Type {
 	typ := reflect.TypeOf(i)
 
@@ -50,6 +50,7 @@ func GetType(i interface{}) reflect.Type {
 	return typ
 }
 
+// GetValue returns the value of a struct
 func GetValue(i interface{}) reflect.Value {
 	val := reflect.ValueOf(i)
 
@@ -73,6 +74,7 @@ func tagAttributeExists(tag reflect.StructTag, attribute string) bool {
 	return false
 }
 
+// GetGoedbTagTypeAndValue returns the tag and the value of a struct
 func GetGoedbTagTypeAndValue(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string) (reflect.Type, reflect.Value, error) {
 	for i := 0; i < instanceType.NumField(); i++ {
 		field := instanceType.Field(i)
@@ -84,9 +86,10 @@ func GetGoedbTagTypeAndValue(instanceType reflect.Type, instanceValue reflect.Va
 	return nil, reflect.Value{}, errors.New(" Goedb:" + goedbTag + " not found")
 }
 
-func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, fieldId int) (reflect.Type, reflect.Value, error) {
-	fieldType := instanceType.Field(fieldId).Type
-	fieldValue := instanceValue.Field(fieldId)
+// GetGoedbTagTypeAndValueOfIndexField returns the type and the value of a index field
+func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, fieldID int) (reflect.Type, reflect.Value, error) {
+	fieldType := instanceType.Field(fieldID).Type
+	fieldValue := instanceValue.Field(fieldID)
 
 	return GetGoedbTagTypeAndValue(fieldType, fieldValue, goedbTag)
 }
@@ -108,6 +111,8 @@ func processColumnType(column *GoedbColumn, columnType reflect.Type, columnValue
 	return nil
 }
 
+
+// ParseModel generates a GoedbTable, the model of a struct
 func ParseModel(entity interface{}) GoedbTable {
 	entityType := GetType(entity)
 	entityValue := GetValue(entity)
@@ -158,10 +163,9 @@ func getSubStructAddresses(slice *[]interface{}, value reflect.Value) {
 	}
 }
 
-/*
-	Returns a slice with the addresses of each struct field,
-	so any modification on the slide will modify the source struct fields
-*/
+
+// StructToSliceOfAddresses returns a slice with the addresses of each struct field,
+// so any modification on the slide will modify the source struct fields
 func StructToSliceOfAddresses(structPtr interface{}) []interface{} {
 
 	var fieldArr reflect.Value

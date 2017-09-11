@@ -8,10 +8,14 @@ import (
 	"strconv"
 )
 
+// GoedbSQLDriver constains the database connection
 type GoedbSQLDriver struct {
 	db *sql.DB
 }
 
+// Open creates the connection with the database
+// **DON'T open a connection**
+// This will be managed by goedb
 func (sqld *GoedbSQLDriver) Open(driver string, params string) error {
 	db, err := sql.Open(driver, params)
 	if err != nil {
@@ -33,6 +37,7 @@ func (sqld *GoedbSQLDriver) Open(driver string, params string) error {
 
 }
 
+// Close finishes the connection
 func (sqld *GoedbSQLDriver) Close() error {
 	if sqld.db == nil {
 		return errors.New("DB is closed")
@@ -40,6 +45,7 @@ func (sqld *GoedbSQLDriver) Close() error {
 	return sqld.db.Close()
 }
 
+// Migrate creates the table in the database
 func (sqld *GoedbSQLDriver) Migrate(i interface{}) error {
 	sqld.DropTable(i)
 	table := metadata.ParseModel(i)
@@ -49,6 +55,7 @@ func (sqld *GoedbSQLDriver) Migrate(i interface{}) error {
 	return err
 }
 
+// Model returns the metadata of each structure migrated
 func (sqld *GoedbSQLDriver) Model(i interface{}) (metadata.GoedbTable, error) {
 	var q metadata.GoedbTable
 	if q, ok := metadata.Models[metadata.GetType(i).Name()]; ok {
@@ -57,6 +64,7 @@ func (sqld *GoedbSQLDriver) Model(i interface{}) (metadata.GoedbTable, error) {
 	return q, errors.New("Model not found")
 }
 
+// Insert creates a new row with the object in the database (it must be migrated)
 func (sqld *GoedbSQLDriver) Insert(instance interface{}) (GoedbResult, error) {
 	var result sql.Result
 	var goedbres GoedbResult
@@ -80,6 +88,7 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{}) (GoedbResult, error) {
 	return goedbres, nil
 }
 
+// Remove removes a row with the object in the database (it must be migrated)
 func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params ...interface{}) (GoedbResult, error) {
 	var result sql.Result
 	var goedbres GoedbResult
@@ -147,6 +156,7 @@ func generateSQLQuery(model metadata.GoedbTable) (query string, constraints stri
 	return query, constraints
 }
 
+// First returns the first record found
 func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params ...interface{}) error {
 	model, err := sqld.Model(instance)
 	if err != nil {
@@ -180,6 +190,7 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params ...
 	return err
 }
 
+// Find returns all records found
 func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, params ...interface{}) error {
 	model, err := sqld.Model(resultEntitySlice)
 	if err != nil {
@@ -236,6 +247,7 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, pa
 	return nil
 }
 
+// DropTable removes a table from the database
 func (sqld *GoedbSQLDriver) DropTable(i interface{}) error {
 	typ := metadata.GetType(i)
 	name := typ.Name()
@@ -248,6 +260,7 @@ func (sqld *GoedbSQLDriver) DropTable(i interface{}) error {
 	return nil
 }
 
+// TxBegin is used to set a transaction
 func (sqld *GoedbSQLDriver) TxBegin() (*sql.Tx, error) {
 	return sqld.db.Begin()
 }
@@ -335,9 +348,8 @@ func getPKs(gt metadata.GoedbTable, obj interface{}) (string, string, error) {
 			case reflect.Bool:
 				if v.Bool() {
 					return gt.Columns[i].Title, "1", nil
-				} else {
-					return gt.Columns[i].Title, "0", nil
 				}
+				return gt.Columns[i].Title, "0", nil
 			case reflect.String:
 				return gt.Columns[i].Title, "'" + v.String() + "'", nil
 			}
