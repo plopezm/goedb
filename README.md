@@ -1,6 +1,8 @@
 # GOEDB (Go Easy Database Manager)
+![Go Report Card](https://goreportcard.com/badge/github.com/plopezm/goedb) [![Build Status](https://travis-ci.org/gin-gonic/gin.svg)](https://travis-ci.org/gin-gonic/gin)
 
-Goedb is a simple ORM.
+Goedb is a ORM for golang.
+
 
 # How To Use
 
