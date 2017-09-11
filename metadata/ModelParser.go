@@ -111,7 +111,6 @@ func processColumnType(column *GoedbColumn, columnType reflect.Type, columnValue
 	return nil
 }
 
-
 // ParseModel generates a GoedbTable, the model of a struct
 func ParseModel(entity interface{}) GoedbTable {
 	entityType := GetType(entity)
@@ -162,7 +161,6 @@ func getSubStructAddresses(slice *[]interface{}, value reflect.Value) {
 		*slice = append(*slice, subField.Addr().Interface())
 	}
 }
-
 
 // StructToSliceOfAddresses returns a slice with the addresses of each struct field,
 // so any modification on the slide will modify the source struct fields
