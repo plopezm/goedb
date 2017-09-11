@@ -337,7 +337,7 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 		Email: "Plm2421233",
 	}
 
-	rs, err := em.Remove(newUser, "")
+	rs, _ := em.Remove(newUser, "")
 
 	if rs.NumRecordsAffected != 0 {
 		t.Error("Remove must returns an error because the record does not exist")
