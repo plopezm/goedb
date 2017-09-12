@@ -6,6 +6,14 @@ Goedb is a ORM for golang.
 
 # How To Use
 
+### Installation
+
+This project uses [godep](https://github.com/tools/godep) for the dependency management. To install the dependencies type the following:
+
+```
+    dep ensure
+```
+
 ### Describing persistence.json
 
 The file persistence.json will be used to define the datasource used at certain moment. It must be defined in the same directory as your program. A example of persistence.json is as follows:
