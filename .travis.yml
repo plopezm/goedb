@@ -10,6 +10,7 @@ before_install:
   - go get -t -v ./...
 
 script:
+  - chmod +x launch_tests.sh
   - ./launch_tests.sh
 
 after_success:
