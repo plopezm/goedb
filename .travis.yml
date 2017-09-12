@@ -10,10 +10,7 @@ before_install:
   - go get -t -v ./...
 
 script:
-  - cd tests
-  - go test -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=../...
-  - mv coverage.txt ../
-  - cd ..
+  - ./launch_tests.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
