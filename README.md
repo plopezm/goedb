@@ -1,5 +1,5 @@
 # GOEDB (Go Easy Database Manager)
-[![Go Report Card](https://goreportcard.com/badge/github.com/plopezm/goedb)](https://goreportcard.com/badge/github.com/plopezm/goedb) [![Build Status](https://travis-ci.org/gin-gonic/gin.svg)](https://travis-ci.org/gin-gonic/gin) [![codecov](https://codecov.io/gh/plopezm/goedb/branch/master/graph/badge.svg)](https://codecov.io/gh/plopezm/goedb)
+[![Go Report Card](https://goreportcard.com/badge/github.com/plopezm/goedb)](https://goreportcard.com/report/github.com/plopezm/goedb) [![Build Status](https://travis-ci.org/plopezm/goedb.svg)](https://travis-ci.org/plopezm/goedb) [![codecov](https://codecov.io/gh/plopezm/goedb/branch/master/graph/badge.svg)](https://codecov.io/gh/plopezm/goedb)
 
 Goedb is a ORM for golang.
 
