@@ -7,3 +7,6 @@ test.db
 
 #Intellij
 .idea/
+
+#Codecov
+coverage.txt
