@@ -1,8 +1,7 @@
-package tests
+package goedb
 
 import (
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/plopezm/goedb"
 	"github.com/plopezm/goedb/manager"
 	"testing"
 )
@@ -33,14 +32,14 @@ type OtherStruct struct {
 
 func init() {
 	var err error
-	em, err = goedb.GetEntityManager("testSQLite3")
+	em, err = GetEntityManager("testSQLite3")
 	if err != nil {
 		panic("Persistence unit not defined in persistence.json")
 	}
 }
 
 func TestOpen(t *testing.T) {
-	_, err := goedb.GetEntityManager("testSQLite3")
+	_, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -216,7 +215,7 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 
 func TestDB_First(t *testing.T) {
 	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -234,7 +233,7 @@ func TestDB_First(t *testing.T) {
 
 func TestDB_First_Not_Found(t *testing.T) {
 	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -257,7 +256,7 @@ func TestDB_First_Not_Found(t *testing.T) {
 
 func TestDB_Find(t *testing.T) {
 	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -292,7 +291,7 @@ func TestDB_Find(t *testing.T) {
 
 func TestDB_Find_Not_Found(t *testing.T) {
 	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -307,7 +306,7 @@ func TestDB_Find_Not_Found(t *testing.T) {
 
 func TestDB_Remove(t *testing.T) {
 	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -328,7 +327,7 @@ func TestDB_Remove(t *testing.T) {
 
 func TestDB_Remove_Not_Found(t *testing.T) {
 	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -346,7 +345,7 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 
 func TestDB_Remove_Relation(t *testing.T) {
 	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}
@@ -364,7 +363,7 @@ func TestDB_Remove_Relation(t *testing.T) {
 
 func TestDB_DropTable(t *testing.T) {
 	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
+	em, err := GetEntityManager("testSQLite3")
 	if err != nil {
 		t.Error(err)
 	}

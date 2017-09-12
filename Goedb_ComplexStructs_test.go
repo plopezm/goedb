@@ -1,9 +1,8 @@
-package tests
+package goedb
 
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/plopezm/goedb"
 	"github.com/plopezm/goedb/manager"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -24,7 +23,7 @@ var em manager.EntityManager
 
 func init() {
 	var err error
-	em, err = goedb.GetEntityManager("testSQLite3")
+	em, err = GetEntityManager("testSQLite3")
 	if err != nil {
 		panic("Persistence unit not defined in persistence.json")
 	}
