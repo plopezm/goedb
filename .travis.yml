@@ -11,7 +11,7 @@ before_install:
 
 script:
   - cd tests
-  - go test -race -coverprofile=coverage.txt -covermode=atomic
+  - go test -race -coverprofile=coverage.txt -covermode=atomic -coverpkg=../...
   - mv coverage.txt ../
   - cd ..
 
