@@ -8,7 +8,7 @@ Goedb is a ORM for golang.
 
 ### Installation
 
-This project uses [godep](https://github.com/tools/godep) for dependency management. To install the dependencies type the following:
+This project uses [godep](https://github.com/golang/dep) for dependency management. To install the dependencies type the following:
 
 ```
     dep ensure
