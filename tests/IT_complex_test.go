@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/plopezm/goedb"
 	"github.com/plopezm/goedb/manager"
@@ -80,7 +79,7 @@ func Test_Goedb_First_By_PrimaryKey(t *testing.T) {
 		ID: 1,
 	}
 
-	err := em.First(soldier1, "")
+	err := em.First(soldier1, "", nil)
 	assert.Nil(t, err)
 	assert.Equal(t, "Ryan", soldier1.Name)
 	assert.Equal(t, 1, soldier1.Troop.ID)
@@ -91,7 +90,7 @@ func Test_Goedb_First_By_Name(t *testing.T) {
 		Name: "Ryan",
 	}
 
-	err := em.First(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Ryan"))
+	err := em.First(soldier1, "TestSoldier.Name = :name", map[string]interface{}{"name":"Ryan",})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, soldier1.ID)
 	assert.Equal(t, 1, soldier1.Troop.ID)
@@ -134,7 +133,7 @@ func Test_Find_All_Soldiers(t *testing.T) {
 
 	foundSoldiers := make([]TestSoldier, 0)
 
-	err := em.Find(&foundSoldiers, "TestTroop.ID = :troop_id", sql.Named("troop_id", 1))
+	err := em.Find(&foundSoldiers, "TestTroop.ID = :troop_id", map[string]interface{}{"troop_id": 1})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 5, len(foundSoldiers))
@@ -142,7 +141,7 @@ func Test_Find_All_Soldiers(t *testing.T) {
 
 func Test_Find_One_Soldier(t *testing.T) {
 	foundSoldiers := make([]TestSoldier, 0)
-	err := em.Find(&foundSoldiers, "TestSoldier.ID = :soldier_id", sql.Named("soldier_id", 3))
+	err := em.Find(&foundSoldiers, "TestSoldier.ID = :soldier_id", map[string]interface{}{"soldier_id":3})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 1, len(foundSoldiers))
@@ -152,14 +151,14 @@ func Test_Delete_Soldier_By_PrimaryKey(t *testing.T) {
 	soldier1 := &TestSoldier{
 		ID: 3,
 	}
-	result, err := em.Remove(soldier1, "")
+	result, err := em.Remove(soldier1, "", nil)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }
 
 func Test_Delete_Soldier_By_OtherField(t *testing.T) {
 	soldier1 := &TestSoldier{}
-	result, err := em.Remove(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Bryan"))
+	result, err := em.Remove(soldier1, "TestSoldier.Name = :name", map[string]interface{}{"name": "Bryan"})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }

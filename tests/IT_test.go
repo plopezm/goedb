@@ -225,7 +225,7 @@ func TestDB_First(t *testing.T) {
 		Email: "Plm",
 	}
 
-	em.First(newUser, "")
+	em.First(newUser, "", nil)
 
 	if newUser.DNI != 123 {
 		t.Error("DNI Unmatch")
@@ -243,13 +243,13 @@ func TestDB_First_Not_Found(t *testing.T) {
 		Email: "Plm245",
 	}
 
-	err = em.First(newUser, "")
+	err = em.First(newUser, "", nil)
 	if err == nil {
 		t.Log(newUser)
 		t.Error("This user does not exist")
 	}
 
-	err = em.First(newUser, "Admin = 0")
+	err = em.First(newUser, "Admin = 0", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -264,7 +264,7 @@ func TestDB_Find(t *testing.T) {
 
 	foundUsers := make([]TestUser, 0)
 
-	err = em.Find(&foundUsers, "")
+	err = em.Find(&foundUsers, "", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -278,7 +278,7 @@ func TestDB_Find(t *testing.T) {
 
 	foundUsers = make([]TestUser, 0)
 
-	err = em.Find(&foundUsers, where)
+	err = em.Find(&foundUsers, where, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,7 +299,7 @@ func TestDB_Find_Not_Found(t *testing.T) {
 
 	foundUsers := make([]TestUser, 0)
 
-	err = em.Find(&foundUsers, "Admin = 3")
+	err = em.Find(&foundUsers, "Admin = 3", nil)
 	if err == nil {
 		t.Error("Find must return an error")
 	}
@@ -316,7 +316,7 @@ func TestDB_Remove(t *testing.T) {
 		Email: "Plm2",
 	}
 
-	rs, err := em.Remove(newUser, "")
+	rs, err := em.Remove(newUser, "", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -337,7 +337,7 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 		Email: "Plm2421233",
 	}
 
-	rs, _ := em.Remove(newUser, "")
+	rs, _ := em.Remove(newUser, "", nil)
 
 	if rs.NumRecordsAffected != 0 {
 		t.Error("Remove must returns an error because the record does not exist")
@@ -356,7 +356,7 @@ func TestDB_Remove_Relation(t *testing.T) {
 		Cif:   "asd2",
 	}
 
-	_, err = em.Remove(newUC, "")
+	_, err = em.Remove(newUC, "", nil)
 	if err != nil {
 		t.Error(err)
 	}
