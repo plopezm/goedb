@@ -93,9 +93,6 @@ func (dialect *SQLiteDialect) GetDropTableQuery(table metadata.GoedbTable) (stri
 	return "DROP TABLE " + table.Name
 }
 
-
-
-
 /*
 	Returns columns names and values for inserting values
 */
