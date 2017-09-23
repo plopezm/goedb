@@ -278,7 +278,14 @@ func (sqld *GoedbSQLDriver) DropTable(i interface{}) error {
 	typ := metadata.GetType(i)
 	name := typ.Name()
 
-	_, err := sqld.db.Exec("DROP TABLE " + name)
+	table, err := sqld.Model(i)
+	if err != nil {
+		return err
+	}
+
+	sql := sqld.Dialect.GetDropTableQuery(table)
+
+	_, err = sqld.db.Exec(sql)
 	if err != nil {
 		return err
 	}

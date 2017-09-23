@@ -89,6 +89,10 @@ func (dialect *SQLiteDialect) GetFindQuery(table metadata.GoedbTable, where stri
 	return sql, nil
 }
 
+func (dialect *SQLiteDialect) GetDropTableQuery(table metadata.GoedbTable) (string){
+	return "DROP TABLE " + table.Name
+}
+
 
 
 

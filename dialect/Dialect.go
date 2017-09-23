@@ -5,12 +5,12 @@ import (
 )
 
 type Dialect interface {
-
 	GetSQLCreate(table metadata.GoedbTable) string
 	GetSQLDelete(table metadata.GoedbTable, where string, instance interface{}) (string, error)
 	GetSQLInsert(table metadata.GoedbTable, instance interface{}) (string, error)
 	GetFirstQuery(table metadata.GoedbTable, where string, instance interface{}) (string, error)
 	GetFindQuery(table metadata.GoedbTable, where string) (string, error)
+	GetDropTableQuery(table metadata.GoedbTable) (string)
 }
 
 func GetDialect(driver string) Dialect{
