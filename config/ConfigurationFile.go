@@ -17,6 +17,7 @@ type Datasource struct {
 	Name   string `json:"name"`
 	Driver string `json:"driver"`
 	URL    string `json:"url"`
+	Schema	string `json:"schema"`
 }
 
 // GetPersistenceConfig generates the persistence struct from persistence.json

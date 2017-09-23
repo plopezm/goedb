@@ -13,6 +13,7 @@ import (
 type GoedbSQLDriver struct {
 	db *sqlx.DB
 	Dialect dialect.Dialect
+	Schema	string
 }
 
 // Open creates the connection with the database
