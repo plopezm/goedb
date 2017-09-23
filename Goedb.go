@@ -6,6 +6,7 @@ import (
 	"github.com/plopezm/goedb/config"
 	"github.com/plopezm/goedb/manager"
 	"os"
+	"github.com/plopezm/goedb/dialect"
 )
 
 var goedbStandalone *dbm
@@ -23,6 +24,7 @@ func init() {
 	for _, datasource := range persistence.Datasources {
 		driver := new(manager.GoedbSQLDriver)
 		err := driver.Open(datasource.Driver, datasource.URL)
+		driver.Dialect = dialect.GetDialect(datasource.Driver)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
