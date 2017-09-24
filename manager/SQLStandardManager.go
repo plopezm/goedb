@@ -13,7 +13,6 @@ import (
 type GoedbSQLDriver struct {
 	db *sqlx.DB
 	Dialect dialect.Dialect
-	Schema	string
 }
 
 // Open creates the connection with the database
@@ -49,9 +48,9 @@ func (sqld *GoedbSQLDriver) Close() error {
 }
 
 // Migrate creates the table in the database
-func (sqld *GoedbSQLDriver) Migrate(i interface{}) error {
+func (sqld *GoedbSQLDriver) Migrate(schema string, i interface{}) error {
 	sqld.DropTable(i)
-	table := metadata.ParseModel(i)
+	table := metadata.ParseModel(schema, i)
 	metadata.Models[table.Name] = table
 	sqltab := sqld.Dialect.GetSQLCreate(table)
 	_, err := sqld.db.Exec(sqltab)

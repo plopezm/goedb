@@ -16,6 +16,7 @@ func init() {
 // GoedbTable represents the metadata of a table
 type GoedbTable struct {
 	Name           string
+	Schema		   string
 	Columns        []GoedbColumn
 	PrimaryKeyName string       `json:"-"`
 	PrimaryKeyType reflect.Kind `json:"-"`
@@ -112,7 +113,7 @@ func processColumnType(column *GoedbColumn, columnType reflect.Type, columnValue
 }
 
 // ParseModel generates a GoedbTable, the model of a struct
-func ParseModel(entity interface{}) GoedbTable {
+func ParseModel(schema string, entity interface{}) GoedbTable {
 	entityType := GetType(entity)
 	entityValue := GetValue(entity)
 

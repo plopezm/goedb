@@ -24,8 +24,7 @@ func init() {
 	for _, datasource := range persistence.Datasources {
 		driver := new(manager.GoedbSQLDriver)
 		err := driver.Open(datasource.Driver, datasource.URL)
-		driver.Dialect = dialect.GetDialect(datasource.Driver)
-		driver.Schema = datasource.Schema
+		driver.Dialect = dialect.GetDialect(datasource.Driver, datasource.Schema)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)

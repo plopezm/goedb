@@ -14,7 +14,7 @@ type GoedbResult struct {
 type EntityManager interface {
 	Open(driver string, params string) error
 	Close() error
-	Migrate(i interface{}) error
+	Migrate(schema string, i interface{}) error
 	DropTable(i interface{}) error
 	Model(i interface{}) (metadata.GoedbTable, error)
 	Insert(i interface{}) (GoedbResult, error)

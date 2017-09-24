@@ -30,12 +30,12 @@ func init() {
 }
 
 func Test_Goedb_Migrate(t *testing.T) {
-	err := em.Migrate(&TestSoldier{})
+	err := em.Migrate("", &TestSoldier{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = em.Migrate(&TestTroop{})
+	err = em.Migrate("", &TestTroop{})
 	if err != nil {
 		t.Error(err)
 	}
