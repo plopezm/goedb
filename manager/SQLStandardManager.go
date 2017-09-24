@@ -13,12 +13,13 @@ import (
 type GoedbSQLDriver struct {
 	db *sqlx.DB
 	Dialect dialect.Dialect
+
 }
 
 // Open creates the connection with the database
 // **DON'T open a connection**
 // This will be managed by goedb
-func (sqld *GoedbSQLDriver) Open(driver string, params string) error {
+func (sqld *GoedbSQLDriver) Open(driver string, params string, schema string, ) error {
 	db, err := sqlx.Connect(driver, params)
 	if err != nil {
 		return err
@@ -34,9 +35,17 @@ func (sqld *GoedbSQLDriver) Open(driver string, params string) error {
 
 	if driver == "sqlite3" {
 		sqld.db.Exec("PRAGMA foreign_keys = ON")
+	}else{
+		sqld.SetSchema(schema)
 	}
 	return nil
 
+}
+
+
+func (sqld *GoedbSQLDriver) SetSchema(schema string) (sql.Result, error){
+	sql := "SET search_path TO "+schema
+	return sqld.db.Exec(sql)
 }
 
 // Close finishes the connection
@@ -48,9 +57,9 @@ func (sqld *GoedbSQLDriver) Close() error {
 }
 
 // Migrate creates the table in the database
-func (sqld *GoedbSQLDriver) Migrate(schema string, i interface{}) error {
+func (sqld *GoedbSQLDriver) Migrate(i interface{}) error {
 	sqld.DropTable(i)
-	table := metadata.ParseModel(schema, i)
+	table := metadata.ParseModel(i)
 	metadata.Models[table.Name] = table
 	sqltab := sqld.Dialect.GetSQLCreate(table)
 	_, err := sqld.db.Exec(sqltab)
@@ -89,10 +98,7 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{}) (GoedbResult, error) {
 }
 
 // Remove removes a row with the object in the database (it must be migrated)
-func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params map[string]interface{}) (GoedbResult, error) {
-	var result sql.Result
-	var goedbres GoedbResult
-
+func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params map[string]interface{}) (goedbres GoedbResult, err error) {
 	model, err := sqld.Model(i)
 	if err != nil {
 		return goedbres, err
@@ -103,7 +109,7 @@ func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params map[strin
 		return goedbres,err
 	}
 
-	result, err = sqld.db.NamedExec(sql, params)
+	result, err := sqld.db.NamedExec(sql, params)
 	goedbres.NumRecordsAffected, _ = result.RowsAffected()
 	return goedbres, err
 }

@@ -23,8 +23,8 @@ func init() {
 	goedbStandalone.drivers = make(map[string]manager.EntityManager)
 	for _, datasource := range persistence.Datasources {
 		driver := new(manager.GoedbSQLDriver)
-		err := driver.Open(datasource.Driver, datasource.URL)
-		driver.Dialect = dialect.GetDialect(datasource.Driver, datasource.Schema)
+		err := driver.Open(datasource.Driver, datasource.URL, datasource.Schema)
+		driver.Dialect = dialect.GetDialect(datasource.Driver)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)

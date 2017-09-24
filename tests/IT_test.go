@@ -46,17 +46,17 @@ func TestDB_Migrate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.Migrate("",&TestUser{})
+	err = em.Migrate(&TestUser{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = em.Migrate("",&TestCompany{})
+	err = em.Migrate(&TestCompany{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = em.Migrate("",&TestUserCompany{})
+	err = em.Migrate(&TestUserCompany{})
 	if err != nil {
 		t.Error(err)
 	}

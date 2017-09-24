@@ -16,7 +16,7 @@ type Dialect interface {
 	GetDropTableQuery(table metadata.GoedbTable) (string)
 }
 
-func GetDialect(driver string, schema string) Dialect{
+func GetDialect(driver string) Dialect{
 	switch driver {
 	case "sqlite3":
 		return new(SQLiteDialect)
@@ -99,33 +99,8 @@ func getPKs(gt metadata.GoedbTable, obj interface{}) (string, string, error) {
 			}
 		}
 	}
-
 	return "", "", errors.New("No PK found")
 }
-
-//func getSQLTableModel(table metadata.GoedbTable) string {
-//	columns := ""
-//	pksFound := ""
-//	constraints := ""
-//
-//	for _, value := range table.Columns {
-//		columnModel, pksColModel, constModel, err := getSQLColumnModel(value)
-//		if err != nil {
-//			continue
-//		}
-//		columns += columnModel
-//		pksFound += pksColModel
-//		constraints += constModel
-//	}
-//
-//	if len(pksFound) > 0 {
-//		pksFound = pksFound[:len(pksFound)-1]
-//		constraints += ", PRIMARY KEY (" + pksFound + ")"
-//	}
-//
-//	lastColumnIndex := len(columns)
-//	return "CREATE TABLE " + table.Name + " (" + columns[:lastColumnIndex-1] + constraints + ")"
-//}
 
 func referenceSQLEntity(from *string, query *string, constraints *string, referencedTable metadata.GoedbTable) {
 	*from += referencedTable.Name + ","

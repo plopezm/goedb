@@ -9,6 +9,7 @@ import (
 type SQLiteDialect struct{
 }
 
+
 func (dialect *SQLiteDialect) GetSQLCreate(table metadata.GoedbTable) string{
 	columns := ""
 	pksFound := ""

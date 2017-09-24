@@ -12,9 +12,10 @@ type GoedbResult struct {
 
 // EntityManager is the manager used to interact with the database
 type EntityManager interface {
-	Open(driver string, params string) error
+
+	Open(driver string, params string, schema string) error
 	Close() error
-	Migrate(schema string, i interface{}) error
+	Migrate(i interface{}) error
 	DropTable(i interface{}) error
 	Model(i interface{}) (metadata.GoedbTable, error)
 	Insert(i interface{}) (GoedbResult, error)

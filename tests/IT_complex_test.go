@@ -2,6 +2,7 @@ package tests
 
 import (
 	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"github.com/plopezm/goedb"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -18,19 +19,19 @@ type TestSoldier struct {
 	Troop TestTroop `goedb:"fk=TestTroop(ID)"`
 }
 
-const PERSISTENCE_UNIT_IT_COMPLEX_TEST = "testSQLite3"
+const PERSISTENCE_UNIT_IT_COMPLEX_TEST = "testPostgres9"
 
 func Test_Goedb_Migrate(t *testing.T) {
 	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.Migrate("", &TestSoldier{})
+	err = em.Migrate(&TestTroop{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = em.Migrate("", &TestTroop{})
+	err = em.Migrate(&TestSoldier{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -185,7 +186,7 @@ func Test_Delete_Soldier_By_OtherField(t *testing.T) {
 	assert.NotNil(t, em)
 
 	soldier1 := &TestSoldier{}
-	result, err := em.Remove(soldier1, "TestSoldier.Name = :name", map[string]interface{}{"name": "Bryan"})
+	result, err := em.Remove(soldier1, "TestSoldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Bryan"})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }
@@ -195,9 +196,9 @@ func Test_DropTable(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.DropTable(&TestTroop{})
-	assert.Nil(t, err)
 	err = em.DropTable(&TestSoldier{})
+	assert.Nil(t, err)
+	err = em.DropTable(&TestTroop{})
 	assert.Nil(t, err)
 	_, err = em.Model(&TestTroop{})
 	assert.NotNil(t, err)
