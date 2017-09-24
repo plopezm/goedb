@@ -3,23 +3,22 @@ package manager
 import (
 	"database/sql"
 	"errors"
-	"github.com/plopezm/goedb/metadata"
-	"reflect"
 	"github.com/jmoiron/sqlx"
 	"github.com/plopezm/goedb/dialect"
+	"github.com/plopezm/goedb/metadata"
+	"reflect"
 )
 
 // GoedbSQLDriver constains the database connection
 type GoedbSQLDriver struct {
-	db *sqlx.DB
+	db      *sqlx.DB
 	Dialect dialect.Dialect
-
 }
 
 // Open creates the connection with the database
 // **DON'T open a connection**
 // This will be managed by goedb
-func (sqld *GoedbSQLDriver) Open(driver string, params string, schema string, ) error {
+func (sqld *GoedbSQLDriver) Open(driver string, params string, schema string) error {
 	db, err := sqlx.Connect(driver, params)
 	if err != nil {
 		return err
@@ -35,16 +34,16 @@ func (sqld *GoedbSQLDriver) Open(driver string, params string, schema string, ) 
 
 	if driver == "sqlite3" {
 		sqld.db.Exec("PRAGMA foreign_keys = ON")
-	}else{
+	} else {
 		sqld.SetSchema(schema)
 	}
 	return nil
 
 }
 
-
-func (sqld *GoedbSQLDriver) SetSchema(schema string) (sql.Result, error){
-	sql := "SET search_path TO "+schema
+// SetSchema sets the schema as default schema for a datasource
+func (sqld *GoedbSQLDriver) SetSchema(schema string) (sql.Result, error) {
+	sql := "SET search_path TO " + schema
 	return sqld.db.Exec(sql)
 }
 
@@ -85,7 +84,7 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{}) (GoedbResult, error) {
 	}
 
 	sql, err := sqld.Dialect.GetSQLInsert(model, instance)
-	if err != nil{
+	if err != nil {
 		return goedbres, err
 	}
 	result, err = sqld.db.Exec(sql)
@@ -106,7 +105,7 @@ func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params map[strin
 
 	sql, err := sqld.Dialect.GetSQLDelete(model, where, i)
 	if err != nil {
-		return goedbres,err
+		return goedbres, err
 	}
 
 	result, err := sqld.db.NamedExec(sql, params)
@@ -133,7 +132,7 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params map
 	if rows.Next() {
 		instanceValuesAddresses := metadata.StructToSliceOfAddresses(instance)
 		err = rows.Scan(instanceValuesAddresses...)
-	}else{
+	} else {
 		err = errors.New("Not found")
 	}
 	return err

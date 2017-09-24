@@ -3,8 +3,8 @@ package tests
 import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/plopezm/goedb"
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 type TestUser struct {
@@ -32,7 +32,6 @@ type OtherStruct struct {
 }
 
 const PERSISTENCE_UNIT_IT_TEST = "testSQLite3"
-
 
 func TestOpen(t *testing.T) {
 	_, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)

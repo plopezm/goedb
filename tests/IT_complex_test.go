@@ -1,8 +1,8 @@
 package tests
 
 import (
-	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/plopezm/goedb"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -102,7 +102,7 @@ func Test_Goedb_First_By_Name(t *testing.T) {
 		Name: "Ryan",
 	}
 
-	err = em.First(soldier1, "TestSoldier.Name = :name", map[string]interface{}{"name":"Ryan",})
+	err = em.First(soldier1, "TestSoldier.Name = :name", map[string]interface{}{"name": "Ryan"})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, soldier1.ID)
 	assert.Equal(t, 1, soldier1.Troop.ID)
@@ -161,7 +161,7 @@ func Test_Find_One_Soldier(t *testing.T) {
 	assert.NotNil(t, em)
 
 	foundSoldiers := make([]TestSoldier, 0)
-	err = em.Find(&foundSoldiers, "TestSoldier.ID = :soldier_id", map[string]interface{}{"soldier_id":3})
+	err = em.Find(&foundSoldiers, "TestSoldier.ID = :soldier_id", map[string]interface{}{"soldier_id": 3})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 1, len(foundSoldiers))

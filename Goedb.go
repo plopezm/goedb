@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/plopezm/goedb/config"
+	"github.com/plopezm/goedb/dialect"
 	"github.com/plopezm/goedb/manager"
 	"os"
-	"github.com/plopezm/goedb/dialect"
 )
 
 var goedbStandalone *dbm

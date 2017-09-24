@@ -1,10 +1,10 @@
 package dialect
 
 import (
+	"errors"
 	"github.com/plopezm/goedb/metadata"
 	"reflect"
 	"strconv"
-	"errors"
 )
 
 type Dialect interface {
@@ -13,10 +13,10 @@ type Dialect interface {
 	GetSQLInsert(table metadata.GoedbTable, instance interface{}) (string, error)
 	GetFirstQuery(table metadata.GoedbTable, where string, instance interface{}) (string, error)
 	GetFindQuery(table metadata.GoedbTable, where string) (string, error)
-	GetDropTableQuery(table metadata.GoedbTable) (string)
+	GetDropTableQuery(table metadata.GoedbTable) string
 }
 
-func GetDialect(driver string) Dialect{
+func GetDialect(driver string) Dialect {
 	switch driver {
 	case "sqlite3":
 		return new(SQLiteDialect)
