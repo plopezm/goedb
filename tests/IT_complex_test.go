@@ -1,10 +1,9 @@
 package tests
 
 import (
-	"database/sql"
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/plopezm/goedb"
-	"github.com/plopezm/goedb/manager"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -20,29 +19,29 @@ type TestSoldier struct {
 	Troop TestTroop `goedb:"fk=TestTroop(ID)"`
 }
 
-var em manager.EntityManager
-
-func init() {
-	var err error
-	em, err = goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		panic("Persistence unit not defined in persistence.json")
-	}
-}
+const persistenceUnitItComplexTest = "testSQLite3"
 
 func Test_Goedb_Migrate(t *testing.T) {
-	err := em.Migrate(&TestSoldier{})
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	err = em.Migrate(&TestTroop{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = em.Migrate(&TestTroop{})
+	err = em.Migrate(&TestSoldier{})
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func Test_Goedb_Model(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	soldier1, err := em.Model(&TestSoldier{})
 	assert.Nil(t, err)
 	assert.Equal(t, "TestSoldier", soldier1.Name)
@@ -53,6 +52,10 @@ func Test_Goedb_Model(t *testing.T) {
 }
 
 func Test_Goedb_Insert(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	troop1 := &TestTroop{
 		Name: "TheBestTeam",
 	}
@@ -62,7 +65,7 @@ func Test_Goedb_Insert(t *testing.T) {
 		Troop: *troop1,
 	}
 
-	_, err := em.Insert(troop1)
+	_, err = em.Insert(troop1)
 	assert.Nil(t, err)
 
 	soldier1.Troop.ID = 1
@@ -76,22 +79,30 @@ func Test_Goedb_Insert(t *testing.T) {
 }
 
 func Test_Goedb_First_By_PrimaryKey(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	soldier1 := &TestSoldier{
 		ID: 1,
 	}
 
-	err := em.First(soldier1, "")
+	err = em.First(soldier1, "", nil)
 	assert.Nil(t, err)
 	assert.Equal(t, "Ryan", soldier1.Name)
 	assert.Equal(t, 1, soldier1.Troop.ID)
 }
 
 func Test_Goedb_First_By_Name(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	soldier1 := &TestSoldier{
 		Name: "Ryan",
 	}
 
-	err := em.First(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Ryan"))
+	err = em.First(soldier1, "TestSoldier.Name = :name", map[string]interface{}{"name": "Ryan"})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, soldier1.ID)
 	assert.Equal(t, 1, soldier1.Troop.ID)
@@ -126,6 +137,10 @@ func weaponCall() (*TestSoldier, *TestSoldier, *TestSoldier, *TestSoldier) {
 }
 
 func Test_Find_All_Soldiers(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	s1, s2, s3, s4 := weaponCall()
 	em.Insert(s1)
 	em.Insert(s2)
@@ -134,40 +149,56 @@ func Test_Find_All_Soldiers(t *testing.T) {
 
 	foundSoldiers := make([]TestSoldier, 0)
 
-	err := em.Find(&foundSoldiers, "TestTroop.ID = :troop_id", sql.Named("troop_id", 1))
+	err = em.Find(&foundSoldiers, "TestTroop.ID = :troop_id", map[string]interface{}{"troop_id": 1})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 5, len(foundSoldiers))
 }
 
 func Test_Find_One_Soldier(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	foundSoldiers := make([]TestSoldier, 0)
-	err := em.Find(&foundSoldiers, "TestSoldier.ID = :soldier_id", sql.Named("soldier_id", 3))
+	err = em.Find(&foundSoldiers, "TestSoldier.ID = :soldier_id", map[string]interface{}{"soldier_id": 3})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 1, len(foundSoldiers))
 }
 
 func Test_Delete_Soldier_By_PrimaryKey(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	soldier1 := &TestSoldier{
 		ID: 3,
 	}
-	result, err := em.Remove(soldier1, "")
+	result, err := em.Remove(soldier1, "", nil)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }
 
 func Test_Delete_Soldier_By_OtherField(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	soldier1 := &TestSoldier{}
-	result, err := em.Remove(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Bryan"))
+	result, err := em.Remove(soldier1, "TestSoldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Chuck"})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }
 
 func Test_DropTable(t *testing.T) {
-	err := em.DropTable(&TestTroop{})
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	err = em.DropTable(&TestSoldier{})
+	assert.Nil(t, err)
+	err = em.DropTable(&TestTroop{})
 	assert.Nil(t, err)
 	_, err = em.Model(&TestTroop{})
 	assert.NotNil(t, err)

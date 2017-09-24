@@ -3,7 +3,7 @@ package tests
 import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/plopezm/goedb"
-	"github.com/plopezm/goedb/manager"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -31,23 +31,21 @@ type OtherStruct struct {
 	Other string
 }
 
-func init() {
-	var err error
-	em, err = goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		panic("Persistence unit not defined in persistence.json")
-	}
-}
+const persistenceUnitItTest = "testSQLite3"
 
 func TestOpen(t *testing.T) {
-	_, err := goedb.GetEntityManager("testSQLite3")
+	_, err := goedb.GetEntityManager(persistenceUnitItTest)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_Migrate(t *testing.T) {
-	err := em.Migrate(&TestUser{})
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	err = em.Migrate(&TestUser{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,6 +62,10 @@ func TestDB_Migrate(t *testing.T) {
 }
 
 func TestDB_Model(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	user, _ := em.Model(&TestUser{})
 	if user.Name != "TestUser" || len(user.Columns) == 0 {
 		t.Error("Error getting db model")
@@ -76,13 +78,21 @@ func TestDB_Model(t *testing.T) {
 }
 
 func TestDB_Model_Not_Found(t *testing.T) {
-	_, err := em.Model(&OtherStruct{})
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	_, err = em.Model(&OtherStruct{})
 	if err == nil {
 		t.Error("The result must has a error because the struct was not created")
 	}
 }
 
 func TestDB_Insert(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	newUser1 := &TestUser{
 		Email:    "Plm",
 		Password: "asd",
@@ -107,7 +117,7 @@ func TestDB_Insert(t *testing.T) {
 		Admin:    false,
 	}
 
-	_, err := em.Insert(newUser1)
+	_, err = em.Insert(newUser1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -124,6 +134,10 @@ func TestDB_Insert(t *testing.T) {
 }
 
 func TestDB_Insert_with_FKs(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	newComp1 := &TestCompany{
 		UserEmail: "Plm",
 		Name:      "asd",
@@ -136,7 +150,7 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 		Cif:       "asd2",
 	}
 
-	_, err := em.Insert(newComp1)
+	_, err = em.Insert(newComp1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -148,6 +162,10 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 }
 
 func TestDB_Insert_Constraints(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	newComp1 := &TestCompany{
 		UserEmail: "Plm",
 		Name:      "asd",
@@ -166,7 +184,7 @@ func TestDB_Insert_Constraints(t *testing.T) {
 		Cif:       "asd4",
 	}
 
-	_, err := em.Insert(newComp1)
+	_, err = em.Insert(newComp1)
 	if err == nil {
 		t.Error("The record already exists")
 	}
@@ -183,12 +201,16 @@ func TestDB_Insert_Constraints(t *testing.T) {
 }
 
 func TestDB_Insert_Adding_Relations(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
 	newUC := &TestUserCompany{
 		Email: "Plm",
 		Cif:   "asd2",
 	}
 
-	_, err := em.Insert(newUC)
+	_, err = em.Insert(newUC)
 	if err != nil {
 		t.Error(err)
 	}
@@ -215,17 +237,15 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 }
 
 func TestDB_First(t *testing.T) {
-	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
 
 	newUser := &TestUser{
 		Email: "Plm",
 	}
 
-	em.First(newUser, "")
+	em.First(newUser, "", nil)
 
 	if newUser.DNI != 123 {
 		t.Error("DNI Unmatch")
@@ -233,38 +253,33 @@ func TestDB_First(t *testing.T) {
 }
 
 func TestDB_First_Not_Found(t *testing.T) {
-	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
 
 	newUser := &TestUser{
 		Email: "Plm245",
 	}
 
-	err = em.First(newUser, "")
+	err = em.First(newUser, "", nil)
 	if err == nil {
 		t.Log(newUser)
 		t.Error("This user does not exist")
 	}
 
-	err = em.First(newUser, "Admin = 0")
+	err = em.First(newUser, "Admin = 0", nil)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_Find(t *testing.T) {
-	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
-
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
 	foundUsers := make([]TestUser, 0)
 
-	err = em.Find(&foundUsers, "")
+	err = em.Find(&foundUsers, "", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -278,7 +293,7 @@ func TestDB_Find(t *testing.T) {
 
 	foundUsers = make([]TestUser, 0)
 
-	err = em.Find(&foundUsers, where)
+	err = em.Find(&foundUsers, where, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -291,32 +306,28 @@ func TestDB_Find(t *testing.T) {
 }
 
 func TestDB_Find_Not_Found(t *testing.T) {
-	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
 
 	foundUsers := make([]TestUser, 0)
 
-	err = em.Find(&foundUsers, "Admin = 3")
+	err = em.Find(&foundUsers, "Admin = 3", nil)
 	if err == nil {
 		t.Error("Find must return an error")
 	}
 }
 
 func TestDB_Remove(t *testing.T) {
-	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
 
 	newUser := &TestUser{
 		Email: "Plm2",
 	}
 
-	rs, err := em.Remove(newUser, "")
+	rs, err := em.Remove(newUser, "", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -327,17 +338,15 @@ func TestDB_Remove(t *testing.T) {
 }
 
 func TestDB_Remove_Not_Found(t *testing.T) {
-	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
 
 	newUser := &TestUser{
 		Email: "Plm2421233",
 	}
 
-	rs, _ := em.Remove(newUser, "")
+	rs, _ := em.Remove(newUser, "", nil)
 
 	if rs.NumRecordsAffected != 0 {
 		t.Error("Remove must returns an error because the record does not exist")
@@ -345,29 +354,25 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 }
 
 func TestDB_Remove_Relation(t *testing.T) {
-	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
 
 	newUC := &TestUserCompany{
 		Email: "Plm",
 		Cif:   "asd2",
 	}
 
-	_, err = em.Remove(newUC, "")
+	_, err = em.Remove(newUC, "", nil)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_DropTable(t *testing.T) {
-	var em manager.EntityManager
-	em, err := goedb.GetEntityManager("testSQLite3")
-	if err != nil {
-		t.Error(err)
-	}
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
 
 	err = em.DropTable(&TestUserCompany{})
 	if err != nil {

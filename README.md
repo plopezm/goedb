@@ -66,16 +66,17 @@ In the current version, entity manager functionality is as follows:
 
 ```
 type EntityManager interface {
-	Open(driver string, params string) error
-	Close() error
-	Migrate(i interface{}) error
-	DropTable(i interface{}) error
-	Model(i interface{})(metadata.GoedbTable, error)
-	Insert(i interface{}) (GoedbResult, error)
-	Remove(i interface{}, where string, params ...interface{}) (GoedbResult, error)
-	First(i interface{}, where string, params ...interface{}) error
-	Find(i interface{}, where string, params ...interface{}) error
-	TxBegin() (*sql.Tx, error)
+	SetSchema(schema string) (sql.Result, error)
+	Open(driver string, params string, schema string) error
+    Close() error
+    Migrate(i interface{}) error
+    DropTable(i interface{}) error
+    Model(i interface{}) (metadata.GoedbTable, error)
+    Insert(i interface{}) (GoedbResult, error)
+    Remove(i interface{}, where string, params map[string]interface{}) (GoedbResult, error)
+    First(i interface{}, where string, params map[string]interface{}) error
+    Find(i interface{}, where string, params map[string]interface{}) error
+    TxBegin() (*sql.Tx, error)
 }
 ```
 
@@ -91,6 +92,10 @@ type EntityManager interface {
 	err := em.First(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Ryan"))
 ```
 
+### Databases tested
+
+- SQLite3
+- PostgreSQL9
 
 # License
 
