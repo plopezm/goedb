@@ -31,17 +31,17 @@ type OtherStruct struct {
 	Other string
 }
 
-const PERSISTENCE_UNIT_IT_TEST = "testSQLite3"
+const persistenceUnitItTest = "testSQLite3"
 
 func TestOpen(t *testing.T) {
-	_, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	_, err := goedb.GetEntityManager(persistenceUnitItTest)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestDB_Migrate(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -62,7 +62,7 @@ func TestDB_Migrate(t *testing.T) {
 }
 
 func TestDB_Model(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -78,7 +78,7 @@ func TestDB_Model(t *testing.T) {
 }
 
 func TestDB_Model_Not_Found(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -89,7 +89,7 @@ func TestDB_Model_Not_Found(t *testing.T) {
 }
 
 func TestDB_Insert(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -134,7 +134,7 @@ func TestDB_Insert(t *testing.T) {
 }
 
 func TestDB_Insert_with_FKs(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -162,7 +162,7 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 }
 
 func TestDB_Insert_Constraints(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -201,7 +201,7 @@ func TestDB_Insert_Constraints(t *testing.T) {
 }
 
 func TestDB_Insert_Adding_Relations(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -237,7 +237,7 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 }
 
 func TestDB_First(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -253,7 +253,7 @@ func TestDB_First(t *testing.T) {
 }
 
 func TestDB_First_Not_Found(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -274,7 +274,7 @@ func TestDB_First_Not_Found(t *testing.T) {
 }
 
 func TestDB_Find(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 	foundUsers := make([]TestUser, 0)
@@ -306,7 +306,7 @@ func TestDB_Find(t *testing.T) {
 }
 
 func TestDB_Find_Not_Found(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -319,7 +319,7 @@ func TestDB_Find_Not_Found(t *testing.T) {
 }
 
 func TestDB_Remove(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -338,7 +338,7 @@ func TestDB_Remove(t *testing.T) {
 }
 
 func TestDB_Remove_Not_Found(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -354,7 +354,7 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 }
 
 func TestDB_Remove_Relation(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -370,7 +370,7 @@ func TestDB_Remove_Relation(t *testing.T) {
 }
 
 func TestDB_DropTable(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 

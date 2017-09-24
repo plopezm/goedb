@@ -6,9 +6,11 @@ import (
 	"reflect"
 )
 
+// PostgresDialect represents a postgresql database dialect
 type PostgresDialect struct {
 }
 
+// GetSQLColumnModel returns the model of a column for Postgresql
 func (dialect *PostgresDialect) GetSQLColumnModel(value metadata.GoedbColumn) (string, string, string, error) {
 	var pksFound string
 	var constraints string

@@ -19,10 +19,10 @@ type TestSoldier struct {
 	Troop TestTroop `goedb:"fk=TestTroop(ID)"`
 }
 
-const PERSISTENCE_UNIT_IT_COMPLEX_TEST = "testPostgres9"
+const persistenceUnitItComplexTest = "testPostgres9"
 
 func Test_Goedb_Migrate(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -38,7 +38,7 @@ func Test_Goedb_Migrate(t *testing.T) {
 }
 
 func Test_Goedb_Model(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -52,7 +52,7 @@ func Test_Goedb_Model(t *testing.T) {
 }
 
 func Test_Goedb_Insert(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -79,7 +79,7 @@ func Test_Goedb_Insert(t *testing.T) {
 }
 
 func Test_Goedb_First_By_PrimaryKey(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -94,7 +94,7 @@ func Test_Goedb_First_By_PrimaryKey(t *testing.T) {
 }
 
 func Test_Goedb_First_By_Name(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -137,7 +137,7 @@ func weaponCall() (*TestSoldier, *TestSoldier, *TestSoldier, *TestSoldier) {
 }
 
 func Test_Find_All_Soldiers(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -156,7 +156,7 @@ func Test_Find_All_Soldiers(t *testing.T) {
 }
 
 func Test_Find_One_Soldier(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -168,7 +168,7 @@ func Test_Find_One_Soldier(t *testing.T) {
 }
 
 func Test_Delete_Soldier_By_PrimaryKey(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -181,7 +181,7 @@ func Test_Delete_Soldier_By_PrimaryKey(t *testing.T) {
 }
 
 func Test_Delete_Soldier_By_OtherField(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
@@ -192,7 +192,7 @@ func Test_Delete_Soldier_By_OtherField(t *testing.T) {
 }
 
 func Test_DropTable(t *testing.T) {
-	em, err := goedb.GetEntityManager(PERSISTENCE_UNIT_IT_COMPLEX_TEST)
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 

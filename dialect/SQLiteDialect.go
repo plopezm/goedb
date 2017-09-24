@@ -6,9 +6,11 @@ import (
 	"reflect"
 )
 
+// SQLiteDialect represents a sqlite3 database dialect
 type SQLiteDialect struct {
 }
 
+// GetSQLColumnModel returns the model of a column for SQLite3
 func (dialect *SQLiteDialect) GetSQLColumnModel(value metadata.GoedbColumn) (string, string, string, error) {
 	var pksFound string
 	var constraints string
