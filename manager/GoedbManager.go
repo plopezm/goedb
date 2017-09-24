@@ -12,6 +12,7 @@ type GoedbResult struct {
 
 // EntityManager is the manager used to interact with the database
 type EntityManager interface {
+	SetSchema(schema string) (sql.Result, error)
 	Open(driver string, params string, schema string) error
 	Close() error
 	Migrate(i interface{}) error
