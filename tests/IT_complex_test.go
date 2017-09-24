@@ -167,6 +167,30 @@ func Test_Find_One_Soldier(t *testing.T) {
 	assert.Equal(t, 1, len(foundSoldiers))
 }
 
+func Test_Update_Soldier_By_PrimaryKey(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	soldier1 := &TestSoldier{
+		ID:   3,
+		Name: "UpdateTest",
+		Troop: TestTroop{
+			ID: 1,
+		},
+	}
+
+	result, err := em.Update(soldier1)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), result.NumRecordsAffected)
+
+	soldier1.Name = ""
+	err = em.First(soldier1, "", nil)
+	assert.Nil(t, err)
+	assert.Equal(t, "UpdateTest", soldier1.Name)
+	assert.Equal(t, 1, soldier1.Troop.ID)
+}
+
 func Test_Delete_Soldier_By_PrimaryKey(t *testing.T) {
 	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)

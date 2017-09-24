@@ -75,8 +75,7 @@ func (sqld *GoedbSQLDriver) Model(i interface{}) (metadata.GoedbTable, error) {
 }
 
 // Insert creates a new row with the object in the database (it must be migrated)
-func (sqld *GoedbSQLDriver) Insert(instance interface{}) (GoedbResult, error) {
-	var goedbres GoedbResult
+func (sqld *GoedbSQLDriver) Insert(instance interface{}) (goedbres GoedbResult, err error) {
 	var result sql.Result
 	model, err := sqld.Model(instance)
 	if err != nil {
@@ -84,6 +83,27 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{}) (GoedbResult, error) {
 	}
 
 	sql, err := dialect.GetSQLInsert(model, instance)
+	if err != nil {
+		return goedbres, err
+	}
+	result, err = sqld.db.Exec(sql)
+	if err != nil {
+		return goedbres, err
+	}
+
+	goedbres.NumRecordsAffected, _ = result.RowsAffected()
+	return goedbres, nil
+}
+
+// Update updates an object using its primery key
+func (sqld *GoedbSQLDriver) Update(instance interface{}) (goedbres GoedbResult, err error) {
+	var result sql.Result
+	model, err := sqld.Model(instance)
+	if err != nil {
+		return goedbres, err
+	}
+
+	sql, err := dialect.GetSQLUpdate(model, instance)
 	if err != nil {
 		return goedbres, err
 	}
