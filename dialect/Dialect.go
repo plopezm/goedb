@@ -2,7 +2,6 @@ package dialect
 
 import (
 	"errors"
-	"fmt"
 	"github.com/plopezm/goedb/metadata"
 	"reflect"
 	"strconv"
@@ -63,7 +62,6 @@ func GetSQLDelete(table metadata.GoedbTable, where string, instance interface{})
 	} else {
 		sql += where
 	}
-	fmt.Println(sql)
 	return sql, nil
 }
 
@@ -75,28 +73,38 @@ func GetSQLInsert(table metadata.GoedbTable, instance interface{}) (string, erro
 	}
 	//sql := "INSERT INTO " + table.Name + " (" + columns + ") values(" + values + ")"
 	sql := "INSERT INTO " + table.Name + " ("
-	for _, column := range columns{
-		sql += column + ", "
+	for _, column := range columns {
+		sql += column + ","
 	}
-	sql = sql[:len(sql)-2]
+	sql = sql[:len(sql)-1]
 	sql += ") values("
 	for _, value := range values {
-		sql += value + ", "
+		sql += value + ","
 	}
-	sql = sql[:len(sql)-2]
+	sql = sql[:len(sql)-1]
 	sql += ")"
 	return sql, nil
 }
 
 // GetSQLUpdate returns an insert query
-//func GetSQLUpdate(table metadata.GoedbTable, instance interface{}) (string, error) {
-//	columns, values, err := getColumnsAndValues(table, instance)
-//	if err != nil {
-//		return "", err
-//	}
-//	sql := "INSERT INTO " + table.Name + " (" + columns + ") values(" + values + ")"
-//	return sql, nil
-//}
+func GetSQLUpdate(table metadata.GoedbTable, instance interface{}) (string, error) {
+	columns, values, err := getColumnsAndValues(table, instance)
+	if err != nil {
+		return "", err
+	}
+	sql := "UPDATE " + table.Name + " SET "
+	for i, column := range columns {
+		sql += column + " = " + values[i] + ","
+	}
+	sql = sql[:len(sql)-1]
+	pkc, pkv, err := getPKs(table, instance)
+	if err != nil {
+		return "", errors.New("Error getting primary key")
+	}
+	sql += " WHERE " + table.Name + "." + pkc + "=" + pkv
+
+	return sql, nil
+}
 
 // GetFirstQuery returns a first sql query
 func GetFirstQuery(table metadata.GoedbTable, where string, instance interface{}) (string, error) {
@@ -177,7 +185,7 @@ func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (c
 			}
 		case reflect.String:
 			//values += "'" + value.String() + "',"
-			values = append(values, "'" + value.String() + "'")
+			values = append(values, "'"+value.String()+"'")
 		}
 		//columns += metatable.Columns[i].Title + ","
 		columns = append(columns, metatable.Columns[i].Title)
