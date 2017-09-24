@@ -60,7 +60,7 @@ func (sqld *GoedbSQLDriver) Migrate(i interface{}) error {
 	sqld.DropTable(i)
 	table := metadata.ParseModel(i)
 	metadata.Models[table.Name] = table
-	sqltab := sqld.Dialect.GetSQLCreate(table)
+	sqltab := dialect.GetSQLCreate(sqld.Dialect, table)
 	_, err := sqld.db.Exec(sqltab)
 	return err
 }
@@ -83,7 +83,7 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{}) (GoedbResult, error) {
 		return goedbres, err
 	}
 
-	sql, err := sqld.Dialect.GetSQLInsert(model, instance)
+	sql, err := dialect.GetSQLInsert(model, instance)
 	if err != nil {
 		return goedbres, err
 	}
@@ -103,7 +103,7 @@ func (sqld *GoedbSQLDriver) Remove(i interface{}, where string, params map[strin
 		return goedbres, err
 	}
 
-	sql, err := sqld.Dialect.GetSQLDelete(model, where, i)
+	sql, err := dialect.GetSQLDelete(model, where, i)
 	if err != nil {
 		return goedbres, err
 	}
@@ -120,7 +120,7 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params map
 		return err
 	}
 
-	sql, err := sqld.Dialect.GetFirstQuery(model, where, instance)
+	sql, err := dialect.GetFirstQuery(model, where, instance)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, pa
 		return err
 	}
 
-	sql, err := sqld.Dialect.GetFindQuery(model, where)
+	sql, err := dialect.GetFindQuery(model, where)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (sqld *GoedbSQLDriver) DropTable(i interface{}) error {
 		return err
 	}
 
-	sql := sqld.Dialect.GetDropTableQuery(table)
+	sql := dialect.GetDropTableQuery(table)
 
 	_, err = sqld.db.Exec(sql)
 	if err != nil {
