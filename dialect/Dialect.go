@@ -73,9 +73,30 @@ func GetSQLInsert(table metadata.GoedbTable, instance interface{}) (string, erro
 	if err != nil {
 		return "", err
 	}
-	sql := "INSERT INTO " + table.Name + " (" + columns + ") values(" + values + ")"
+	//sql := "INSERT INTO " + table.Name + " (" + columns + ") values(" + values + ")"
+	sql := "INSERT INTO " + table.Name + " ("
+	for _, column := range columns{
+		sql += column + ", "
+	}
+	sql = sql[:len(sql)-2]
+	sql += ") values("
+	for _, value := range values {
+		sql += value + ", "
+	}
+	sql = sql[:len(sql)-2]
+	sql += ")"
 	return sql, nil
 }
+
+// GetSQLUpdate returns an insert query
+//func GetSQLUpdate(table metadata.GoedbTable, instance interface{}) (string, error) {
+//	columns, values, err := getColumnsAndValues(table, instance)
+//	if err != nil {
+//		return "", err
+//	}
+//	sql := "INSERT INTO " + table.Name + " (" + columns + ") values(" + values + ")"
+//	return sql, nil
+//}
 
 // GetFirstQuery returns a first sql query
 func GetFirstQuery(table metadata.GoedbTable, where string, instance interface{}) (string, error) {
@@ -119,10 +140,7 @@ func GetDropTableQuery(table metadata.GoedbTable) string {
 /*
 	Returns columns names and values for inserting values
 */
-func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (string, string, error) {
-	strCols := ""
-	strValues := ""
-
+func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (columns []string, values []string, err error) {
 	instanceType := metadata.GetType(instance)
 	intanceValue := metadata.GetValue(instance)
 
@@ -134,10 +152,9 @@ func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (s
 		}
 
 		if metatable.Columns[i].IsComplex {
-			var err error
 			_, value, err = metadata.GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)
 			if err != nil {
-				return "", "", err
+				return columns, values, err
 			}
 		} else {
 			value = intanceValue.Field(i)
@@ -145,22 +162,29 @@ func getColumnsAndValues(metatable metadata.GoedbTable, instance interface{}) (s
 
 		switch metatable.Columns[i].ColumnType {
 		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
-			strValues += strconv.FormatInt(value.Int(), 10) + ","
+			//values += strconv.FormatInt(value.Int(), 10) + ","
+			values = append(values, strconv.FormatInt(value.Int(), 10))
 		case reflect.Float32, reflect.Float64:
-			strValues += strconv.FormatFloat(value.Float(), 'f', 6, 64) + ","
+			//values += strconv.FormatFloat(value.Float(), 'f', 6, 64) + ","
+			values = append(values, strconv.FormatFloat(value.Float(), 'f', 6, 64))
 		case reflect.Bool:
 			if value.Bool() {
-				strValues += "1,"
+				//values += "1,"
+				values = append(values, "1")
 			} else {
-				strValues += "0,"
+				//values += "0,"
+				values = append(values, "0")
 			}
 		case reflect.String:
-			strValues += "'" + value.String() + "',"
+			//values += "'" + value.String() + "',"
+			values = append(values, "'" + value.String() + "'")
 		}
-		strCols += metatable.Columns[i].Title + ","
+		//columns += metatable.Columns[i].Title + ","
+		columns = append(columns, metatable.Columns[i].Title)
 	}
 
-	return strCols[:len(strCols)-1], strValues[:len(strValues)-1], nil
+	//return strCols[:len(strCols)-1], strValues[:len(strValues)-1], nil
+	return columns, values, err
 }
 
 func getPKs(gt metadata.GoedbTable, obj interface{}) (string, string, error) {
