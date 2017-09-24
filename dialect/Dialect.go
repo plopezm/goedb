@@ -20,7 +20,7 @@ func GetDialect(driver string) Dialect{
 	switch driver {
 	case "sqlite3":
 		return new(SQLiteDialect)
-	case "postgres":
+	case "postgres", "pgx":
 		return new(PostgresDialect)
 	default:
 		return new(SQLiteDialect)

@@ -186,7 +186,7 @@ func Test_Delete_Soldier_By_OtherField(t *testing.T) {
 	assert.NotNil(t, em)
 
 	soldier1 := &TestSoldier{}
-	result, err := em.Remove(soldier1, "TestSoldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Bryan"})
+	result, err := em.Remove(soldier1, "TestSoldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Chuck"})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }
