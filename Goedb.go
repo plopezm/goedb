@@ -42,7 +42,7 @@ func Initialize() {
 func GetEntityManager(persistenceUnit string) (manager.EntityManager, error) {
 	entityManager, ok := goedbStandalone.drivers[persistenceUnit]
 	if !ok {
-		return nil, errors.New("Persistence unit not found in persistence.json")
+		return nil, errors.New("Persistence unit \""+persistenceUnit+"\" not found in persistence.json")
 	}
 
 	return entityManager, nil
