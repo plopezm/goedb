@@ -41,11 +41,12 @@ Currently multiple datasources can be defined. The name will be used as index to
 Once datasource is defined the next step is to get an instance of a entity manager. It requires the name of the datasource as input.
 
 ```
-    em, err = goedb.GetEntityManager("testSQLite3")
-    if err != nil {
+	goedb.Initialize() // REQUIRED TO LOAD CONFIGURATION FROM persistence.json
+	em, err = goedb.GetEntityManager("testSQLite3")
+	if err != nil {
         fmt.Fprintf(os.Stderr, "error: %v\n", err)
         os.Exit(1)
-    }
+}
 ```
 
 Now the manager is ready to work with him, for example:

@@ -16,11 +16,15 @@ type dbm struct {
 }
 
 func init() {
-	var persistence config.Persistence
 	goedbStandalone = new(dbm)
+	goedbStandalone.drivers = make(map[string]manager.EntityManager)
+}
+
+// Initialize gets the datasources from persistence.json
+func Initialize() {
+	var persistence config.Persistence
 	persistence = config.GetPersistenceConfig()
 
-	goedbStandalone.drivers = make(map[string]manager.EntityManager)
 	for _, datasource := range persistence.Datasources {
 		driver := new(manager.GoedbSQLDriver)
 		driver.Dialect = dialect.GetDialect(datasource.Driver)
@@ -38,7 +42,7 @@ func init() {
 func GetEntityManager(persistenceUnit string) (manager.EntityManager, error) {
 	entityManager, ok := goedbStandalone.drivers[persistenceUnit]
 	if !ok {
-		return nil, errors.New("Persistence unit not found in persistence.json")
+		return nil, errors.New("Persistence unit \"" + persistenceUnit + "\" not found in persistence.json")
 	}
 
 	return entityManager, nil

@@ -33,6 +33,10 @@ type OtherStruct struct {
 
 const persistenceUnitItTest = "testSQLite3"
 
+func init() {
+	goedb.Initialize()
+}
+
 func TestOpen(t *testing.T) {
 	_, err := goedb.GetEntityManager(persistenceUnitItTest)
 	if err != nil {
