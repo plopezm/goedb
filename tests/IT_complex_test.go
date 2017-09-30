@@ -21,8 +21,11 @@ type TestSoldier struct {
 
 const persistenceUnitItComplexTest = "testSQLite3"
 
-func Test_Goedb_Migrate(t *testing.T) {
+func init() {
 	goedb.Initialize()
+}
+
+func Test_Goedb_Migrate(t *testing.T) {
 	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
