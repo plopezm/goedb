@@ -23,11 +23,12 @@ func init() {
 	goedbStandalone.drivers = make(map[string]manager.EntityManager)
 	for _, datasource := range persistence.Datasources {
 		driver := new(manager.GoedbSQLDriver)
-		err := driver.Open(datasource.Driver, datasource.URL, datasource.Schema)
 		driver.Dialect = dialect.GetDialect(datasource.Driver)
+		err := driver.Open(datasource.Driver, datasource.URL, datasource.Schema)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
+			fmt.Fprintf(os.Stdout, "[Connection ERROR for Persistence unit { %s } URL { %s }]: %v\n", datasource.Name, datasource.URL, err)
+			//os.Exit(1)
+			continue
 		}
 		goedbStandalone.drivers[datasource.Name] = driver
 	}
@@ -39,5 +40,6 @@ func GetEntityManager(persistenceUnit string) (manager.EntityManager, error) {
 	if !ok {
 		return nil, errors.New("Persistence unit not found in persistence.json")
 	}
+
 	return entityManager, nil
 }

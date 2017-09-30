@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/jmoiron/sqlx"
+	"github.com/plopezm/goedb/config"
 	"github.com/plopezm/goedb/dialect"
 	"github.com/plopezm/goedb/metadata"
 	"reflect"
@@ -11,8 +12,9 @@ import (
 
 // GoedbSQLDriver constains the database connection
 type GoedbSQLDriver struct {
-	db      *sqlx.DB
-	Dialect dialect.Dialect
+	db         *sqlx.DB
+	Dialect    dialect.Dialect
+	Datasource config.Datasource
 }
 
 // Open creates the connection with the database

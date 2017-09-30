@@ -19,7 +19,7 @@ type TestSoldier struct {
 	Troop TestTroop `goedb:"fk=TestTroop(ID)"`
 }
 
-const persistenceUnitItComplexTest = "testSQLite3"
+const persistenceUnitItComplexTest = "testPostgres9"
 
 func Test_Goedb_Migrate(t *testing.T) {
 	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
