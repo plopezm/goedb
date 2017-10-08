@@ -46,7 +46,6 @@ Once datasource is defined the next step is to get an instance of a entity manag
 	if err != nil {
         fmt.Fprintf(os.Stderr, "error: %v\n", err)
         os.Exit(1)
-}
 ```
 
 Now the manager is ready to work with him, for example:
@@ -91,7 +90,7 @@ type EntityManager interface {
 - Polymorphism is not supported
 - Named query supported in where clause. 
 ```
-	err := em.First(soldier1, "TestSoldier.Name = :name", sql.Named("name", "Ryan"))
+	err := em.First(soldier1, "TestSoldier.Name = :name", map[string]interface{}{"name": "Ryan"})
 ```
 
 ### Databases tested
