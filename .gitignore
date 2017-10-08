@@ -10,3 +10,6 @@ test.db
 
 #Codecov
 coverage.txt
+
+#Windows bash
+bash.exe.stackdump

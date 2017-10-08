@@ -153,7 +153,7 @@ func Test_Find_All_Soldiers(t *testing.T) {
 
 	foundSoldiers := make([]TestSoldier, 0)
 
-	err = em.Find(&foundSoldiers, "TestTroop.ID = :troop_id", map[string]interface{}{"troop_id": 1})
+	err = em.Find(&foundSoldiers, "", nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 5, len(foundSoldiers))
