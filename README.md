@@ -98,6 +98,10 @@ type EntityManager interface {
 - SQLite3
 - PostgreSQL9
 
+# Example projects
+
+- [go-auth-ms](https://github.com/plopezm/go-auth-ms) 
+
 # License
 
 Copyright 2017 plopezm <pabloplm@gmail.com>
