@@ -36,7 +36,8 @@ func (sqld *GoedbSQLDriver) Open(driver string, params string, schema string) er
 
 	if driver == "sqlite3" {
 		sqld.db.Exec("PRAGMA foreign_keys = ON")
-	} else {
+	}
+	if len(schema) > 0 {
 		sqld.SetSchema(schema)
 	}
 	return nil
