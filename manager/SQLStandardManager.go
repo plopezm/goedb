@@ -57,6 +57,12 @@ func (sqld *GoedbSQLDriver) Close() error {
 	return sqld.db.Close()
 }
 
+// GetDBConnection returns the DB connection as *sqlx.DB.
+// This method can be used if you wanna perform some query manually
+func (sqld *GoedbSQLDriver) GetDBConnection() *sqlx.DB{
+	return sqld.db
+}
+
 // Migrate creates the table in the database
 func (sqld *GoedbSQLDriver) Migrate(i interface{}, autoCreate bool, dropIfExists bool) (err error) {
 	table := metadata.ParseModel(i)

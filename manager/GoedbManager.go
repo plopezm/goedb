@@ -3,6 +3,7 @@ package manager
 import (
 	"database/sql"
 	"github.com/plopezm/goedb/metadata"
+	"github.com/jmoiron/sqlx"
 )
 
 // GoedbResult is the result for some operation in database
@@ -15,6 +16,7 @@ type EntityManager interface {
 	SetSchema(schema string) (sql.Result, error)
 	Open(driver string, params string, schema string) error
 	Close() error
+	GetDBConnection() *sqlx.DB
 	Migrate(i interface{}, autoCreate bool, dropIfExists bool) error
 	DropTable(i interface{}) error
 	Model(i interface{}) (metadata.GoedbTable, error)
