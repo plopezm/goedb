@@ -142,8 +142,8 @@ func GetFindQuery(table metadata.GoedbTable, where string) (string, error) {
 }
 
 // GetDropTableQuery returns a drop table query
-func GetDropTableQuery(table metadata.GoedbTable) string {
-	return "DROP TABLE " + table.Name
+func GetDropTableQuery(tableName string) string {
+	return "DROP TABLE " + tableName
 }
 
 /*

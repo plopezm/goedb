@@ -30,12 +30,12 @@ func Test_Goedb_Migrate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.Migrate(&TestTroop{})
+	err = em.Migrate(&TestTroop{}, true, true)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = em.Migrate(&TestSoldier{})
+	err = em.Migrate(&TestSoldier{}, true, true)
 	if err != nil {
 		t.Error(err)
 	}
