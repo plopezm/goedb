@@ -58,11 +58,16 @@ func (sqld *GoedbSQLDriver) Close() error {
 }
 
 // Migrate creates the table in the database
-func (sqld *GoedbSQLDriver) Migrate(i interface{}) error {
+func (sqld *GoedbSQLDriver) Migrate(i interface{}, autoCreate bool, dropIfExists bool) (err error) {
 	table := metadata.ParseModel(i)
 	metadata.Models[table.Name] = table
-	sqltab := dialect.GetSQLCreate(sqld.Dialect, table)
-	_, err := sqld.db.Exec(sqltab)
+	if autoCreate {
+		if dropIfExists {
+			sqld.DropTable(i)
+		}
+		sqltab := dialect.GetSQLCreate(sqld.Dialect, table)
+		_, err = sqld.db.Exec(sqltab)
+	}
 	return err
 }
 
