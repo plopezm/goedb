@@ -38,10 +38,13 @@ func init() {
 }
 
 func TestOpen(t *testing.T) {
-	_, err := goedb.GetEntityManager(persistenceUnitItTest)
+	em, err := goedb.GetEntityManager(persistenceUnitItTest)
 	if err != nil {
 		t.Error(err)
 	}
+
+	db := em.GetDBConnection()
+	assert.NotNil(t, db)
 }
 
 func TestDB_Migrate(t *testing.T) {
