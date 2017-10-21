@@ -2,8 +2,8 @@ package manager
 
 import (
 	"database/sql"
-	"github.com/plopezm/goedb/metadata"
 	"github.com/jmoiron/sqlx"
+	"github.com/plopezm/goedb/metadata"
 )
 
 // GoedbResult is the result for some operation in database

@@ -59,7 +59,7 @@ func (sqld *GoedbSQLDriver) Close() error {
 
 // GetDBConnection returns the DB connection as *sqlx.DB.
 // This method can be used if you wanna perform some query manually
-func (sqld *GoedbSQLDriver) GetDBConnection() *sqlx.DB{
+func (sqld *GoedbSQLDriver) GetDBConnection() *sqlx.DB {
 	return sqld.db
 }
 
