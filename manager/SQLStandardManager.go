@@ -59,7 +59,6 @@ func (sqld *GoedbSQLDriver) Close() error {
 
 // Migrate creates the table in the database
 func (sqld *GoedbSQLDriver) Migrate(i interface{}) error {
-	sqld.DropTable(i)
 	table := metadata.ParseModel(i)
 	metadata.Models[table.Name] = table
 	sqltab := dialect.GetSQLCreate(sqld.Dialect, table)
@@ -162,6 +161,11 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params map
 
 // Find returns all records found
 func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, params map[string]interface{}) error {
+
+	if reflect.TypeOf(resultEntitySlice).Elem().Kind() != reflect.Slice {
+		return errors.New("The intput value is not a pointer of a slice")
+	}
+
 	model, err := sqld.Model(resultEntitySlice)
 	if err != nil {
 		return err
@@ -210,14 +214,9 @@ func (sqld *GoedbSQLDriver) DropTable(i interface{}) error {
 	typ := metadata.GetType(i)
 	name := typ.Name()
 
-	table, err := sqld.Model(i)
-	if err != nil {
-		return err
-	}
+	sql := dialect.GetDropTableQuery(name)
 
-	sql := dialect.GetDropTableQuery(table)
-
-	_, err = sqld.db.Exec(sql)
+	_, err := sqld.db.Exec(sql)
 	if err != nil {
 		return err
 	}
