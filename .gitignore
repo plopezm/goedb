@@ -13,3 +13,6 @@ coverage.txt
 
 #Windows bash
 bash.exe.stackdump
+
+#Coverage
+coverage.txt
