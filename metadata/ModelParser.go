@@ -147,7 +147,6 @@ func ParseModel(entity interface{}) GoedbTable {
 		}
 		table.Columns = append(table.Columns, tablecol)
 	}
-	Models[table.Name] = table
 	return table
 }
 

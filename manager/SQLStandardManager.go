@@ -36,7 +36,8 @@ func (sqld *GoedbSQLDriver) Open(driver string, params string, schema string) er
 
 	if driver == "sqlite3" {
 		sqld.db.Exec("PRAGMA foreign_keys = ON")
-	} else {
+	}
+	if len(schema) > 0 {
 		sqld.SetSchema(schema)
 	}
 	return nil
@@ -217,6 +218,61 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, pa
 		}
 	}
 
+	return nil
+}
+
+// NativeFirst returns the first record found
+func (sqld *GoedbSQLDriver) NativeFirst(instance interface{}, sql string, params map[string]interface{}) error {
+	rows, err := sqld.db.NamedQuery(sql, params)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		instanceValuesAddresses := metadata.StructToSliceOfAddresses(instance)
+		err = rows.Scan(instanceValuesAddresses...)
+	} else {
+		err = errors.New("Not found")
+	}
+	return err
+}
+
+// NativeFind returns all records found
+func (sqld *GoedbSQLDriver) NativeFind(resultEntitySlice interface{}, sql string, params map[string]interface{}) error {
+
+	if reflect.TypeOf(resultEntitySlice).Elem().Kind() != reflect.Slice {
+		return errors.New("The intput value is not a pointer of a slice")
+	}
+
+	rows, err := sqld.db.NamedQuery(sql, params)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	//Creates a new pointer with the same type that resultEntitySlice
+	slicePtr := reflect.ValueOf(resultEntitySlice)
+	//it gets the value of the slice pointer
+	slice := reflect.Indirect(slicePtr)
+
+	entityType := metadata.GetType(resultEntitySlice)
+
+	if !rows.Next() {
+		return errors.New("Records not found")
+	}
+
+	for {
+		entityPtr := reflect.New(entityType)
+
+		entityFieldsAsSlice := metadata.StructToSliceOfAddresses(entityPtr)
+		rows.Scan(entityFieldsAsSlice...)
+
+		slice.Set(reflect.Append(slice, entityPtr.Elem()))
+
+		if !rows.Next() {
+			break
+		}
+	}
 	return nil
 }
 
