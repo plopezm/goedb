@@ -159,6 +159,25 @@ func Test_Find_All_Soldiers(t *testing.T) {
 	assert.Equal(t, 5, len(foundSoldiers))
 }
 
+func Test_Native_Find_All_Soldiers(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	s1, s2, s3, s4 := weaponCall()
+	em.Insert(s1)
+	em.Insert(s2)
+	em.Insert(s3)
+	em.Insert(s4)
+
+	foundSoldiers := make([]TestSoldier, 0)
+
+	err = em.NativeFind(&foundSoldiers, "select * from TestSoldier", nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, foundSoldiers)
+	assert.Equal(t, 5, len(foundSoldiers))
+}
+
 func Test_Find_One_Soldier(t *testing.T) {
 	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
@@ -166,6 +185,18 @@ func Test_Find_One_Soldier(t *testing.T) {
 
 	foundSoldiers := make([]TestSoldier, 0)
 	err = em.Find(&foundSoldiers, "TestSoldier.ID = :soldier_id", map[string]interface{}{"soldier_id": 3})
+	assert.Nil(t, err)
+	assert.NotNil(t, foundSoldiers)
+	assert.Equal(t, 1, len(foundSoldiers))
+}
+
+func Test_Native_Find_One_Soldier(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	foundSoldiers := make([]TestSoldier, 0)
+	err = em.NativeFind(&foundSoldiers, "select * from TestSoldier where TestSoldier.ID = :soldier_id", map[string]interface{}{"soldier_id": 3})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 1, len(foundSoldiers))

@@ -25,5 +25,7 @@ type EntityManager interface {
 	Remove(i interface{}, where string, params map[string]interface{}) (GoedbResult, error)
 	First(i interface{}, where string, params map[string]interface{}) error
 	Find(i interface{}, where string, params map[string]interface{}) error
+	NativeFirst(i interface{}, query string, params map[string]interface{}) error
+	NativeFind(i interface{}, query string, params map[string]interface{}) error
 	TxBegin() (*sql.Tx, error)
 }
