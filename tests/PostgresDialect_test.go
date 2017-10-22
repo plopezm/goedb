@@ -1,14 +1,15 @@
-package dialect
+package tests
 
 import (
 	"testing"
 	"github.com/plopezm/goedb/metadata"
 	"reflect"
 	"github.com/stretchr/testify/assert"
+	"github.com/plopezm/goedb/dialect"
 )
 
 func TestGetSQLColumnModelPrimaryKey (t *testing.T){
-	dialect := new(PostgresDialect)
+	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
 	column.Title = "primaryKeyColumn"
@@ -28,7 +29,7 @@ func TestGetSQLColumnModelPrimaryKey (t *testing.T){
 }
 
 func TestGetSQLColumnModelFloat (t *testing.T){
-	dialect := new(PostgresDialect)
+	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
 	column.Title = "floatColumn"
@@ -46,7 +47,7 @@ func TestGetSQLColumnModelFloat (t *testing.T){
 }
 
 func TestGetSQLColumnModelBool (t *testing.T){
-	dialect := new(PostgresDialect)
+	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
 	column.Title = "boolColumn"
@@ -64,7 +65,7 @@ func TestGetSQLColumnModelBool (t *testing.T){
 }
 
 func TestGetSQLColumnModelString (t *testing.T){
-	dialect := new(PostgresDialect)
+	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
 	column.Title = "stringColumn"
@@ -82,7 +83,7 @@ func TestGetSQLColumnModelString (t *testing.T){
 }
 
 func TestGetSQLColumnModelBigInt (t *testing.T){
-	dialect := new(PostgresDialect)
+	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
 	column.Title = "bigIntColumn"
@@ -100,7 +101,7 @@ func TestGetSQLColumnModelBigInt (t *testing.T){
 }
 
 func TestGetSQLColumnModelBigIntPrimaryKey (t *testing.T){
-	dialect := new(PostgresDialect)
+	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
 	column.Title = "bigIntColumn"
@@ -119,7 +120,7 @@ func TestGetSQLColumnModelBigIntPrimaryKey (t *testing.T){
 }
 
 func TestGetSQLColumnModelBigIntPrimaryKeyAutoincrement (t *testing.T){
-	dialect := new(PostgresDialect)
+	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
 	column.Title = "bigIntColumn"
