@@ -23,7 +23,7 @@ func init() {
 // Initialize gets the datasources from persistence.json
 func Initialize() {
 	var persistence config.Persistence
-	persistence = config.GetPersistenceConfig()
+	persistence = config.GetPersistenceConfig("persistence.json")
 
 	for _, datasource := range persistence.Datasources {
 		driver := new(manager.GoedbSQLDriver)
