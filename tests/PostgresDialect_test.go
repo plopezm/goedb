@@ -1,14 +1,14 @@
 package tests
 
 import (
-	"testing"
-	"github.com/plopezm/goedb/metadata"
-	"reflect"
-	"github.com/stretchr/testify/assert"
 	"github.com/plopezm/goedb/dialect"
+	"github.com/plopezm/goedb/metadata"
+	"github.com/stretchr/testify/assert"
+	"reflect"
+	"testing"
 )
 
-func TestGetSQLColumnModelPrimaryKey (t *testing.T){
+func TestGetSQLColumnModelPrimaryKey(t *testing.T) {
 	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
@@ -28,7 +28,7 @@ func TestGetSQLColumnModelPrimaryKey (t *testing.T){
 	assert.Nil(t, err)
 }
 
-func TestGetSQLColumnModelFloat (t *testing.T){
+func TestGetSQLColumnModelFloat(t *testing.T) {
 	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
@@ -46,7 +46,7 @@ func TestGetSQLColumnModelFloat (t *testing.T){
 	assert.Nil(t, err)
 }
 
-func TestGetSQLColumnModelBool (t *testing.T){
+func TestGetSQLColumnModelBool(t *testing.T) {
 	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
@@ -64,7 +64,7 @@ func TestGetSQLColumnModelBool (t *testing.T){
 	assert.Nil(t, err)
 }
 
-func TestGetSQLColumnModelString (t *testing.T){
+func TestGetSQLColumnModelString(t *testing.T) {
 	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
@@ -82,7 +82,7 @@ func TestGetSQLColumnModelString (t *testing.T){
 	assert.Nil(t, err)
 }
 
-func TestGetSQLColumnModelBigInt (t *testing.T){
+func TestGetSQLColumnModelBigInt(t *testing.T) {
 	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
@@ -100,7 +100,7 @@ func TestGetSQLColumnModelBigInt (t *testing.T){
 	assert.Nil(t, err)
 }
 
-func TestGetSQLColumnModelBigIntPrimaryKey (t *testing.T){
+func TestGetSQLColumnModelBigIntPrimaryKey(t *testing.T) {
 	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
@@ -119,7 +119,7 @@ func TestGetSQLColumnModelBigIntPrimaryKey (t *testing.T){
 	assert.Nil(t, err)
 }
 
-func TestGetSQLColumnModelBigIntPrimaryKeyAutoincrement (t *testing.T){
+func TestGetSQLColumnModelBigIntPrimaryKeyAutoincrement(t *testing.T) {
 	dialect := new(dialect.PostgresDialect)
 	var column metadata.GoedbColumn
 
