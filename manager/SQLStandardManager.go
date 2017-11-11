@@ -3,11 +3,12 @@ package manager
 import (
 	"database/sql"
 	"errors"
+	"reflect"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/plopezm/goedb/config"
 	"github.com/plopezm/goedb/dialect"
 	"github.com/plopezm/goedb/metadata"
-	"reflect"
 )
 
 // GoedbSQLDriver constains the database connection
@@ -66,12 +67,12 @@ func (sqld *GoedbSQLDriver) GetDBConnection() *sqlx.DB {
 
 // Migrate creates the table in the database
 func (sqld *GoedbSQLDriver) Migrate(i interface{}, autoCreate bool, dropIfExists bool) (err error) {
+	if dropIfExists {
+		sqld.DropTable(i)
+	}
 	table := metadata.ParseModel(i)
 	metadata.Models[table.Name] = table
 	if autoCreate {
-		if dropIfExists {
-			sqld.DropTable(i)
-		}
 		sqltab := dialect.GetSQLCreate(sqld.Dialect, table)
 		_, err = sqld.db.Exec(sqltab)
 	}

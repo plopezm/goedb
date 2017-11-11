@@ -1,11 +1,12 @@
 package tests
 
 import (
+	"testing"
+
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/plopezm/goedb"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type TestTroop struct {
@@ -31,14 +32,34 @@ func Test_Goedb_Migrate(t *testing.T) {
 	assert.NotNil(t, em)
 
 	err = em.Migrate(&TestTroop{}, true, true)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.Nil(t, err)
 
 	err = em.Migrate(&TestSoldier{}, true, true)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.Nil(t, err)
+}
+
+func Test_Goedb_Migrate_Recreate(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	err = em.Migrate(&TestTroop{}, true, false)
+	assert.NotNil(t, err)
+
+	err = em.Migrate(&TestSoldier{}, true, false)
+	assert.NotNil(t, err)
+}
+
+func Test_Goedb_Migrate_RecreateWithDrop(t *testing.T) {
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	err = em.Migrate(&TestTroop{}, true, true)
+	assert.Nil(t, err)
+
+	err = em.Migrate(&TestSoldier{}, true, true)
+	assert.Nil(t, err)
 }
 
 func Test_Goedb_Model(t *testing.T) {
