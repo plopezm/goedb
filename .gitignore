@@ -8,6 +8,9 @@ test.db
 #Intellij
 .idea/
 
+#VSCode
+.vscode
+
 #Codecov
 coverage.txt
 
