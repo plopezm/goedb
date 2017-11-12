@@ -214,10 +214,7 @@ func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value) {
 
 // StructToSliceOfAddressesWithRules returns a slice with the addresses of each struct field,
 // so any modification on the slide will modify the source struct fields
-func StructToSliceOfAddressesWithRules(structPtr interface{}) []interface{} {
-	//log.Println("Checking model ", GetType(structPtr).Name())
-	tablemodel := Models[GetType(structPtr).Name()]
-	//log.Println(tablemodel)
+func StructToSliceOfAddressesWithRules(tablemodel GoedbTable, structPtr interface{}) []interface{} {
 	var fieldArr reflect.Value
 	if _, ok := structPtr.(reflect.Value); ok {
 		fieldArr = structPtr.(reflect.Value)
