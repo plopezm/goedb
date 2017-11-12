@@ -89,6 +89,30 @@ type EntityManager interface {
 }
 ```
 
+# Struct annotations
+
+* `goedb:"fk"` -> It marks a field as primary key. Primary key MUST be integer
+  * `goedb:"fk,autoincrement"` -> Sets the column as primarykey autoincremented in database.
+* `goedb:"unique"` -> It sets the column as unique.
+* `goedb:"ignore"` -> Goedb will ignore the column annotated with ignore.
+* `goedb:"fk=DestinationTable(PKColumn)"` -> It sets the column as foreign key
+
+Example
+
+```
+type TestTroop struct {
+	ID       int           `goedb:"pk,autoincrement"`
+	Name     string        `goedb:"unique"`
+	Soldiers []TestSoldier `goedb:"ignore"`
+}
+
+type TestSoldier struct {
+	ID    int       `goedb:"pk,autoincrement"`
+	Name  string    `goedb:"unique"`
+	Troop TestTroop `goedb:"fk=TestTroop(ID)"`
+}
+```
+
 # What is currently supported:
 
 - For simple entities: All -> Tests in tests/Goedb_test.go

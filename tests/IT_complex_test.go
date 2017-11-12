@@ -10,8 +10,9 @@ import (
 )
 
 type TestTroop struct {
-	ID   int    `goedb:"pk,autoincrement"`
-	Name string `goedb:"unique"`
+	ID       int           `goedb:"pk,autoincrement"`
+	Name     string        `goedb:"unique"`
+	Soldiers []TestSoldier `goedb:"ignore"`
 }
 
 type TestSoldier struct {

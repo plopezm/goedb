@@ -3,10 +3,12 @@ package goedb
 import (
 	"errors"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/plopezm/goedb/config"
 	"github.com/plopezm/goedb/dialect"
 	"github.com/plopezm/goedb/manager"
-	"os"
 )
 
 var goedbStandalone *dbm
@@ -16,6 +18,7 @@ type dbm struct {
 }
 
 func init() {
+	log.Println("[GOEDB] library version: 1.0.0-RC8")
 	goedbStandalone = new(dbm)
 	goedbStandalone.drivers = make(map[string]manager.EntityManager)
 }

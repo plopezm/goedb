@@ -32,6 +32,7 @@ type GoedbColumn struct {
 	ForeignKeyReference string
 	AutoIncrement       bool
 	IsComplex           bool
+	Ignore              bool
 }
 
 // GetType returns the type of a struct
@@ -137,6 +138,8 @@ func ParseModel(entity interface{}) GoedbTable {
 					tablecol.AutoIncrement = true
 				case "unique":
 					tablecol.Unique = true
+				case "ignore":
+					tablecol.Ignore = true
 				default:
 					if strings.Contains(val, "fk=") {
 						tablecol.ForeignKey = true
@@ -183,6 +186,54 @@ func StructToSliceOfAddresses(structPtr interface{}) []interface{} {
 
 		if f.Kind() == reflect.Struct {
 			getSubStructAddresses(&fieldAddrArr, f)
+			continue
+		}
+		fieldAddrArr = append(fieldAddrArr, f.Addr().Interface())
+	}
+
+	return fieldAddrArr
+}
+
+func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value) {
+	tablemodel := Models[value.Type().Name()]
+	for j := 0; j < value.NumField(); j++ {
+		if tablemodel.Columns[j].Ignore {
+			continue
+		}
+		subField := value.Field(j)
+		if subField.Kind() == reflect.Struct {
+			getSubStructAddresses(slice, subField)
+			continue
+		}
+		*slice = append(*slice, subField.Addr().Interface())
+	}
+}
+
+// StructToSliceOfAddressesWithRules returns a slice with the addresses of each struct field,
+// so any modification on the slide will modify the source struct fields
+func StructToSliceOfAddressesWithRules(structPtr interface{}) []interface{} {
+	var fieldArr reflect.Value
+	if _, ok := structPtr.(reflect.Value); ok {
+		fieldArr = structPtr.(reflect.Value)
+	} else {
+		fieldArr = reflect.ValueOf(structPtr).Elem()
+	}
+
+	if fieldArr.Kind() == reflect.Ptr {
+		fieldArr = fieldArr.Elem()
+	}
+	tablemodel := Models[fieldArr.Type().Name()]
+	fieldAddrArr := make([]interface{}, 0)
+	for i := 0; i < fieldArr.NumField(); i++ {
+
+		if tablemodel.Columns[i].Ignore {
+			continue
+		}
+
+		f := fieldArr.Field(i)
+
+		if f.Kind() == reflect.Struct {
+			getSubStructAddressesWithRules(&fieldAddrArr, f)
 			continue
 		}
 		fieldAddrArr = append(fieldAddrArr, f.Addr().Interface())
