@@ -164,7 +164,7 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params map
 	}
 	defer rows.Close()
 	if rows.Next() {
-		instanceValuesAddresses := metadata.StructToSliceOfAddressesWithRules(model, instance)
+		instanceValuesAddresses := metadata.StructToSliceOfAddressesWithRules(instance)
 		err = rows.Scan(instanceValuesAddresses...)
 	} else {
 		err = errors.New("Not found")
@@ -209,7 +209,7 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, pa
 	for {
 		entityPtr := reflect.New(entityType)
 
-		entityFieldsAsSlice := metadata.StructToSliceOfAddressesWithRules(model, entityPtr)
+		entityFieldsAsSlice := metadata.StructToSliceOfAddressesWithRules(entityPtr)
 		rows.Scan(entityFieldsAsSlice...)
 
 		slice.Set(reflect.Append(slice, entityPtr.Elem()))

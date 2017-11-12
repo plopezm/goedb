@@ -2,7 +2,6 @@ package metadata
 
 import (
 	"errors"
-	"log"
 	"reflect"
 	"strings"
 )
@@ -196,9 +195,7 @@ func StructToSliceOfAddresses(structPtr interface{}) []interface{} {
 }
 
 func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value) {
-	log.Println("Checking model ", value.Type().Name())
 	tablemodel := Models[value.Type().Name()]
-	log.Println(tablemodel)
 	for j := 0; j < value.NumField(); j++ {
 		if tablemodel.Columns[j].Ignore {
 			continue
@@ -214,7 +211,7 @@ func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value) {
 
 // StructToSliceOfAddressesWithRules returns a slice with the addresses of each struct field,
 // so any modification on the slide will modify the source struct fields
-func StructToSliceOfAddressesWithRules(tablemodel GoedbTable, structPtr interface{}) []interface{} {
+func StructToSliceOfAddressesWithRules(structPtr interface{}) []interface{} {
 	var fieldArr reflect.Value
 	if _, ok := structPtr.(reflect.Value); ok {
 		fieldArr = structPtr.(reflect.Value)
@@ -225,9 +222,8 @@ func StructToSliceOfAddressesWithRules(tablemodel GoedbTable, structPtr interfac
 	if fieldArr.Kind() == reflect.Ptr {
 		fieldArr = fieldArr.Elem()
 	}
-
+	tablemodel := Models[fieldArr.Type().Name()]
 	fieldAddrArr := make([]interface{}, 0)
-
 	for i := 0; i < fieldArr.NumField(); i++ {
 
 		if tablemodel.Columns[i].Ignore {
