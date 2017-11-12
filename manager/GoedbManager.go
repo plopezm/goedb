@@ -2,6 +2,7 @@ package manager
 
 import (
 	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/plopezm/goedb/metadata"
 )
@@ -9,6 +10,7 @@ import (
 // GoedbResult is the result for some operation in database
 type GoedbResult struct {
 	NumRecordsAffected int64
+	LastInsertId       int64
 }
 
 // EntityManager is the manager used to interact with the database

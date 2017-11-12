@@ -106,6 +106,7 @@ func (sqld *GoedbSQLDriver) Insert(instance interface{}) (goedbres GoedbResult, 
 	}
 
 	goedbres.NumRecordsAffected, _ = result.RowsAffected()
+	goedbres.LastInsertId, _ = result.LastInsertId()
 	return goedbres, nil
 }
 
