@@ -173,6 +173,22 @@ func (sqld *GoedbSQLDriver) First(instance interface{}, where string, params map
 	return err
 }
 
+// NativeFirst returns the first record found
+func (sqld *GoedbSQLDriver) NativeFirst(instance interface{}, sql string, params map[string]interface{}) error {
+	rows, err := sqld.db.NamedQuery(sql, params)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		instanceValuesAddresses := metadata.StructToSliceOfAddresses(instance)
+		err = rows.Scan(instanceValuesAddresses...)
+	} else {
+		err = errors.New("Not found")
+	}
+	return err
+}
+
 // Find returns all records found
 func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, params map[string]interface{}) error {
 
@@ -221,22 +237,6 @@ func (sqld *GoedbSQLDriver) Find(resultEntitySlice interface{}, where string, pa
 	}
 
 	return nil
-}
-
-// NativeFirst returns the first record found
-func (sqld *GoedbSQLDriver) NativeFirst(instance interface{}, sql string, params map[string]interface{}) error {
-	rows, err := sqld.db.NamedQuery(sql, params)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	if rows.Next() {
-		instanceValuesAddresses := metadata.StructToSliceOfAddresses(instance)
-		err = rows.Scan(instanceValuesAddresses...)
-	} else {
-		err = errors.New("Not found")
-	}
-	return err
 }
 
 // NativeFind returns all records found
