@@ -21,6 +21,12 @@ type TestSoldier struct {
 	Troop TestTroop `goedb:"fk=TestTroop(ID)"`
 }
 
+type TestCustomSoldier struct {
+	ID        int
+	Name      string
+	TroopName string
+}
+
 const persistenceUnitItComplexTest = "testSQLite3"
 
 func init() {
@@ -134,29 +140,47 @@ func Test_Goedb_First_By_Name(t *testing.T) {
 	assert.Equal(t, 1, soldier1.Troop.ID)
 }
 
+func Test_Goedb_Native_First_By_Name(t *testing.T) {
+
+	em, err := goedb.GetEntityManager(persistenceUnitItComplexTest)
+	assert.Nil(t, err)
+	assert.NotNil(t, em)
+
+	var customSoldier TestCustomSoldier
+
+	err = em.NativeFirst(&customSoldier, "SELECT ts.ID, ts.Name, tt.Name FROM TestSoldier ts, TestTroop tt WHERE ts.Name = :name AND ts.Troop = tt.ID", map[string]interface{}{"name": "Ryan"})
+	assert.Nil(t, err)
+	assert.Equal(t, 1, customSoldier.ID)
+	assert.Equal(t, "TheBestTeam", customSoldier.TroopName)
+}
+
 func weaponCall() (*TestSoldier, *TestSoldier, *TestSoldier, *TestSoldier) {
 	soldier2 := &TestSoldier{
 		Name: "Bryan",
 		Troop: TestTroop{
-			ID: 1,
+			ID:   1,
+			Name: "ExampleTroop",
 		},
 	}
 	soldier3 := &TestSoldier{
 		Name: "Steve",
 		Troop: TestTroop{
-			ID: 1,
+			ID:   1,
+			Name: "ExampleTroop",
 		},
 	}
 	soldier4 := &TestSoldier{
 		Name: "Eduard",
 		Troop: TestTroop{
-			ID: 1,
+			ID:   1,
+			Name: "ExampleTroop",
 		},
 	}
 	soldier5 := &TestSoldier{
 		Name: "Chuck",
 		Troop: TestTroop{
-			ID: 1,
+			ID:   1,
+			Name: "ExampleTroop",
 		},
 	}
 	return soldier2, soldier3, soldier4, soldier5
@@ -192,9 +216,9 @@ func Test_Native_Find_All_Soldiers(t *testing.T) {
 	em.Insert(s3)
 	em.Insert(s4)
 
-	foundSoldiers := make([]TestSoldier, 0)
+	foundSoldiers := make([]TestCustomSoldier, 0)
 
-	err = em.NativeFind(&foundSoldiers, "select * from TestSoldier", nil)
+	err = em.NativeFind(&foundSoldiers, "SELECT ts.ID, ts.Name, tt.Name FROM TestSoldier ts, TestTroop tt WHERE ts.Troop = tt.ID", nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 5, len(foundSoldiers))
@@ -206,10 +230,11 @@ func Test_Find_One_Soldier(t *testing.T) {
 	assert.NotNil(t, em)
 
 	foundSoldiers := make([]TestSoldier, 0)
-	err = em.Find(&foundSoldiers, "TestSoldier.ID = :soldier_id", map[string]interface{}{"soldier_id": 3})
+	err = em.Find(&foundSoldiers, "TestSoldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Steve"})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 1, len(foundSoldiers))
+	assert.Equal(t, "Steve", foundSoldiers[0].Name)
 }
 
 func Test_Native_Find_One_Soldier(t *testing.T) {
@@ -217,11 +242,12 @@ func Test_Native_Find_One_Soldier(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	foundSoldiers := make([]TestSoldier, 0)
-	err = em.NativeFind(&foundSoldiers, "select * from TestSoldier where TestSoldier.ID = :soldier_id", map[string]interface{}{"soldier_id": 3})
+	foundSoldiers := make([]TestCustomSoldier, 0)
+	err = em.NativeFind(&foundSoldiers, "SELECT ts.ID, ts.Name, tt.Name FROM TestSoldier ts, TestTroop tt WHERE ts.Name = :soldier_name AND ts.Troop = tt.ID", map[string]interface{}{"soldier_name": "Steve"})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 1, len(foundSoldiers))
+	assert.Equal(t, "Steve", foundSoldiers[0].Name)
 }
 
 func Test_Update_Soldier_By_PrimaryKey(t *testing.T) {
