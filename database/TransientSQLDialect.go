@@ -210,8 +210,10 @@ func referenceSQLEntity(from *string, query *string, constraints *string, table 
 		}
 
 		for _, primaryKey := range referencedTable.PrimaryKeys {
-			*constraints += " AND " + table.Name + "." + column.Title + " = " + referencedTable.Name + "." + primaryKey.Name
-			referenceSQLEntity(from, query, constraints, modelMap[column.ColumnTypeName], modelMap)
+			if primaryKey.Name == column.ForeignKey.ForeignKeyColumnReference {
+				*constraints += " AND " + table.Name + "." + column.Title + " = " + referencedTable.Name + "." + primaryKey.Name
+				referenceSQLEntity(from, query, constraints, modelMap[column.ColumnTypeName], modelMap)
+			}
 		}
 	}
 	return err

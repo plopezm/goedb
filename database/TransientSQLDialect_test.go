@@ -207,7 +207,7 @@ func TestTransientSQLDialect_Create(t *testing.T) {
 	}
 }
 
-func getGoedbTableTest() Table {
+func getGoedbTableTest1() Table {
 
 	type TestTable struct {
 		ID   uint64 `goedb:"pk,autoincrement"`
@@ -223,6 +223,27 @@ func getGoedbTableTest() Table {
 	return ParseModel(&TestTableWithFK{})
 }
 
+func getGoedbTableTest2() Table {
+
+	type TestTable struct {
+		ID   uint64 `goedb:"pk,autoincrement"`
+		Name string `goedb:"unique"`
+	}
+
+	type TestTableWithFK struct {
+		Name          string    `goedb:"pk"`
+		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
+		Ignorable     bool      `goedb:"ignore"`
+	}
+
+	type TestTableWithFK2 struct {
+		Name                string          `goedb:"pk"`
+		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
+	}
+
+	return ParseModel(&TestTableWithFK2{})
+}
+
 func getGoedbTableMapTest() (modelMap map[string]Table) {
 	type TestTable struct {
 		ID   uint64 `goedb:"pk,autoincrement"`
@@ -235,9 +256,14 @@ func getGoedbTableMapTest() (modelMap map[string]Table) {
 		Ignorable     bool      `goedb:"ignore"`
 	}
 
+	type TestTableWithFK2 struct {
+		Name                string          `goedb:"pk"`
+		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
+	}
 	modelMap = make(map[string]Table)
 	modelMap["TestTable"] = ParseModel(&TestTable{})
 	modelMap["TestTableWithFK"] = ParseModel(&TestTableWithFK{})
+	modelMap["TestTableWithFK2"] = ParseModel(&TestTableWithFK2{})
 	return modelMap
 }
 
@@ -257,11 +283,20 @@ func Test_generateSQLQuery(t *testing.T) {
 		{
 			name: "TestGenerateSQLQuery",
 			args: args{
-				table:    getGoedbTableTest(),
+				table:    getGoedbTableTest1(),
 				modelMap: getGoedbTableMapTest(),
 			},
 			wantQuery:       "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name FROM TestTableWithFK,TestTable",
 			wantConstraints: " AND TestTableWithFK.TestTableName = TestTable.Name",
+		},
+		{
+			name: "TestGenerateSQLQueryMoreThanOneStructAsDependency",
+			args: args{
+				table:    getGoedbTableTest2(),
+				modelMap: getGoedbTableMapTest(),
+			},
+			wantQuery:       "SELECT TestTableWithFK2.Name,TestTableWithFK.Name,TestTable.ID,TestTable.Name FROM TestTableWithFK2,TestTableWithFK,TestTable",
+			wantConstraints: " AND TestTableWithFK2.TestTableWithFKName = TestTableWithFK.Name AND TestTableWithFK.TestTableName = TestTable.Name",
 		},
 	}
 	for _, tt := range tests {
