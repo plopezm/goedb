@@ -49,11 +49,10 @@ func Test_getTransientSQLCreateColumn(t *testing.T) {
 			name: "TestColumnPrimaryKeyWithConstraints",
 			args: args{
 				value: Column{
-					Title:               "PKColumn",
-					PrimaryKey:          true,
-					ColumnType:          reflect.Int,
-					ForeignKey:          true,
-					ForeignKeyReference: "OtherTable(OtherTablePK)",
+					Title:      "PKColumn",
+					PrimaryKey: true,
+					ColumnType: reflect.Int,
+					ForeignKey: ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "OtherTable", ForeignKeyColumnReference: "OtherTablePK"},
 				},
 			},
 			wantSQLColumnLine: "PKColumn INTEGER,",
@@ -64,11 +63,10 @@ func Test_getTransientSQLCreateColumn(t *testing.T) {
 			name: "TestErrorTypeNotFound",
 			args: args{
 				value: Column{
-					Title:               "PKColumn",
-					PrimaryKey:          true,
-					ColumnType:          reflect.Struct,
-					ForeignKey:          true,
-					ForeignKeyReference: "OtherTable(OtherTablePK)",
+					Title:      "PKColumn",
+					PrimaryKey: true,
+					ColumnType: reflect.Struct,
+					ForeignKey: ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "OtherTable", ForeignKeyColumnReference: "OtherTablePK"},
 				},
 			},
 			wantErr: true,
@@ -204,6 +202,80 @@ func TestTransientSQLDialect_Create(t *testing.T) {
 			dialect := &TransientSQLDialect{}
 			if got := dialect.Create(tt.args.table); got != tt.want {
 				t.Errorf("TransientSQLDialect.Create() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func getGoedbTableTest() Table {
+
+	type TestTable struct {
+		ID   uint64 `goedb:"pk,autoincrement"`
+		Name string `goedb:"unique"`
+	}
+
+	type TestTableWithFK struct {
+		Name          string    `goedb:"pk"`
+		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
+		Ignorable     bool      `goedb:"ignore"`
+	}
+
+	return ParseModel(&TestTableWithFK{})
+}
+
+func getGoedbTableMapTest() (modelMap map[string]Table) {
+	type TestTable struct {
+		ID   uint64 `goedb:"pk,autoincrement"`
+		Name string `goedb:"unique"`
+	}
+
+	type TestTableWithFK struct {
+		Name          string    `goedb:"pk"`
+		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
+		Ignorable     bool      `goedb:"ignore"`
+	}
+
+	modelMap = make(map[string]Table)
+	modelMap["TestTable"] = ParseModel(&TestTable{})
+	modelMap["TestTableWithFK"] = ParseModel(&TestTableWithFK{})
+	return modelMap
+}
+
+func Test_generateSQLQuery(t *testing.T) {
+	type args struct {
+		table    Table
+		modelMap map[string]Table
+	}
+	tests := []struct {
+		name            string
+		args            args
+		wantQuery       string
+		wantConstraints string
+		wantErr         bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "TestGenerateSQLQuery",
+			args: args{
+				table:    getGoedbTableTest(),
+				modelMap: getGoedbTableMapTest(),
+			},
+			wantQuery:       "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name FROM TestTableWithFK,TestTable",
+			wantConstraints: "AND TestTableWithFK.TestTableName = TestTable.Name",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotQuery, gotConstraints, err := generateSQLQuery(tt.args.table, tt.args.modelMap)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("generateSQLQuery() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotQuery != tt.wantQuery {
+				t.Errorf("generateSQLQuery() gotQuery = %v, want %v", gotQuery, tt.wantQuery)
+			}
+			if gotConstraints != tt.wantConstraints {
+				t.Errorf("generateSQLQuery() gotConstraints = %v, want %v", gotConstraints, tt.wantConstraints)
 			}
 		})
 	}

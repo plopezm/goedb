@@ -52,6 +52,9 @@ func TestParseModel(t *testing.T) {
 					{
 						Name: "ID", Type: reflect.Uint64,
 					},
+					{
+						Name: "Name", Type: reflect.String,
+					},
 				},
 			},
 		},
@@ -70,13 +73,12 @@ func TestParseModel(t *testing.T) {
 						ColumnTypeName: "string",
 					},
 					{
-						Title:               "TestTableName",
-						PrimaryKey:          true,
-						ColumnType:          reflect.String,
-						ColumnTypeName:      "TestTable",
-						ForeignKey:          true,
-						ForeignKeyReference: "TestTable(Name)",
-						IsComplex:           true,
+						Title:          "TestTableName",
+						PrimaryKey:     true,
+						ColumnType:     reflect.String,
+						ColumnTypeName: "TestTable",
+						ForeignKey:     ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "TestTable", ForeignKeyColumnReference: "Name"},
+						IsComplex:      true,
 					},
 					{
 						Title:          "Ignorable",

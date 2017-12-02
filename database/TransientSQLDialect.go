@@ -150,8 +150,8 @@ func getTransientSQLCreateColumn(value Column) (sqlColumnLine string, primaryKey
 		primaryKey += value.Title + ","
 	}
 
-	if value.ForeignKey {
-		constraints += ", FOREIGN KEY (" + value.Title + ") REFERENCES " + value.ForeignKeyReference + " ON DELETE CASCADE"
+	if value.ForeignKey.IsForeignKey {
+		constraints += ", FOREIGN KEY (" + value.Title + ") REFERENCES " + value.ForeignKey.ForeignKeyTableReference + "(" + value.ForeignKey.ForeignKeyColumnReference + ")" + " ON DELETE CASCADE"
 	}
 	sqlColumnLine += ","
 	return sqlColumnLine, primaryKey, constraints, nil
@@ -179,8 +179,10 @@ func generateSQLQuery(table Table, modelMap map[string]Table) (query string, con
 		}
 
 		for _, primaryKey := range referencedTable.PrimaryKeys {
-			constraints += " AND " + table.Name + "." + column.Title + " = " + referencedTable.Name + "." + primaryKey.Name
-			err = referenceSQLEntity(&from, &query, &constraints, referencedTable, modelMap)
+			if primaryKey.Name == column.ForeignKey.ForeignKeyColumnReference {
+				constraints += " AND " + table.Name + "." + column.Title + " = " + referencedTable.Name + "." + primaryKey.Name
+				err = referenceSQLEntity(&from, &query, &constraints, referencedTable, modelMap)
+			}
 		}
 	}
 	//Removing last ','

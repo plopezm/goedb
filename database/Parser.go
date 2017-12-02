@@ -21,18 +21,23 @@ type PrimaryKey struct {
 	Type reflect.Kind
 }
 
+type ForeignKey struct {
+	IsForeignKey              bool
+	ForeignKeyTableReference  string
+	ForeignKeyColumnReference string
+}
+
 // Column represents the metadata of a column
 type Column struct {
-	Title               string
-	ColumnType          reflect.Kind
-	ColumnTypeName      string
-	PrimaryKey          bool
-	Unique              bool
-	ForeignKey          bool
-	ForeignKeyReference string
-	AutoIncrement       bool
-	IsComplex           bool
-	Ignore              bool
+	Title          string
+	ColumnType     reflect.Kind
+	ColumnTypeName string
+	PrimaryKey     bool
+	Unique         bool
+	ForeignKey     ForeignKey
+	AutoIncrement  bool
+	IsComplex      bool
+	Ignore         bool
 }
 
 // GetType returns the type of a struct
@@ -75,11 +80,11 @@ func tagAttributeExists(tag reflect.StructTag, attribute string) bool {
 }
 
 // GetGoedbTagTypeAndValueOfForeignKeyReference returns the tag and the value of a struct
-func GetGoedbTagTypeAndValueOfForeignKeyReference(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, foreignKeyReference string) (reflect.Type, reflect.Value, error) {
+func GetGoedbTagTypeAndValueOfForeignKeyReference(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, foreignKeyReference ForeignKey) (reflect.Type, reflect.Value, error) {
 	for i := 0; i < instanceType.NumField(); i++ {
 		field := instanceType.Field(i)
 		value := instanceValue.Field(i)
-		if tagAttributeExists(field.Tag, goedbTag) && strings.Contains(foreignKeyReference, field.Name) {
+		if tagAttributeExists(field.Tag, goedbTag) && foreignKeyReference.ForeignKeyColumnReference == field.Name {
 			return field.Type, value, nil
 		}
 	}
@@ -101,7 +106,7 @@ func processColumnType(column *Column, columnType reflect.Type, columnValue refl
 		column.ColumnType = columnType.Kind()
 		return nil
 	}
-	primaryKeyType, _, err := GetGoedbTagTypeAndValueOfForeignKeyReference(columnType, columnValue, "pk,unique", column.ForeignKeyReference)
+	primaryKeyType, _, err := GetGoedbTagTypeAndValueOfForeignKeyReference(columnType, columnValue, "pk,unique", column.ForeignKey)
 	if err != nil {
 		return err
 	}
@@ -140,14 +145,19 @@ func ParseModel(entity interface{}) Table {
 					tablecol.Ignore = true
 				default:
 					if strings.Contains(val, "fk=") {
-						tablecol.ForeignKey = true
-						tablecol.ForeignKeyReference = strings.Split(val, "=")[1]
+						tablecol.ForeignKey.IsForeignKey = true
+						//References are received in the following format: ReferencedTable(ReferencedColumn)
+						fktag := val[3:]
+						fksubtags := strings.Split(fktag, "(")
+						tablecol.ForeignKey.ForeignKeyTableReference = fksubtags[0]
+						tablecol.ForeignKey.ForeignKeyColumnReference = fksubtags[1][:len(fksubtags[1])-1]
+
 					}
 				}
 			}
 		}
 		processColumnType(&tablecol, entityType.Field(i).Type, entityValue)
-		if tablecol.PrimaryKey {
+		if tablecol.PrimaryKey || tablecol.Unique {
 			table.PrimaryKeys = append(table.PrimaryKeys, PrimaryKey{Name: tablecol.Title, Type: tablecol.ColumnType})
 		}
 		table.Columns = append(table.Columns, tablecol)
