@@ -261,7 +261,7 @@ func Test_generateSQLQuery(t *testing.T) {
 				modelMap: getGoedbTableMapTest(),
 			},
 			wantQuery:       "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name FROM TestTableWithFK,TestTable",
-			wantConstraints: "AND TestTableWithFK.TestTableName = TestTable.Name",
+			wantConstraints: " AND TestTableWithFK.TestTableName = TestTable.Name",
 		},
 	}
 	for _, tt := range tests {
