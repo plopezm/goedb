@@ -4,8 +4,6 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
-
-	"github.com/plopezm/goedb/metadata"
 )
 
 //TransientSQLDialect is the implementation of Transient SQL as Dialect
@@ -89,7 +87,7 @@ func (dialect *TransientSQLDialect) Find(table Table, where string, instance int
 
 //Update returns the TransientSQL sentence depending on the table and the instance
 func (dialect *TransientSQLDialect) Update(table Table, instance interface{}) (string, error) {
-	columns, values, err := getColumnsAndValuesSQL(table, instance)
+	columns, values, err := getColumnsAndValues(table, instance)
 	if err != nil {
 		return "", err
 	}
@@ -298,23 +296,26 @@ func getRelationPrimaryKeyValue(fkColumn Column, v reflect.Value) (columnValue s
 	return columnValue
 }
 
-func getColumnsAndValuesSQL(metatable Table, instance interface{}) (columns []string, values []string, err error) {
-	instanceType := metadata.GetType(instance)
-	intanceValue := metadata.GetValue(instance)
+func getColumnsAndValues(table Table, instance interface{}) (columns []string, values []string, err error) {
+	instanceType := GetType(instance)
+	intanceValue := GetValue(instance)
 
-	for i := 0; i < len(metatable.Columns); i++ {
+	for i := 0; i < len(table.Columns); i++ {
 		var value reflect.Value
 
-		if metatable.Columns[i].Ignore {
+		if table.Columns[i].Ignore {
 			continue
 		}
 
-		if metatable.Columns[i].AutoIncrement {
+		if table.Columns[i].AutoIncrement {
 			continue
 		}
 
-		if metatable.Columns[i].IsComplex {
-			_, value, err = metadata.GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)
+		if table.Columns[i].IsComplex {
+			//_, value, err = GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)
+			complexType := instanceType.Field(i).Type
+			complexValue := intanceValue.Field(i)
+			_, value, err = GetGoedbTagTypeAndValueOfForeignKeyReference(complexType, complexValue, "pk,unique", table.Columns[i].ForeignKey)
 			if err != nil {
 				return columns, values, err
 			}
@@ -322,7 +323,7 @@ func getColumnsAndValuesSQL(metatable Table, instance interface{}) (columns []st
 			value = intanceValue.Field(i)
 		}
 
-		switch metatable.Columns[i].ColumnType {
+		switch table.Columns[i].ColumnType {
 		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
 			//values += strconv.FormatInt(value.Int(), 10) + ","
 			values = append(values, strconv.FormatInt(value.Int(), 10))
@@ -342,7 +343,7 @@ func getColumnsAndValuesSQL(metatable Table, instance interface{}) (columns []st
 			values = append(values, "'"+value.String()+"'")
 		}
 		//columns += metatable.Columns[i].Title + ","
-		columns = append(columns, metatable.Columns[i].Title)
+		columns = append(columns, table.Columns[i].Title)
 	}
 	//return strCols[:len(strCols)-1], strValues[:len(strValues)-1], nil
 	return columns, values, err

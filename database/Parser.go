@@ -91,13 +91,25 @@ func GetGoedbTagTypeAndValueOfForeignKeyReference(instanceType reflect.Type, ins
 	return nil, reflect.Value{}, errors.New(" Goedb:" + goedbTag + " not found")
 }
 
+// GetGoedbTagTypeAndValue returns the tag and the value of a struct
+func GetGoedbTagTypeAndValue(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string) (reflect.Type, reflect.Value, error) {
+	for i := 0; i < instanceType.NumField(); i++ {
+		field := instanceType.Field(i)
+		value := instanceValue.Field(i)
+		if tagAttributeExists(field.Tag, goedbTag) {
+			return field.Type, value, nil
+		}
+	}
+	return nil, reflect.Value{}, errors.New(" Goedb:" + goedbTag + " not found")
+}
+
 // GetGoedbTagTypeAndValueOfIndexField returns the type and the value of a index field
-/*func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, fieldID int) (reflect.Type, reflect.Value, error) {
+func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, fieldID int) (reflect.Type, reflect.Value, error) {
 	fieldType := instanceType.Field(fieldID).Type
 	fieldValue := instanceValue.Field(fieldID)
 
 	return GetGoedbTagTypeAndValue(fieldType, fieldValue, goedbTag)
-}*/
+}
 
 func processColumnType(column *Column, columnType reflect.Type, columnValue reflect.Value) error {
 

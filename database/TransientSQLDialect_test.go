@@ -336,16 +336,6 @@ func getGoedbTableTest1Value() interface{} {
 	}
 }
 
-/*{
-	name: "GetPrimaryKeysValues",
-	args: args{
-		gt:  getGoedbTableTest1(),
-		obj: getGoedbTableTest1Value(),
-	},
-	wantColumnName:  []string{"TestTableName"},
-	wantColumnValue: []string{"TestTableName-Name-ID"},
-},*/
-
 func Test_getPrimaryKeysAndValues(t *testing.T) {
 	type args struct {
 		gt  Table
@@ -381,6 +371,76 @@ func Test_getPrimaryKeysAndValues(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotColumnValue, tt.wantColumnValue) {
 				t.Errorf("getPrimaryKeysAndValues() gotColumnValue = %v, want %v", gotColumnValue, tt.wantColumnValue)
+			}
+		})
+	}
+}
+
+func Test_getColumnsAndValues(t *testing.T) {
+	type args struct {
+		table    Table
+		instance interface{}
+	}
+	tests := []struct {
+		name        string
+		args        args
+		wantColumns []string
+		wantValues  []string
+		wantErr     bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "GetColumnsAndValuesSQL",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+			},
+			wantColumns: []string{"Name", "TestTableName"},
+			wantValues:  []string{"'TestTableWithFK-Name'", "'TestTableName-Name-ID'"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotColumns, gotValues, err := getColumnsAndValues(tt.args.table, tt.args.instance)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getColumnsAndValuesSQL() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotColumns, tt.wantColumns) {
+				t.Errorf("getColumnsAndValuesSQL() gotColumns = %v, want %v", gotColumns, tt.wantColumns)
+			}
+			if !reflect.DeepEqual(gotValues, tt.wantValues) {
+				t.Errorf("getColumnsAndValuesSQL() gotValues = %v, want %v", gotValues, tt.wantValues)
+			}
+		})
+	}
+}
+
+func TestTransientSQLDialect_First(t *testing.T) {
+	type args struct {
+		table    Table
+		where    string
+		instance interface{}
+	}
+	tests := []struct {
+		name    string
+		dialect *TransientSQLDialect
+		args    args
+		want    string
+		wantErr bool
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dialect := &TransientSQLDialect{}
+			got, err := dialect.First(tt.args.table, tt.args.where, tt.args.instance)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TransientSQLDialect.First() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("TransientSQLDialect.First() = %v, want %v", got, tt.want)
 			}
 		})
 	}
