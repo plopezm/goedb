@@ -443,6 +443,7 @@ func TestTransientSQLDialect_First(t *testing.T) {
 			},
 			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Name='TestTableWithFK-Name' AND TestTableWithFK.TestTableName='TestTableName-Name-ID' AND TestTableWithFK.TestTableName = TestTable.Name",
 			wantErr: false,
+			dialect: &TransientSQLDialect{Models: getGoedbTableMapTest()},
 		},
 		{
 			name: "TransientSQLDialect_First_WithWhere",
@@ -453,13 +454,22 @@ func TestTransientSQLDialect_First(t *testing.T) {
 			},
 			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Name = 'description1' AND TestTableWithFK.TestTableName = TestTable.Name",
 			wantErr: false,
+			dialect: &TransientSQLDialect{Models: getGoedbTableMapTest()},
+		},
+		{
+			name: "TransientSQLDialect_First_NoModelFound",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+			},
+			want:    "",
+			wantErr: true,
+			dialect: &TransientSQLDialect{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &TransientSQLDialect{
-				Models: getGoedbTableMapTest(),
-			}
+			dialect := tt.dialect
 			got, err := dialect.First(tt.args.table, tt.args.where, tt.args.instance)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TransientSQLDialect.First() error = [%v], wantErr [%v]", err, tt.wantErr)
