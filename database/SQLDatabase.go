@@ -68,7 +68,7 @@ func (sqld *SQLDatabase) Migrate(i interface{}, autoCreate bool, dropIfExists bo
 		sqld.DropTable(i)
 	}
 	table := ParseModel(i)
-	Models[table.Name] = table
+	sqld.Dialect.SetModel(table.Name, table)
 	if autoCreate {
 		sqltab := sqld.Dialect.Create(table)
 		_, err = sqld.db.Exec(sqltab)
@@ -81,7 +81,7 @@ func (sqld *SQLDatabase) DropTable(i interface{}) error {
 	typ := metadata.GetType(i)
 	name := typ.Name()
 
-	sql := sqld.Dialect.Drop(Models[name].Name)
+	sql := sqld.Dialect.Drop(sqld.Dialect.GetModel(name).Name)
 
 	_, err := sqld.db.Exec(sql)
 	if err != nil {

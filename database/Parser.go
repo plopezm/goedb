@@ -7,7 +7,7 @@ import (
 )
 
 // Models contains every model migrated
-var Models map[string]Table
+//var Models map[string]Table
 
 // Table represents the metadata of a table
 type Table struct {
