@@ -218,6 +218,7 @@ func getGoedbTableTest1() Table {
 		Name          string    `goedb:"pk"`
 		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
 		Ignorable     bool      `goedb:"ignore"`
+		Desc          string
 	}
 
 	return ParseModel(&TestTableWithFK{})
@@ -234,6 +235,7 @@ func getGoedbTableTest2() Table {
 		Name          string    `goedb:"pk"`
 		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
 		Ignorable     bool      `goedb:"ignore"`
+		Desc          string
 	}
 
 	type TestTableWithFK2 struct {
@@ -254,6 +256,7 @@ func getGoedbTableMapTest() (modelMap map[string]Table) {
 		Name          string    `goedb:"pk"`
 		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
 		Ignorable     bool      `goedb:"ignore"`
+		Desc          string
 	}
 
 	type TestTableWithFK2 struct {
@@ -286,7 +289,7 @@ func Test_generateSQLQuery(t *testing.T) {
 				table:    getGoedbTableTest1(),
 				modelMap: getGoedbTableMapTest(),
 			},
-			wantQuery:       "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name FROM TestTableWithFK,TestTable",
+			wantQuery:       "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable",
 			wantConstraints: " AND TestTableWithFK.TestTableName = TestTable.Name",
 		},
 		{
@@ -295,7 +298,7 @@ func Test_generateSQLQuery(t *testing.T) {
 				table:    getGoedbTableTest2(),
 				modelMap: getGoedbTableMapTest(),
 			},
-			wantQuery:       "SELECT TestTableWithFK2.Name,TestTableWithFK.Name,TestTable.ID,TestTable.Name FROM TestTableWithFK2,TestTableWithFK,TestTable",
+			wantQuery:       "SELECT TestTableWithFK2.Name,TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK2,TestTableWithFK,TestTable",
 			wantConstraints: " AND TestTableWithFK2.TestTableWithFKName = TestTableWithFK.Name AND TestTableWithFK.TestTableName = TestTable.Name",
 		},
 	}
@@ -327,12 +330,14 @@ func getGoedbTableTest1Value() interface{} {
 		Name          string    `goedb:"pk"`
 		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
 		Ignorable     bool      `goedb:"ignore"`
+		Desc          string
 	}
 
 	return &TestTableWithFK{
 		Name:          "TestTableWithFK-Name",
 		TestTableName: TestTable{ID: 1, Name: "TestTableName-Name-ID"},
 		Ignorable:     true,
+		Desc:          "testing description",
 	}
 }
 
@@ -395,8 +400,8 @@ func Test_getColumnsAndValues(t *testing.T) {
 				table:    getGoedbTableTest1(),
 				instance: getGoedbTableTest1Value(),
 			},
-			wantColumns: []string{"Name", "TestTableName"},
-			wantValues:  []string{"'TestTableWithFK-Name'", "'TestTableName-Name-ID'"},
+			wantColumns: []string{"Name", "TestTableName", "Desc"},
+			wantValues:  []string{"'TestTableWithFK-Name'", "'TestTableName-Name-ID'", "'testing description'"},
 		},
 	}
 	for _, tt := range tests {
@@ -429,18 +434,39 @@ func TestTransientSQLDialect_First(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
+		{
+			name: "TransientSQLDialect_First_WithoutWhere",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+			},
+			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Name='TestTableWithFK-Name' AND TestTableWithFK.TestTableName='TestTableName-Name-ID' AND TestTableWithFK.TestTableName = TestTable.Name",
+			wantErr: false,
+		},
+		{
+			name: "TransientSQLDialect_First_WithWhere",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+				where:    "TestTableWithFK.Name = 'description1'",
+			},
+			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Name = 'description1' AND TestTableWithFK.TestTableName = TestTable.Name",
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &TransientSQLDialect{}
+			dialect := &TransientSQLDialect{
+				Models: getGoedbTableMapTest(),
+			}
 			got, err := dialect.First(tt.args.table, tt.args.where, tt.args.instance)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("TransientSQLDialect.First() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("TransientSQLDialect.First() error = [%v], wantErr [%v]", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("TransientSQLDialect.First() = %v, want %v", got, tt.want)
+				t.Errorf("TransientSQLDialect.First() = [%v], want [%v]", got, tt.want)
 			}
 		})
 	}
