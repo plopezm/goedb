@@ -47,11 +47,17 @@ func (dialect *TransientSQLDialect) First(table Table, where string, instance in
 	}
 
 	if where == "" {
-		pkc, pkv, err := getPrimaryKeysValues(table, instance)
+		pkc, pkv, err := getPrimaryKeysAndValues(table, instance)
 		if err != nil {
 			return "", err
 		}
-		sql += " WHERE " + table.Name + "." + pkc + "=" + pkv
+		//sql += " WHERE " + table.Name + "." + pkc + "=" + pkv
+		if len(pkc) > 0 {
+			sql += " WHERE " + table.Name + "." + pkc[0] + "=" + pkv[0]
+			for i := 1; i < len(pkc); i++ {
+				sql += " AND " + table.Name + "." + pkc[i] + "=" + pkv[i]
+			}
+		}
 	} else {
 		sql += " WHERE " + where
 	}
@@ -92,12 +98,17 @@ func (dialect *TransientSQLDialect) Update(table Table, instance interface{}) (s
 		sql += column + " = " + values[i] + ","
 	}
 	sql = sql[:len(sql)-1]
-	pkc, pkv, err := getPrimaryKeysValues(table, instance)
+	pkc, pkv, err := getPrimaryKeysAndValues(table, instance)
 	if err != nil {
 		return "", errors.New("Error getting primary key")
 	}
-	sql += " WHERE " + table.Name + "." + pkc + "=" + pkv
-
+	//sql += " WHERE " + table.Name + "." + pkc + "=" + pkv
+	if len(pkc) > 0 {
+		sql += " WHERE " + table.Name + "." + pkc[0] + "=" + pkv[0]
+		for i := 1; i < len(pkc); i++ {
+			sql += " AND " + table.Name + "." + pkc[i] + "=" + pkv[i]
+		}
+	}
 	return sql, nil
 }
 
@@ -105,11 +116,17 @@ func (dialect *TransientSQLDialect) Update(table Table, instance interface{}) (s
 func (dialect *TransientSQLDialect) Delete(table Table, where string, instance interface{}) (string, error) {
 	sql := "DELETE FROM " + table.Name + " WHERE "
 	if where == "" {
-		pkc, pkv, err := getPrimaryKeysValues(table, instance)
+		pkc, pkv, err := getPrimaryKeysAndValues(table, instance)
 		if err != nil {
 			return "", err
 		}
-		sql += pkc + "=" + pkv
+		//sql += pkc + "=" + pkv
+		if len(pkc) > 0 {
+			sql += pkc[0] + "=" + pkv[0]
+			for i := 1; i < len(pkc); i++ {
+				sql += " AND " + pkc[i] + "=" + pkv[i]
+			}
+		}
 	} else {
 		sql += where
 	}
@@ -219,7 +236,7 @@ func referenceSQLEntity(from *string, query *string, constraints *string, table 
 	return err
 }
 
-func getPrimaryKeysValues(gt Table, obj interface{}) (columnName string, columnValue string, err error) {
+func getPrimaryKeysAndValues(gt Table, obj interface{}) (columnName []string, columnValue []string, err error) {
 	err = errors.New("No primary key found")
 	val := reflect.ValueOf(obj)
 
@@ -229,26 +246,56 @@ func getPrimaryKeysValues(gt Table, obj interface{}) (columnName string, columnV
 
 	for i := 0; i < len(gt.Columns); i++ {
 		v := val.Field(i)
-		if gt.Columns[i].PrimaryKey {
-			columnName = gt.Columns[i].Title
+		columnToAnalize := gt.Columns[i]
+		if columnToAnalize.PrimaryKey {
+			columnName = append(columnName, gt.Columns[i].Title)
 			err = nil
-			switch gt.Columns[i].ColumnType {
-			case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
-				columnValue = strconv.FormatInt(v.Int(), 10)
-			case reflect.Float32, reflect.Float64:
-				columnValue = strconv.FormatFloat(v.Float(), 'f', 6, 64)
-			case reflect.Bool:
-				if v.Bool() {
-					columnValue = "1"
-				} else {
-					columnValue = "0"
-				}
-			case reflect.String:
-				columnValue = "'" + v.String() + "'"
+			if columnToAnalize.IsComplex {
+				columnValue = append(columnValue, getRelationPrimaryKeyValue(columnToAnalize, v))
+			} else {
+				columnValue = append(columnValue, getPrimaryKeyValue(columnToAnalize, v))
 			}
 		}
 	}
 	return columnName, columnValue, err
+}
+
+func getPrimaryKeyValue(columnToAnalize Column, v reflect.Value) (columnValue string) {
+	switch columnToAnalize.ColumnType {
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
+		columnValue = strconv.FormatInt(v.Int(), 10)
+	case reflect.Float32, reflect.Float64:
+		columnValue = strconv.FormatFloat(v.Float(), 'f', 6, 64)
+	case reflect.Bool:
+		if v.Bool() {
+			columnValue = "1"
+		} else {
+			columnValue = "0"
+		}
+	case reflect.String:
+		columnValue = "'" + v.String() + "'"
+	}
+	return columnValue
+}
+
+func getRelationPrimaryKeyValue(fkColumn Column, v reflect.Value) (columnValue string) {
+	referencedFKColumn := v.FieldByName(fkColumn.ForeignKey.ForeignKeyColumnReference)
+
+	switch fkColumn.ColumnType {
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64:
+		columnValue = strconv.FormatInt(referencedFKColumn.Int(), 10)
+	case reflect.Float32, reflect.Float64:
+		columnValue = strconv.FormatFloat(referencedFKColumn.Float(), 'f', 6, 64)
+	case reflect.Bool:
+		if v.Bool() {
+			columnValue = "1"
+		} else {
+			columnValue = "0"
+		}
+	case reflect.String:
+		columnValue = "'" + referencedFKColumn.String() + "'"
+	}
+	return columnValue
 }
 
 func getColumnsAndValuesSQL(metatable Table, instance interface{}) (columns []string, values []string, err error) {

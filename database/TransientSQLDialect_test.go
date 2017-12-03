@@ -315,3 +315,73 @@ func Test_generateSQLQuery(t *testing.T) {
 		})
 	}
 }
+
+func getGoedbTableTest1Value() interface{} {
+
+	type TestTable struct {
+		ID   uint64 `goedb:"pk,autoincrement"`
+		Name string `goedb:"unique"`
+	}
+
+	type TestTableWithFK struct {
+		Name          string    `goedb:"pk"`
+		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
+		Ignorable     bool      `goedb:"ignore"`
+	}
+
+	return &TestTableWithFK{
+		Name:          "TestTableWithFK-Name",
+		TestTableName: TestTable{ID: 1, Name: "TestTableName-Name-ID"},
+		Ignorable:     true,
+	}
+}
+
+/*{
+	name: "GetPrimaryKeysValues",
+	args: args{
+		gt:  getGoedbTableTest1(),
+		obj: getGoedbTableTest1Value(),
+	},
+	wantColumnName:  []string{"TestTableName"},
+	wantColumnValue: []string{"TestTableName-Name-ID"},
+},*/
+
+func Test_getPrimaryKeysAndValues(t *testing.T) {
+	type args struct {
+		gt  Table
+		obj interface{}
+	}
+	tests := []struct {
+		name            string
+		args            args
+		wantColumnName  []string
+		wantColumnValue []string
+		wantErr         bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "GetPrimaryKeysValues",
+			args: args{
+				gt:  getGoedbTableTest1(),
+				obj: getGoedbTableTest1Value(),
+			},
+			wantColumnName:  []string{"Name", "TestTableName"},
+			wantColumnValue: []string{"'TestTableWithFK-Name'", "'TestTableName-Name-ID'"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotColumnName, gotColumnValue, err := getPrimaryKeysAndValues(tt.args.gt, tt.args.obj)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getPrimaryKeysAndValues() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotColumnName, tt.wantColumnName) {
+				t.Errorf("getPrimaryKeysAndValues() gotColumnName = %v, want %v", gotColumnName, tt.wantColumnName)
+			}
+			if !reflect.DeepEqual(gotColumnValue, tt.wantColumnValue) {
+				t.Errorf("getPrimaryKeysAndValues() gotColumnValue = %v, want %v", gotColumnValue, tt.wantColumnValue)
+			}
+		})
+	}
+}
