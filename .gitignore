@@ -19,3 +19,5 @@ bash.exe.stackdump
 
 #Coverage
 coverage.txt
+
+/**/debug.test
