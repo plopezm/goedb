@@ -24,7 +24,7 @@ func GetPersistenceConfig(persistenceConfigFile string) Persistence {
 	raw, err := ioutil.ReadFile(persistenceConfigFile)
 	if err == nil {
 		json.Unmarshal(raw, &persistence)
-	}else{
+	} else {
 		persistence.Datasources = make([]Datasource, 0)
 	}
 	return persistence
