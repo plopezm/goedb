@@ -3,6 +3,8 @@ package database
 import (
 	"reflect"
 	"testing"
+
+	"github.com/plopezm/goedb/database/models"
 )
 
 func TestParseModel(t *testing.T) {
@@ -23,7 +25,7 @@ func TestParseModel(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want Table
+		want models.Table
 	}{
 		// TODO: Add test cases.
 		{
@@ -31,9 +33,9 @@ func TestParseModel(t *testing.T) {
 			args: args{
 				entity: &TestTable{},
 			},
-			want: Table{
+			want: models.Table{
 				Name: "TestTable",
-				Columns: []Column{
+				Columns: []models.Column{
 					{
 						Title:          "ID",
 						AutoIncrement:  true,
@@ -48,7 +50,7 @@ func TestParseModel(t *testing.T) {
 						ColumnTypeName: "string",
 					},
 				},
-				PrimaryKeys: []PrimaryKey{
+				PrimaryKeys: []models.PrimaryKey{
 					{
 						Name: "ID", Type: reflect.Uint64,
 					},
@@ -63,9 +65,9 @@ func TestParseModel(t *testing.T) {
 			args: args{
 				entity: &TestTableWithFK{},
 			},
-			want: Table{
+			want: models.Table{
 				Name: "TestTableWithFK",
-				Columns: []Column{
+				Columns: []models.Column{
 					{
 						Title:          "Name",
 						PrimaryKey:     true,
@@ -77,7 +79,7 @@ func TestParseModel(t *testing.T) {
 						PrimaryKey:     true,
 						ColumnType:     reflect.String,
 						ColumnTypeName: "TestTable",
-						ForeignKey:     ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "TestTable", ForeignKeyColumnReference: "Name"},
+						ForeignKey:     models.ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "TestTable", ForeignKeyColumnReference: "Name"},
 						IsComplex:      true,
 					},
 					{
@@ -87,7 +89,7 @@ func TestParseModel(t *testing.T) {
 						ColumnTypeName: "bool",
 					},
 				},
-				PrimaryKeys: []PrimaryKey{
+				PrimaryKeys: []models.PrimaryKey{
 					{
 						Name: "Name", Type: reflect.String,
 					},

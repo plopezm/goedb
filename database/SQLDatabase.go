@@ -8,6 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/plopezm/goedb/config"
+	"github.com/plopezm/goedb/database/models"
 )
 
 //SQLDatabase is the implementation of SQL for a Database interface
@@ -64,8 +65,8 @@ func (sqld *SQLDatabase) GetDBConnection() *sqlx.DB {
 }
 
 // Model returns the metadata of each structure migrated
-func (sqld *SQLDatabase) Model(i interface{}) (Table, error) {
-	var table Table
+func (sqld *SQLDatabase) Model(i interface{}) (models.Table, error) {
+	var table models.Table
 	if table, ok := sqld.Dialect.GetModel(GetType(i).Name()); ok {
 		return table, nil
 	}
@@ -87,7 +88,7 @@ func (sqld *SQLDatabase) Migrate(i interface{}, autoCreate bool, dropIfExists bo
 }
 
 // Insert creates a new row with the object in the database (it must be migrated)
-func (sqld *SQLDatabase) Insert(instance interface{}) (goedbres Result, err error) {
+func (sqld *SQLDatabase) Insert(instance interface{}) (goedbres models.Result, err error) {
 	var result sql.Result
 	model, err := sqld.Model(instance)
 	if err != nil {
@@ -109,7 +110,7 @@ func (sqld *SQLDatabase) Insert(instance interface{}) (goedbres Result, err erro
 }
 
 // Update updates an object using its primery key
-func (sqld *SQLDatabase) Update(instance interface{}) (goedbres Result, err error) {
+func (sqld *SQLDatabase) Update(instance interface{}) (goedbres models.Result, err error) {
 	var result sql.Result
 	model, err := sqld.Model(instance)
 	if err != nil {
@@ -131,7 +132,7 @@ func (sqld *SQLDatabase) Update(instance interface{}) (goedbres Result, err erro
 }
 
 // Remove removes a row with the object in the database (it must be migrated)
-func (sqld *SQLDatabase) Remove(i interface{}, where string, params map[string]interface{}) (goedbres Result, err error) {
+func (sqld *SQLDatabase) Remove(i interface{}, where string, params map[string]interface{}) (goedbres models.Result, err error) {
 	model, err := sqld.Model(i)
 	if err != nil {
 		return goedbres, err

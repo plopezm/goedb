@@ -3,154 +3,34 @@ package database
 import (
 	"reflect"
 	"testing"
-)
 
-func Test_getTransientSQLCreateColumn(t *testing.T) {
-	type args struct {
-		value Column
-	}
-	tests := [...]struct {
-		name              string
-		args              args
-		wantSQLColumnLine string
-		wantPrimaryKey    string
-		wantConstraints   string
-		wantErr           bool
-	}{
-		// TODO: Add test cases.
-		{
-			name: "TestColumnPrimaryKeyAutoincrement",
-			args: args{
-				value: Column{
-					Title:         "PKColumn",
-					PrimaryKey:    true,
-					ColumnType:    reflect.Uint64,
-					AutoIncrement: true,
-				},
-			},
-			wantSQLColumnLine: "PKColumn BIGINT PRIMARY KEY AUTOINCREMENT,",
-			wantPrimaryKey:    "",
-			wantConstraints:   "",
-		},
-		{
-			name: "TestColumnPrimaryKey",
-			args: args{
-				value: Column{
-					Title:      "PKColumn",
-					PrimaryKey: true,
-					ColumnType: reflect.Int,
-				},
-			},
-			wantSQLColumnLine: "PKColumn INTEGER,",
-			wantPrimaryKey:    "PKColumn,",
-			wantConstraints:   "",
-		},
-		{
-			name: "TestColumnPrimaryKeyWithConstraints",
-			args: args{
-				value: Column{
-					Title:      "PKColumn",
-					PrimaryKey: true,
-					ColumnType: reflect.Int,
-					ForeignKey: ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "OtherTable", ForeignKeyColumnReference: "OtherTablePK"},
-				},
-			},
-			wantSQLColumnLine: "PKColumn INTEGER,",
-			wantPrimaryKey:    "PKColumn,",
-			wantConstraints:   ", FOREIGN KEY (PKColumn) REFERENCES OtherTable(OtherTablePK) ON DELETE CASCADE",
-		},
-		{
-			name: "TestErrorTypeNotFound",
-			args: args{
-				value: Column{
-					Title:      "PKColumn",
-					PrimaryKey: true,
-					ColumnType: reflect.Struct,
-					ForeignKey: ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "OtherTable", ForeignKeyColumnReference: "OtherTablePK"},
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "TestStringColumnUnique",
-			args: args{
-				value: Column{
-					Title:      "UniqueColumnString",
-					ColumnType: reflect.String,
-					Unique:     true,
-				},
-			},
-			wantSQLColumnLine: "UniqueColumnString VARCHAR UNIQUE,",
-		},
-		{
-			name: "TestNormalStringColumn",
-			args: args{
-				value: Column{
-					Title:      "NormalColumnString",
-					ColumnType: reflect.String,
-				},
-			},
-			wantSQLColumnLine: "NormalColumnString VARCHAR,",
-		},
-		{
-			name: "TestNormalStringColumn",
-			args: args{
-				value: Column{
-					Title:      "NormalColumnString",
-					ColumnType: reflect.Float64,
-				},
-			},
-			wantSQLColumnLine: "NormalColumnString FLOAT,",
-		},
-		{
-			name: "TestNormalStringColumn",
-			args: args{
-				value: Column{
-					Title:      "NormalColumnString",
-					ColumnType: reflect.Bool,
-				},
-			},
-			wantSQLColumnLine: "NormalColumnString BOOLEAN,",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			wantSQLColumnLine, gotPrimaryKey, gotConstraints, err := getTransientSQLCreateColumn(tt.args.value)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getTransientSQLCreateColumn() error = %v, wantErr = %v", err, tt.wantErr)
-				return
-			}
-			if wantSQLColumnLine != tt.wantSQLColumnLine {
-				t.Errorf("getTransientSQLCreateColumn() wantSQLColumnLine = %v, want = %v", wantSQLColumnLine, tt.wantSQLColumnLine)
-			}
-			if gotPrimaryKey != tt.wantPrimaryKey {
-				t.Errorf("getTransientSQLCreateColumn() gotPrimaryKey = %v, want = %v", gotPrimaryKey, tt.wantPrimaryKey)
-			}
-			if gotConstraints != tt.wantConstraints {
-				t.Errorf("getTransientSQLCreateColumn() gotConstraints = %v, want = %v", gotConstraints, tt.wantConstraints)
-			}
-		})
-	}
-}
+	"github.com/plopezm/goedb/database/specifics"
+
+	"github.com/plopezm/goedb/database/models"
+)
 
 func TestSQLDialect_Create(t *testing.T) {
 	type args struct {
-		table Table
+		table models.Table
 	}
 	tests := [...]struct {
-		name    string
-		dialect *SQLDialect
-		args    args
-		want    string
+		name      string
+		dialect   *SQLDialect
+		specifics specifics.Specifics
+		args      args
+		want      string
 	}{
 		// TODO: Add test cases.
 		{
-			name:    "TestCreateTable",
-			dialect: new(SQLDialect),
+			name: "TestCreateTable",
+			dialect: &SQLDialect{
+				Specifics: new(specifics.SQLiteSpecifics),
+			},
+			specifics: new(specifics.SQLiteSpecifics),
 			args: args{
-				table: Table{
+				table: models.Table{
 					Name: "Table1",
-					Columns: []Column{
+					Columns: []models.Column{
 						{
 							Title:         "PKColumn",
 							PrimaryKey:    true,
@@ -167,12 +47,14 @@ func TestSQLDialect_Create(t *testing.T) {
 			want: "CREATE TABLE Table1 (PKColumn BIGINT PRIMARY KEY AUTOINCREMENT,NormalColumnString VARCHAR)",
 		},
 		{
-			name:    "TestCreateTableWithPrimaryKeys",
-			dialect: new(SQLDialect),
+			name: "TestCreateTableWithPrimaryKeys",
+			dialect: &SQLDialect{
+				Specifics: new(specifics.SQLiteSpecifics),
+			},
 			args: args{
-				table: Table{
+				table: models.Table{
 					Name: "Table1",
-					Columns: []Column{
+					Columns: []models.Column{
 						{
 							Title:      "PKColumn1",
 							PrimaryKey: true,
@@ -199,7 +81,7 @@ func TestSQLDialect_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &SQLDialect{}
+			dialect := tt.dialect
 			if got := dialect.Create(tt.args.table); got != tt.want {
 				t.Errorf("SQLDialect.Create() = %v, want %v", got, tt.want)
 			}
@@ -207,7 +89,7 @@ func TestSQLDialect_Create(t *testing.T) {
 	}
 }
 
-func getGoedbTableTest1() Table {
+func getGoedbTableTest1() models.Table {
 
 	type TestTable struct {
 		ID   uint64 `goedb:"pk,autoincrement"`
@@ -224,7 +106,7 @@ func getGoedbTableTest1() Table {
 	return ParseModel(&TestTableWithFK{})
 }
 
-func getGoedbTableTest2() Table {
+func getGoedbTableTest2() models.Table {
 
 	type TestTable struct {
 		ID   uint64 `goedb:"pk,autoincrement"`
@@ -246,7 +128,7 @@ func getGoedbTableTest2() Table {
 	return ParseModel(&TestTableWithFK2{})
 }
 
-func getGoedbTableMapTest() (modelMap map[string]Table) {
+func getGoedbTableMapTest() (modelMap map[string]models.Table) {
 	type TestTable struct {
 		ID   uint64 `goedb:"pk,autoincrement"`
 		Name string `goedb:"unique"`
@@ -263,7 +145,7 @@ func getGoedbTableMapTest() (modelMap map[string]Table) {
 		Name                string          `goedb:"pk"`
 		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
 	}
-	modelMap = make(map[string]Table)
+	modelMap = make(map[string]models.Table)
 	modelMap["TestTable"] = ParseModel(&TestTable{})
 	modelMap["TestTableWithFK"] = ParseModel(&TestTableWithFK{})
 	modelMap["TestTableWithFK2"] = ParseModel(&TestTableWithFK2{})
@@ -272,8 +154,8 @@ func getGoedbTableMapTest() (modelMap map[string]Table) {
 
 func Test_generateSQLQuery(t *testing.T) {
 	type args struct {
-		table    Table
-		modelMap map[string]Table
+		table    models.Table
+		modelMap map[string]models.Table
 	}
 	tests := []struct {
 		name            string
@@ -343,7 +225,7 @@ func getGoedbTableTest1Value() interface{} {
 
 func Test_getPrimaryKeysAndValues(t *testing.T) {
 	type args struct {
-		gt  Table
+		gt  models.Table
 		obj interface{}
 	}
 	tests := []struct {
@@ -383,7 +265,7 @@ func Test_getPrimaryKeysAndValues(t *testing.T) {
 
 func Test_getColumnsAndValues(t *testing.T) {
 	type args struct {
-		table    Table
+		table    models.Table
 		instance interface{}
 	}
 	tests := []struct {
@@ -423,7 +305,7 @@ func Test_getColumnsAndValues(t *testing.T) {
 
 func TestSQLDialect_First(t *testing.T) {
 	type args struct {
-		table    Table
+		table    models.Table
 		where    string
 		instance interface{}
 	}
@@ -484,10 +366,10 @@ func TestSQLDialect_First(t *testing.T) {
 
 func TestSQLDialect_Find(t *testing.T) {
 	type fields struct {
-		Models map[string]Table
+		Models map[string]models.Table
 	}
 	type args struct {
-		table    Table
+		table    models.Table
 		where    string
 		instance interface{}
 	}
@@ -557,10 +439,10 @@ func TestSQLDialect_Find(t *testing.T) {
 
 func TestSQLDialect_Update(t *testing.T) {
 	type fields struct {
-		Models map[string]Table
+		Models map[string]models.Table
 	}
 	type args struct {
-		table    Table
+		table    models.Table
 		instance interface{}
 	}
 	tests := []struct {
@@ -603,10 +485,10 @@ func TestSQLDialect_Update(t *testing.T) {
 
 func TestSQLDialect_Delete(t *testing.T) {
 	type fields struct {
-		Models map[string]Table
+		Models map[string]models.Table
 	}
 	type args struct {
-		table    Table
+		table    models.Table
 		where    string
 		instance interface{}
 	}
@@ -663,7 +545,7 @@ func TestSQLDialect_Delete(t *testing.T) {
 
 func TestSQLDialect_Drop(t *testing.T) {
 	type fields struct {
-		Models map[string]Table
+		Models map[string]models.Table
 	}
 	type args struct {
 		tableName string
@@ -700,10 +582,10 @@ func TestSQLDialect_Drop(t *testing.T) {
 
 func TestSQLDialect_Insert(t *testing.T) {
 	type fields struct {
-		Models map[string]Table
+		Models map[string]models.Table
 	}
 	type args struct {
-		table    Table
+		table    models.Table
 		instance interface{}
 	}
 	tests := []struct {
