@@ -106,3 +106,99 @@ func TestParseModel(t *testing.T) {
 		})
 	}
 }
+
+func getGoedbTableTestParser() interface{} {
+
+	type TestTable struct {
+		ID   uint64 `goedb:"pk,autoincrement"`
+		Name string `goedb:"unique"`
+	}
+
+	type TestTableWithFK struct {
+		Name          string    `goedb:"pk"`
+		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
+		Ignorable     bool      `goedb:"ignore"`
+		Desc          string
+	}
+
+	type TestTableWithFK2 struct {
+		Name                string          `goedb:"pk"`
+		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
+	}
+
+	return &TestTableWithFK2{
+		Name: "ExampleMultiStruct",
+		TestTableWithFKName: TestTableWithFK{
+			Name:          "TestTableWithFK-Name",
+			TestTableName: TestTable{ID: 1, Name: "TestTableName-Name-ID"},
+			Ignorable:     true,
+			Desc:          "testing description",
+		},
+	}
+}
+
+func MockGetModel(name string) (Table, bool) {
+	type TestTable struct {
+		ID   uint64 `goedb:"pk,autoincrement"`
+		Name string `goedb:"unique"`
+	}
+
+	type TestTableWithFK struct {
+		Name          string    `goedb:"pk"`
+		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
+		Ignorable     bool      `goedb:"ignore"`
+		Desc          string
+	}
+
+	type TestTableWithFK2 struct {
+		Name                string          `goedb:"pk"`
+		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
+	}
+
+	if name == "TestTableWithFK2" {
+		return ParseModel(&TestTableWithFK2{
+			Name: "ExampleMultiStruct",
+			TestTableWithFKName: TestTableWithFK{
+				Name:          "TestTableWithFK-Name",
+				TestTableName: TestTable{ID: 1, Name: "TestTableName-Name-ID"},
+				Ignorable:     true,
+				Desc:          "testing description",
+			},
+		}), true
+	} else if name == "TestTableWithFK" {
+		return ParseModel(&TestTableWithFK{
+			Name:          "TestTableWithFK-Name",
+			TestTableName: TestTable{ID: 1, Name: "TestTableName-Name-ID"},
+			Ignorable:     true,
+			Desc:          "testing description",
+		}), true
+	} else {
+		return ParseModel(&TestTable{ID: 1, Name: "TestTableName-Name-ID"}), true
+	}
+}
+
+func TestStructToSliceOfAddressesWithRules(t *testing.T) {
+	type args struct {
+		structPtr interface{}
+		GetModel  func(name string) (Table, bool)
+	}
+	tests := []struct {
+		name string
+		args args
+		want []interface{}
+	}{
+		// TODO: Add test cases.
+		{
+			name: "TestStructToSliceOfAddressesWithRules_MultipleStructs",
+			args: args{structPtr: getGoedbTableTestParser(), GetModel: MockGetModel},
+			want: []interface{}{"addr1", "addr2", "addr3", "addr4", "addr5"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := StructToSliceOfAddressesWithRules(tt.args.structPtr, tt.args.GetModel); len(got) != len(tt.want) {
+				t.Errorf("StructToSliceOfAddressesWithRules() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
