@@ -570,7 +570,19 @@ func TestTransientSQLDialect_Update(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
+		{
+			name: "TransientSQLDialect_Update",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+			},
+			want:    "UPDATE TestTableWithFK SET Name = 'TestTableWithFK-Name',TestTableName = 'TestTableName-Name-ID',Desc = 'testing description' WHERE TestTableWithFK.Name='TestTableWithFK-Name' AND TestTableWithFK.TestTableName='TestTableName-Name-ID'",
+			wantErr: false,
+			fields: fields{
+				Models: getGoedbTableMapTest(),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
