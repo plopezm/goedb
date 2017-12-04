@@ -1,0 +1,15 @@
+{
+  "datasources":[
+    {
+      "name": "testSQLite3",
+      "driver": "sqlite3",
+      "url": "./test.db"
+    },
+    {
+      "name": "testPostgres9",
+      "schema": "testing",
+      "driver": "postgres",
+      "url": "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+    }
+  ]
+}

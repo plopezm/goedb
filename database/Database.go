@@ -1,17 +1,11 @@
-package manager
+package database
 
 import (
 	"database/sql"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/plopezm/goedb/metadata"
+	"github.com/plopezm/goedb/database/models"
 )
-
-// GoedbResult is the result for some operation in database
-type GoedbResult struct {
-	NumRecordsAffected int64
-	LastInsertId       int64
-}
 
 // EntityManager is the manager used to interact with the database
 type EntityManager interface {
@@ -21,10 +15,10 @@ type EntityManager interface {
 	GetDBConnection() *sqlx.DB
 	Migrate(i interface{}, autoCreate bool, dropIfExists bool) error
 	DropTable(i interface{}) error
-	Model(i interface{}) (metadata.GoedbTable, error)
-	Insert(i interface{}) (GoedbResult, error)
-	Update(i interface{}) (GoedbResult, error)
-	Remove(i interface{}, where string, params map[string]interface{}) (GoedbResult, error)
+	Model(i interface{}) (models.Table, error)
+	Insert(i interface{}) (models.Result, error)
+	Update(i interface{}) (models.Result, error)
+	Remove(i interface{}, where string, params map[string]interface{}) (models.Result, error)
 	First(i interface{}, where string, params map[string]interface{}) error
 	Find(i interface{}, where string, params map[string]interface{}) error
 	NativeFirst(i interface{}, query string, params map[string]interface{}) error

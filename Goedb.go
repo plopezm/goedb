@@ -6,21 +6,22 @@ import (
 	"log"
 	"os"
 
+	"github.com/plopezm/goedb/database/dialect"
+
 	"github.com/plopezm/goedb/config"
-	"github.com/plopezm/goedb/dialect"
-	"github.com/plopezm/goedb/manager"
+	"github.com/plopezm/goedb/database"
 )
 
 var goedbStandalone *dbm
 
 type dbm struct {
-	drivers map[string]manager.EntityManager
+	drivers map[string]database.EntityManager
 }
 
 func init() {
-	log.Println("[GOEDB] library version: 1.0.0-RC8")
+	log.Println("[GOEDB] library version: 1.0.0")
 	goedbStandalone = new(dbm)
-	goedbStandalone.drivers = make(map[string]manager.EntityManager)
+	goedbStandalone.drivers = make(map[string]database.EntityManager)
 }
 
 // Initialize gets the datasources from persistence.json
@@ -29,7 +30,7 @@ func Initialize() {
 	persistence = config.GetPersistenceConfig("persistence.json")
 
 	for _, datasource := range persistence.Datasources {
-		driver := new(manager.GoedbSQLDriver)
+		driver := new(database.SQLDatabase)
 		driver.Dialect = dialect.GetDialect(datasource.Driver)
 		err := driver.Open(datasource.Driver, datasource.URL, datasource.Schema)
 		if err != nil {
@@ -42,7 +43,7 @@ func Initialize() {
 }
 
 // GetEntityManager returns a entity manager for the datasource selected.
-func GetEntityManager(persistenceUnit string) (manager.EntityManager, error) {
+func GetEntityManager(persistenceUnit string) (database.EntityManager, error) {
 	entityManager, ok := goedbStandalone.drivers[persistenceUnit]
 	if !ok {
 		return nil, errors.New("Persistence unit \"" + persistenceUnit + "\" not found in persistence.json")

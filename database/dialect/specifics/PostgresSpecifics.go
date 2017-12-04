@@ -1,17 +1,18 @@
-package dialect
+package specifics
 
 import (
 	"errors"
-	"github.com/plopezm/goedb/metadata"
 	"reflect"
+
+	"github.com/plopezm/goedb/database/models"
 )
 
-// PostgresDialect represents a postgresql database dialect
-type PostgresDialect struct {
+//PostgresSpecifics contains a few functions that are different from standard sql dialect
+type PostgresSpecifics struct {
 }
 
-// GetSQLColumnModel returns the model of a column for Postgresql
-func (dialect *PostgresDialect) GetSQLColumnModel(value metadata.GoedbColumn) (string, string, string, error) {
+// GetSQLCreateTableColumn returns the model of a column for Postgresql
+func (dialect *PostgresSpecifics) GetSQLCreateTableColumn(value models.Column) (string, string, string, error) {
 	var pksFound string
 	var constraints string
 	column := value.Title
@@ -47,8 +48,8 @@ func (dialect *PostgresDialect) GetSQLColumnModel(value metadata.GoedbColumn) (s
 		pksFound += value.Title + ","
 	}
 
-	if value.ForeignKey {
-		constraints += ", FOREIGN KEY (" + value.Title + ") REFERENCES " + value.ForeignKeyReference + " ON DELETE CASCADE"
+	if value.ForeignKey.IsForeignKey {
+		constraints += ", FOREIGN KEY (" + value.Title + ") REFERENCES " + value.ForeignKey.ForeignKeyTableReference + "(" + value.ForeignKey.ForeignKeyColumnReference + ")" + " ON DELETE CASCADE"
 	}
 	column += ","
 	return column, pksFound, constraints, nil
