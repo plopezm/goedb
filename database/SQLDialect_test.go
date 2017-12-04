@@ -697,3 +697,49 @@ func TestTransientSQLDialect_Drop(t *testing.T) {
 		})
 	}
 }
+
+func TestTransientSQLDialect_Insert(t *testing.T) {
+	type fields struct {
+		Models map[string]Table
+	}
+	type args struct {
+		table    Table
+		instance interface{}
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "TransientSQLDialect_Delete_WithWhere",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+			},
+			want:    "INSERT INTO TestTableWithFK (Name,TestTableName,Desc) values('TestTableWithFK-Name','TestTableName-Name-ID','testing description')",
+			wantErr: false,
+			fields: fields{
+				Models: getGoedbTableMapTest(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dialect := &TransientSQLDialect{
+				Models: tt.fields.Models,
+			}
+			got, err := dialect.Insert(tt.args.table, tt.args.instance)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TransientSQLDialect.Insert() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("TransientSQLDialect.Insert() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

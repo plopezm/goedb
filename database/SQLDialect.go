@@ -11,12 +11,17 @@ type TransientSQLDialect struct {
 	Models map[string]Table
 }
 
-func (dialect *TransientSQLDialect) GetModel(name string) Table {
-	return dialect.Models[name]
+func (dialect *TransientSQLDialect) GetModel(name string) (Table, bool) {
+	model, ok := dialect.Models[name]
+	return model, ok
 }
 
 func (dialect *TransientSQLDialect) SetModel(name string, table Table) {
 	dialect.Models[name] = table
+}
+
+func (dialect *TransientSQLDialect) DeleteModel(name string) {
+	delete(dialect.Models, name)
 }
 
 //Create generates the SQL CREATE TABLE using a goedb table
@@ -43,6 +48,26 @@ func (dialect *TransientSQLDialect) Create(table Table) string {
 	lastColumnIndex := len(columns)
 	sqlquery := "CREATE TABLE " + table.Name + " (" + columns[:lastColumnIndex-1] + constraints + ")"
 	return sqlquery
+}
+
+func (dialect *TransientSQLDialect) Insert(table Table, instance interface{}) (string, error) {
+	columns, values, err := getColumnsAndValues(table, instance)
+	if err != nil {
+		return "", err
+	}
+	//sql := "INSERT INTO " + table.Name + " (" + columns + ") values(" + values + ")"
+	sql := "INSERT INTO " + table.Name + " ("
+	for _, column := range columns {
+		sql += column + ","
+	}
+	sql = sql[:len(sql)-1]
+	sql += ") values("
+	for _, value := range values {
+		sql += value + ","
+	}
+	sql = sql[:len(sql)-1]
+	sql += ")"
+	return sql, nil
 }
 
 //First returns the TransientSQL sentence depending on the table and the instance

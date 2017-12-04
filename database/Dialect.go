@@ -16,9 +16,11 @@ func GetDialect(driver string) Dialect {
 
 // Dialect represents a database dialect
 type Dialect interface {
-	GetModel(name string) Table
+	GetModel(name string) (Table, bool)
 	SetModel(name string, table Table)
+	DeleteModel(name string)
 	Create(table Table) string
+	Insert(table Table, instance interface{}) (string, error)
 	First(table Table, where string, instance interface{}) (string, error)
 	Find(table Table, where string, instance interface{}) (string, error)
 	Update(table Table, instance interface{}) (string, error)

@@ -176,3 +176,98 @@ func ParseModel(entity interface{}) Table {
 	}
 	return table
 }
+
+func getSubStructAddresses(slice *[]interface{}, value reflect.Value) {
+	for j := 0; j < value.NumField(); j++ {
+		subField := value.Field(j)
+		if subField.Kind() == reflect.Struct {
+			getSubStructAddresses(slice, subField)
+			continue
+		}
+		*slice = append(*slice, subField.Addr().Interface())
+	}
+}
+
+// StructToSliceOfAddresses returns a slice with the addresses of each struct field,
+// so any modification on the slide will modify the source struct fields
+func StructToSliceOfAddresses(structPtr interface{}) []interface{} {
+
+	var fieldArr reflect.Value
+	if _, ok := structPtr.(reflect.Value); ok {
+		fieldArr = structPtr.(reflect.Value)
+	} else {
+		fieldArr = reflect.ValueOf(structPtr).Elem()
+	}
+
+	if fieldArr.Kind() == reflect.Ptr {
+		fieldArr = fieldArr.Elem()
+	}
+
+	fieldAddrArr := make([]interface{}, 0)
+
+	for i := 0; i < fieldArr.NumField(); i++ {
+		f := fieldArr.Field(i)
+
+		if f.Kind() == reflect.Struct {
+			getSubStructAddresses(&fieldAddrArr, f)
+			continue
+		}
+		fieldAddrArr = append(fieldAddrArr, f.Addr().Interface())
+	}
+
+	return fieldAddrArr
+}
+
+func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value, GetModel func(name string) (Table, bool)) {
+	tablemodel, ok := GetModel(value.Type().Name())
+	if !ok {
+		return
+	}
+	for j := 0; j < value.NumField(); j++ {
+		if tablemodel.Columns[j].Ignore {
+			continue
+		}
+		subField := value.Field(j)
+		if subField.Kind() == reflect.Struct {
+			getSubStructAddresses(slice, subField)
+			continue
+		}
+		*slice = append(*slice, subField.Addr().Interface())
+	}
+}
+
+// StructToSliceOfAddressesWithRules returns a slice with the addresses of each struct field,
+// so any modification on the slide will modify the source struct fields
+func StructToSliceOfAddressesWithRules(structPtr interface{}, GetModel func(name string) (Table, bool)) []interface{} {
+	var fieldArr reflect.Value
+	if _, ok := structPtr.(reflect.Value); ok {
+		fieldArr = structPtr.(reflect.Value)
+	} else {
+		fieldArr = reflect.ValueOf(structPtr).Elem()
+	}
+
+	if fieldArr.Kind() == reflect.Ptr {
+		fieldArr = fieldArr.Elem()
+	}
+	tablemodel, ok := GetModel(fieldArr.Type().Name())
+	if !ok {
+		return nil
+	}
+	fieldAddrArr := make([]interface{}, 0)
+	for i := 0; i < fieldArr.NumField(); i++ {
+
+		if tablemodel.Columns[i].Ignore {
+			continue
+		}
+
+		f := fieldArr.Field(i)
+
+		if f.Kind() == reflect.Struct {
+			getSubStructAddressesWithRules(&fieldAddrArr, f, GetModel)
+			continue
+		}
+		fieldAddrArr = append(fieldAddrArr, f.Addr().Interface())
+	}
+
+	return fieldAddrArr
+}

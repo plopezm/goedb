@@ -3,10 +3,10 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"reflect"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/plopezm/goedb/config"
-	"github.com/plopezm/goedb/metadata"
 )
 
 //SQLDatabase is the implementation of SQL for a Database interface
@@ -62,6 +62,15 @@ func (sqld *SQLDatabase) GetDBConnection() *sqlx.DB {
 	return sqld.db
 }
 
+// Model returns the metadata of each structure migrated
+func (sqld *SQLDatabase) Model(i interface{}) (Table, error) {
+	var table Table
+	if table, ok := sqld.Dialect.GetModel(GetType(i).Name()); ok {
+		return table, nil
+	}
+	return table, errors.New("Model not found")
+}
+
 // Migrate creates the table in the database
 func (sqld *SQLDatabase) Migrate(i interface{}, autoCreate bool, dropIfExists bool) (err error) {
 	if dropIfExists {
@@ -76,17 +85,216 @@ func (sqld *SQLDatabase) Migrate(i interface{}, autoCreate bool, dropIfExists bo
 	return err
 }
 
+// Insert creates a new row with the object in the database (it must be migrated)
+func (sqld *SQLDatabase) Insert(instance interface{}) (goedbres Result, err error) {
+	var result sql.Result
+	model, err := sqld.Model(instance)
+	if err != nil {
+		return goedbres, err
+	}
+
+	sql, err := sqld.Dialect.Insert(model, instance)
+	if err != nil {
+		return goedbres, err
+	}
+	result, err = sqld.db.Exec(sql)
+	if err != nil {
+		return goedbres, err
+	}
+
+	goedbres.NumRecordsAffected, _ = result.RowsAffected()
+	goedbres.LastInsertId, _ = result.LastInsertId()
+	return goedbres, nil
+}
+
+// Update updates an object using its primery key
+func (sqld *SQLDatabase) Update(instance interface{}) (goedbres Result, err error) {
+	var result sql.Result
+	model, err := sqld.Model(instance)
+	if err != nil {
+		return goedbres, err
+	}
+
+	sql, err := sqld.Dialect.Insert(model, instance)
+	if err != nil {
+		return goedbres, err
+	}
+	result, err = sqld.db.Exec(sql)
+	if err != nil {
+		return goedbres, err
+	}
+
+	goedbres.NumRecordsAffected, _ = result.RowsAffected()
+	return goedbres, nil
+}
+
+// Remove removes a row with the object in the database (it must be migrated)
+func (sqld *SQLDatabase) Remove(i interface{}, where string, params map[string]interface{}) (goedbres Result, err error) {
+	model, err := sqld.Model(i)
+	if err != nil {
+		return goedbres, err
+	}
+
+	sql, err := sqld.Dialect.Delete(model, where, i)
+	if err != nil {
+		return goedbres, err
+	}
+
+	result, err := sqld.db.NamedExec(sql, params)
+	goedbres.NumRecordsAffected, _ = result.RowsAffected()
+	return goedbres, err
+}
+
+// First returns the first record found
+func (sqld *SQLDatabase) First(instance interface{}, where string, params map[string]interface{}) error {
+	model, err := sqld.Model(instance)
+	if err != nil {
+		return err
+	}
+
+	sql, err := sqld.Dialect.First(model, where, instance)
+	if err != nil {
+		return err
+	}
+	rows, err := sqld.db.NamedQuery(sql, params)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		instanceValuesAddresses := StructToSliceOfAddressesWithRules(instance, sqld.Dialect.GetModel)
+		err = rows.Scan(instanceValuesAddresses...)
+	} else {
+		err = errors.New("Not found")
+	}
+	return err
+}
+
+// NativeFirst returns the first record found
+func (sqld *SQLDatabase) NativeFirst(instance interface{}, sql string, params map[string]interface{}) error {
+	rows, err := sqld.db.NamedQuery(sql, params)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		instanceValuesAddresses := StructToSliceOfAddresses(instance)
+		err = rows.Scan(instanceValuesAddresses...)
+	} else {
+		err = errors.New("Not found")
+	}
+	return err
+}
+
+// Find returns all records found
+func (sqld *SQLDatabase) Find(instance interface{}, where string, params map[string]interface{}) error {
+
+	if reflect.TypeOf(instance).Elem().Kind() != reflect.Slice {
+		return errors.New("The intput value is not a pointer of a slice")
+	}
+
+	model, err := sqld.Model(instance)
+	if err != nil {
+		return err
+	}
+
+	sql, err := sqld.Dialect.Find(model, where, instance)
+	if err != nil {
+		return err
+	}
+
+	rows, err := sqld.db.NamedQuery(sql, params)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	//Creates a new pointer with the same type that resultEntitySlice
+	slicePtr := reflect.ValueOf(instance)
+	//it gets the value of the slice pointer
+	slice := reflect.Indirect(slicePtr)
+
+	entityType := GetType(instance)
+
+	if !rows.Next() {
+		return errors.New("Records not found")
+	}
+
+	for {
+		entityPtr := reflect.New(entityType)
+
+		entityFieldsAsSlice := StructToSliceOfAddressesWithRules(entityPtr, sqld.Dialect.GetModel)
+		rows.Scan(entityFieldsAsSlice...)
+
+		slice.Set(reflect.Append(slice, entityPtr.Elem()))
+
+		if !rows.Next() {
+			break
+		}
+	}
+
+	return nil
+}
+
+// NativeFind returns all records found
+func (sqld *SQLDatabase) NativeFind(resultEntitySlice interface{}, sql string, params map[string]interface{}) error {
+
+	if reflect.TypeOf(resultEntitySlice).Elem().Kind() != reflect.Slice {
+		return errors.New("The intput value is not a pointer of a slice")
+	}
+
+	rows, err := sqld.db.NamedQuery(sql, params)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	//Creates a new pointer with the same type that resultEntitySlice
+	slicePtr := reflect.ValueOf(resultEntitySlice)
+	//it gets the value of the slice pointer
+	slice := reflect.Indirect(slicePtr)
+
+	entityType := GetType(resultEntitySlice)
+
+	if !rows.Next() {
+		return errors.New("Records not found")
+	}
+
+	for {
+		entityPtr := reflect.New(entityType)
+
+		entityFieldsAsSlice := StructToSliceOfAddresses(entityPtr)
+		rows.Scan(entityFieldsAsSlice...)
+
+		slice.Set(reflect.Append(slice, entityPtr.Elem()))
+
+		if !rows.Next() {
+			break
+		}
+	}
+	return nil
+}
+
 // DropTable removes a table from the database
 func (sqld *SQLDatabase) DropTable(i interface{}) error {
-	typ := metadata.GetType(i)
+	typ := GetType(i)
 	name := typ.Name()
 
-	sql := sqld.Dialect.Drop(sqld.Dialect.GetModel(name).Name)
+	table, ok := sqld.Dialect.GetModel(name)
+	if !ok {
+		return errors.New("Model not found")
+	}
+	sql := sqld.Dialect.Drop(table.Name)
 
 	_, err := sqld.db.Exec(sql)
 	if err != nil {
 		return err
 	}
-	delete(metadata.Models, name)
+	sqld.Dialect.DeleteModel(name)
 	return nil
+}
+
+// TxBegin is used to set a transaction
+func (sqld *SQLDatabase) TxBegin() (*sql.Tx, error) {
+	return sqld.db.Begin()
 }
