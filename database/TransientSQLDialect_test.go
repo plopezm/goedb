@@ -450,9 +450,9 @@ func TestTransientSQLDialect_First(t *testing.T) {
 			args: args{
 				table:    getGoedbTableTest1(),
 				instance: getGoedbTableTest1Value(),
-				where:    "TestTableWithFK.Name = 'description1'",
+				where:    "TestTableWithFK.Desc = 'description1'",
 			},
-			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Name = 'description1' AND TestTableWithFK.TestTableName = TestTable.Name",
+			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Desc = 'description1' AND TestTableWithFK.TestTableName = TestTable.Name",
 			wantErr: false,
 			dialect: &TransientSQLDialect{Models: getGoedbTableMapTest()},
 		},
@@ -477,6 +477,113 @@ func TestTransientSQLDialect_First(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("TransientSQLDialect.First() = [%v], want [%v]", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTransientSQLDialect_Find(t *testing.T) {
+	type fields struct {
+		Models map[string]Table
+	}
+	type args struct {
+		table    Table
+		where    string
+		instance interface{}
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "TransientSQLDialect_Find_WithoutWhere",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+			},
+			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.TestTableName = TestTable.Name",
+			wantErr: false,
+			fields: fields{
+				Models: getGoedbTableMapTest(),
+			},
+		},
+		{
+			name: "TransientSQLDialect_Find_WithWhere",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+				where:    "TestTableWithFK.Desc = 'description1'",
+			},
+			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Desc = 'description1' AND TestTableWithFK.TestTableName = TestTable.Name",
+			wantErr: false,
+			fields: fields{
+				Models: getGoedbTableMapTest(),
+			},
+		},
+		{
+			name: "TransientSQLDialect_Find_WithModelNotFound",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+				where:    "TestTableWithFK.Desc = 'description1'",
+			},
+			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Desc = 'description1' AND TestTableWithFK.TestTableName = TestTable.Name",
+			wantErr: false,
+			fields: fields{
+				Models: getGoedbTableMapTest(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dialect := &TransientSQLDialect{
+				Models: tt.fields.Models,
+			}
+			got, err := dialect.Find(tt.args.table, tt.args.where, tt.args.instance)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TransientSQLDialect.Find() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("TransientSQLDialect.Find() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTransientSQLDialect_Update(t *testing.T) {
+	type fields struct {
+		Models map[string]Table
+	}
+	type args struct {
+		table    Table
+		instance interface{}
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dialect := &TransientSQLDialect{
+				Models: tt.fields.Models,
+			}
+			got, err := dialect.Update(tt.args.table, tt.args.instance)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TransientSQLDialect.Update() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("TransientSQLDialect.Update() = %v, want %v", got, tt.want)
 			}
 		})
 	}
