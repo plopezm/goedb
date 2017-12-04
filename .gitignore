@@ -4,6 +4,7 @@ vendor/
 
 #SQLite3
 test.db
+test-2.db
 
 #Intellij
 .idea/

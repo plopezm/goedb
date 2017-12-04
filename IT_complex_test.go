@@ -32,6 +32,25 @@ func init() {
 	Initialize()
 }
 
+func Test_Goedb_Open_Fail(t *testing.T) {
+	_, err := GetEntityManager("Not-exists")
+	assert.NotNil(t, err)
+}
+
+func Test_Goedb_Open_And_Close(t *testing.T) {
+	em, err := GetEntityManager("closeTest")
+	assert.Nil(t, err)
+
+	tx, err := em.TxBegin()
+	assert.Nil(t, err)
+	assert.NotNil(t, tx)
+
+	tx.Rollback()
+
+	err = em.Close()
+	assert.Nil(t, err)
+}
+
 func Test_Goedb_Migrate(t *testing.T) {
 	em, err := GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)

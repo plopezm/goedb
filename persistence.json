@@ -6,6 +6,11 @@
       "url": "./test.db"
     },
     {
+      "name": "closeTest",
+      "driver": "sqlite3",
+      "url": "./test-2.db"
+    },
+    {
       "name": "testPostgres9",
       "schema": "testing",
       "driver": "postgres",

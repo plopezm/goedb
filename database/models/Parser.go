@@ -57,6 +57,7 @@ func GetGoedbTagTypeAndValueOfForeignKeyReference(instanceType reflect.Type, ins
 	return nil, reflect.Value{}, errors.New(" Goedb:" + goedbTag + " not found")
 }
 
+/*
 // GetGoedbTagTypeAndValue returns the tag and the value of a struct
 func GetGoedbTagTypeAndValue(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string) (reflect.Type, reflect.Value, error) {
 	for i := 0; i < instanceType.NumField(); i++ {
@@ -76,6 +77,7 @@ func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValu
 
 	return GetGoedbTagTypeAndValue(fieldType, fieldValue, goedbTag)
 }
+*/
 
 func processColumnType(column *Column, columnType reflect.Type, columnValue reflect.Value) error {
 
