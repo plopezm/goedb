@@ -600,3 +600,100 @@ func TestTransientSQLDialect_Update(t *testing.T) {
 		})
 	}
 }
+
+func TestTransientSQLDialect_Delete(t *testing.T) {
+	type fields struct {
+		Models map[string]Table
+	}
+	type args struct {
+		table    Table
+		where    string
+		instance interface{}
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "TransientSQLDialect_Delete_WithoutWhere",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+			},
+			want:    "DELETE FROM TestTableWithFK WHERE Name='TestTableWithFK-Name' AND TestTableName='TestTableName-Name-ID'",
+			wantErr: false,
+			fields: fields{
+				Models: getGoedbTableMapTest(),
+			},
+		},
+		{
+			name: "TransientSQLDialect_Delete_WithWhere",
+			args: args{
+				table:    getGoedbTableTest1(),
+				instance: getGoedbTableTest1Value(),
+				where:    "Name='TestTableWithFK-Name'",
+			},
+			want:    "DELETE FROM TestTableWithFK WHERE Name='TestTableWithFK-Name'",
+			wantErr: false,
+			fields: fields{
+				Models: getGoedbTableMapTest(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dialect := &TransientSQLDialect{
+				Models: tt.fields.Models,
+			}
+			got, err := dialect.Delete(tt.args.table, tt.args.where, tt.args.instance)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TransientSQLDialect.Delete() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("TransientSQLDialect.Delete() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTransientSQLDialect_Drop(t *testing.T) {
+	type fields struct {
+		Models map[string]Table
+	}
+	type args struct {
+		tableName string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		// TODO: Add test cases.
+		{
+			name: "TransientSQLDialect_Drop",
+			args: args{
+				tableName: "TableToRemove",
+			},
+			want: "DROP TABLE TableToRemove",
+			fields: fields{
+				Models: getGoedbTableMapTest(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dialect := &TransientSQLDialect{
+				Models: tt.fields.Models,
+			}
+			if got := dialect.Drop(tt.args.tableName); got != tt.want {
+				t.Errorf("TransientSQLDialect.Drop() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
