@@ -1,10 +1,10 @@
-package database
+package dialect
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/plopezm/goedb/database/specifics"
+	"github.com/plopezm/goedb/database/dialect/specifics"
 
 	"github.com/plopezm/goedb/database/models"
 )
@@ -103,7 +103,7 @@ func getGoedbTableTest1() models.Table {
 		Desc          string
 	}
 
-	return ParseModel(&TestTableWithFK{})
+	return models.ParseModel(&TestTableWithFK{})
 }
 
 func getGoedbTableTest2() models.Table {
@@ -125,7 +125,7 @@ func getGoedbTableTest2() models.Table {
 		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
 	}
 
-	return ParseModel(&TestTableWithFK2{})
+	return models.ParseModel(&TestTableWithFK2{})
 }
 
 func getGoedbTableMapTest() (modelMap map[string]models.Table) {
@@ -146,9 +146,9 @@ func getGoedbTableMapTest() (modelMap map[string]models.Table) {
 		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
 	}
 	modelMap = make(map[string]models.Table)
-	modelMap["TestTable"] = ParseModel(&TestTable{})
-	modelMap["TestTableWithFK"] = ParseModel(&TestTableWithFK{})
-	modelMap["TestTableWithFK2"] = ParseModel(&TestTableWithFK2{})
+	modelMap["TestTable"] = models.ParseModel(&TestTable{})
+	modelMap["TestTableWithFK"] = models.ParseModel(&TestTableWithFK{})
+	modelMap["TestTableWithFK2"] = models.ParseModel(&TestTableWithFK2{})
 	return modelMap
 }
 

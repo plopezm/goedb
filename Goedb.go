@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/plopezm/goedb/database/dialect"
+
 	"github.com/plopezm/goedb/config"
 	"github.com/plopezm/goedb/database"
 )
@@ -29,7 +31,7 @@ func Initialize() {
 
 	for _, datasource := range persistence.Datasources {
 		driver := new(database.SQLDatabase)
-		driver.Dialect = database.GetDialect(datasource.Driver)
+		driver.Dialect = dialect.GetDialect(datasource.Driver)
 		err := driver.Open(datasource.Driver, datasource.URL, datasource.Schema)
 		if err != nil {
 			fmt.Fprintf(os.Stdout, "[Connection ERROR for Persistence unit { %s } URL { %s }]: %v\n", datasource.Name, datasource.URL, err)

@@ -1,11 +1,9 @@
-package database
+package models
 
 import (
 	"errors"
 	"reflect"
 	"strings"
-
-	"github.com/plopezm/goedb/database/models"
 )
 
 // GetType returns the type of a struct
@@ -48,7 +46,7 @@ func tagAttributeExists(tag reflect.StructTag, attribute string) bool {
 }
 
 // GetGoedbTagTypeAndValueOfForeignKeyReference returns the tag and the value of a struct
-func GetGoedbTagTypeAndValueOfForeignKeyReference(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, foreignKeyReference models.ForeignKey) (reflect.Type, reflect.Value, error) {
+func GetGoedbTagTypeAndValueOfForeignKeyReference(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, foreignKeyReference ForeignKey) (reflect.Type, reflect.Value, error) {
 	for i := 0; i < instanceType.NumField(); i++ {
 		field := instanceType.Field(i)
 		value := instanceValue.Field(i)
@@ -79,7 +77,7 @@ func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValu
 	return GetGoedbTagTypeAndValue(fieldType, fieldValue, goedbTag)
 }
 
-func processColumnType(column *models.Column, columnType reflect.Type, columnValue reflect.Value) error {
+func processColumnType(column *Column, columnType reflect.Type, columnValue reflect.Value) error {
 
 	column.ColumnTypeName = columnType.Name()
 	if columnType.Kind() != reflect.Struct {
@@ -97,16 +95,16 @@ func processColumnType(column *models.Column, columnType reflect.Type, columnVal
 }
 
 // ParseModel generates a GoedbTable, the model of a struct
-func ParseModel(entity interface{}) models.Table {
+func ParseModel(entity interface{}) Table {
 	entityType := GetType(entity)
 	entityValue := GetValue(entity)
 
-	table := models.Table{}
+	table := Table{}
 	table.Name = entityType.Name()
-	table.Columns = make([]models.Column, 0)
+	table.Columns = make([]Column, 0)
 
 	for i := 0; i < entityType.NumField(); i++ {
-		tablecol := models.Column{}
+		tablecol := Column{}
 		tablecol.Title = entityType.Field(i).Name
 
 		if tag, ok := entityType.Field(i).Tag.Lookup("goedb"); ok {
@@ -138,7 +136,7 @@ func ParseModel(entity interface{}) models.Table {
 		}
 		processColumnType(&tablecol, entityType.Field(i).Type, entityValue)
 		if tablecol.PrimaryKey || tablecol.Unique {
-			table.PrimaryKeys = append(table.PrimaryKeys, models.PrimaryKey{Name: tablecol.Title, Type: tablecol.ColumnType})
+			table.PrimaryKeys = append(table.PrimaryKeys, PrimaryKey{Name: tablecol.Title, Type: tablecol.ColumnType})
 		}
 		table.Columns = append(table.Columns, tablecol)
 	}
@@ -186,7 +184,7 @@ func StructToSliceOfAddresses(structPtr interface{}) []interface{} {
 	return fieldAddrArr
 }
 
-func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value, GetModel func(name string) (models.Table, bool)) {
+func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value, GetModel func(name string) (Table, bool)) {
 	tablemodel, ok := GetModel(value.Type().Name())
 	if !ok {
 		return
@@ -206,7 +204,7 @@ func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value, G
 
 // StructToSliceOfAddressesWithRules returns a slice with the addresses of each struct field,
 // so any modification on the slide will modify the source struct fields
-func StructToSliceOfAddressesWithRules(structPtr interface{}, GetModel func(name string) (models.Table, bool)) []interface{} {
+func StructToSliceOfAddressesWithRules(structPtr interface{}, GetModel func(name string) (Table, bool)) []interface{} {
 	var fieldArr reflect.Value
 	if _, ok := structPtr.(reflect.Value); ok {
 		fieldArr = structPtr.(reflect.Value)

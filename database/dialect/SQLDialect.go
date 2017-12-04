@@ -1,12 +1,12 @@
-package database
+package dialect
 
 import (
 	"errors"
 	"reflect"
 	"strconv"
 
+	"github.com/plopezm/goedb/database/dialect/specifics"
 	"github.com/plopezm/goedb/database/models"
-	"github.com/plopezm/goedb/database/specifics"
 )
 
 //SQLDialect is the implementation of Transient SQL as Dialect
@@ -318,8 +318,8 @@ func getRelationPrimaryKeyValue(fkColumn models.Column, v reflect.Value) (column
 }
 
 func getColumnsAndValues(table models.Table, instance interface{}) (columns []string, values []string, err error) {
-	instanceType := GetType(instance)
-	intanceValue := GetValue(instance)
+	instanceType := models.GetType(instance)
+	intanceValue := models.GetValue(instance)
 
 	for i := 0; i < len(table.Columns); i++ {
 		var value reflect.Value
@@ -336,7 +336,7 @@ func getColumnsAndValues(table models.Table, instance interface{}) (columns []st
 			//_, value, err = GetGoedbTagTypeAndValueOfIndexField(instanceType, intanceValue, "pk", i)
 			complexType := instanceType.Field(i).Type
 			complexValue := intanceValue.Field(i)
-			_, value, err = GetGoedbTagTypeAndValueOfForeignKeyReference(complexType, complexValue, "pk,unique", table.Columns[i].ForeignKey)
+			_, value, err = models.GetGoedbTagTypeAndValueOfForeignKeyReference(complexType, complexValue, "pk,unique", table.Columns[i].ForeignKey)
 			if err != nil {
 				return columns, values, err
 			}

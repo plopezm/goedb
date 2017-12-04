@@ -1,4 +1,4 @@
-package database
+package dialect
 
 import "github.com/plopezm/goedb/database/models"
 

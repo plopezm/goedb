@@ -8,13 +8,14 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/plopezm/goedb/config"
+	"github.com/plopezm/goedb/database/dialect"
 	"github.com/plopezm/goedb/database/models"
 )
 
 //SQLDatabase is the implementation of SQL for a Database interface
 type SQLDatabase struct {
 	db         *sqlx.DB
-	Dialect    Dialect
+	Dialect    dialect.Dialect
 	Datasource config.Datasource
 }
 
@@ -67,7 +68,7 @@ func (sqld *SQLDatabase) GetDBConnection() *sqlx.DB {
 // Model returns the metadata of each structure migrated
 func (sqld *SQLDatabase) Model(i interface{}) (models.Table, error) {
 	var table models.Table
-	if table, ok := sqld.Dialect.GetModel(GetType(i).Name()); ok {
+	if table, ok := sqld.Dialect.GetModel(models.GetType(i).Name()); ok {
 		return table, nil
 	}
 	return table, errors.New("Model not found")
@@ -78,7 +79,7 @@ func (sqld *SQLDatabase) Migrate(i interface{}, autoCreate bool, dropIfExists bo
 	if dropIfExists {
 		sqld.DropTable(i)
 	}
-	table := ParseModel(i)
+	table := models.ParseModel(i)
 	sqld.Dialect.SetModel(table.Name, table)
 	if autoCreate {
 		sqltab := sqld.Dialect.Create(table)
@@ -165,7 +166,7 @@ func (sqld *SQLDatabase) First(instance interface{}, where string, params map[st
 	}
 	defer rows.Close()
 	if rows.Next() {
-		instanceValuesAddresses := StructToSliceOfAddressesWithRules(instance, sqld.Dialect.GetModel)
+		instanceValuesAddresses := models.StructToSliceOfAddressesWithRules(instance, sqld.Dialect.GetModel)
 		err = rows.Scan(instanceValuesAddresses...)
 	} else {
 		err = errors.New("Not found")
@@ -181,7 +182,7 @@ func (sqld *SQLDatabase) NativeFirst(instance interface{}, sql string, params ma
 	}
 	defer rows.Close()
 	if rows.Next() {
-		instanceValuesAddresses := StructToSliceOfAddresses(instance)
+		instanceValuesAddresses := models.StructToSliceOfAddresses(instance)
 		err = rows.Scan(instanceValuesAddresses...)
 	} else {
 		err = errors.New("Not found")
@@ -217,7 +218,7 @@ func (sqld *SQLDatabase) Find(instance interface{}, where string, params map[str
 	//it gets the value of the slice pointer
 	slice := reflect.Indirect(slicePtr)
 
-	entityType := GetType(instance)
+	entityType := models.GetType(instance)
 
 	if !rows.Next() {
 		return errors.New("Records not found")
@@ -226,7 +227,7 @@ func (sqld *SQLDatabase) Find(instance interface{}, where string, params map[str
 	for {
 		entityPtr := reflect.New(entityType)
 
-		entityFieldsAsSlice := StructToSliceOfAddressesWithRules(entityPtr, sqld.Dialect.GetModel)
+		entityFieldsAsSlice := models.StructToSliceOfAddressesWithRules(entityPtr, sqld.Dialect.GetModel)
 		rows.Scan(entityFieldsAsSlice...)
 
 		slice.Set(reflect.Append(slice, entityPtr.Elem()))
@@ -257,7 +258,7 @@ func (sqld *SQLDatabase) NativeFind(resultEntitySlice interface{}, sql string, p
 	//it gets the value of the slice pointer
 	slice := reflect.Indirect(slicePtr)
 
-	entityType := GetType(resultEntitySlice)
+	entityType := models.GetType(resultEntitySlice)
 
 	if !rows.Next() {
 		return errors.New("Records not found")
@@ -266,7 +267,7 @@ func (sqld *SQLDatabase) NativeFind(resultEntitySlice interface{}, sql string, p
 	for {
 		entityPtr := reflect.New(entityType)
 
-		entityFieldsAsSlice := StructToSliceOfAddresses(entityPtr)
+		entityFieldsAsSlice := models.StructToSliceOfAddresses(entityPtr)
 		rows.Scan(entityFieldsAsSlice...)
 
 		slice.Set(reflect.Append(slice, entityPtr.Elem()))
@@ -280,7 +281,7 @@ func (sqld *SQLDatabase) NativeFind(resultEntitySlice interface{}, sql string, p
 
 // DropTable removes a table from the database
 func (sqld *SQLDatabase) DropTable(i interface{}) error {
-	typ := GetType(i)
+	typ := models.GetType(i)
 	name := typ.Name()
 
 	table, ok := sqld.Dialect.GetModel(name)
