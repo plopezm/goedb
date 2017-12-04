@@ -6,9 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/plopezm/goedb/database"
-
 	"github.com/plopezm/goedb/config"
+	"github.com/plopezm/goedb/database"
 )
 
 var goedbStandalone *dbm

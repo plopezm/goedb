@@ -1,10 +1,11 @@
 package tests
 
 import (
+	"testing"
+
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/plopezm/goedb"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type TestUser struct {
