@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/jmoiron/sqlx"
@@ -115,7 +116,8 @@ func (sqld *SQLDatabase) Update(instance interface{}) (goedbres Result, err erro
 		return goedbres, err
 	}
 
-	sql, err := sqld.Dialect.Insert(model, instance)
+	sql, err := sqld.Dialect.Update(model, instance)
+	fmt.Println("UPDATE SQL: ", sql)
 	if err != nil {
 		return goedbres, err
 	}

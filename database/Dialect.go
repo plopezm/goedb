@@ -29,13 +29,14 @@ type Dialect interface {
 }
 
 // GetDialect returns the dialect depending on the driver used
-func GetDialect(driver string) Dialect {
+func GetDialect(driver string) (dialect Dialect) {
 	switch driver {
 	case "sqlite3":
-		return new(TransientSQLDialect)
+		dialect = GetSQLDialectInstance()
 	case "postgres", "pgx":
-		return new(TransientSQLDialect)
+		dialect = GetSQLDialectInstance()
 	default:
-		return new(TransientSQLDialect)
+		dialect = GetSQLDialectInstance()
 	}
+	return dialect
 }
