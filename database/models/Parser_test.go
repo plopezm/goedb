@@ -43,6 +43,7 @@ func TestParseModel(t *testing.T) {
 				Columns: []Column{
 					{
 						Title:          "ID",
+						FieldName:      "ID",
 						AutoIncrement:  true,
 						PrimaryKey:     true,
 						ColumnType:     reflect.Uint64,
@@ -50,6 +51,7 @@ func TestParseModel(t *testing.T) {
 					},
 					{
 						Title:          "Name",
+						FieldName:      "Name",
 						Unique:         true,
 						ColumnType:     reflect.String,
 						ColumnTypeName: "string",
@@ -58,6 +60,7 @@ func TestParseModel(t *testing.T) {
 				MappedColumns: []Column{
 					{
 						Title:      "Childs",
+						FieldName:  "Childs",
 						ColumnType: reflect.Slice,
 						MappedBy: MappedByField{
 							TargetTablePK:   "Name",
@@ -87,12 +90,14 @@ func TestParseModel(t *testing.T) {
 				Columns: []Column{
 					{
 						Title:          "Name",
+						FieldName:      "Name",
 						PrimaryKey:     true,
 						ColumnType:     reflect.String,
 						ColumnTypeName: "string",
 					},
 					{
 						Title:          "TestTableName",
+						FieldName:      "TestTableName",
 						PrimaryKey:     true,
 						ColumnType:     reflect.String,
 						ColumnTypeName: "testtable",
@@ -101,12 +106,14 @@ func TestParseModel(t *testing.T) {
 					},
 					{
 						Title:          "Ignorable",
+						FieldName:      "Ignorable",
 						Ignore:         true,
 						ColumnType:     reflect.Bool,
 						ColumnTypeName: "bool",
 					},
 					{
 						Title:          "Desc",
+						FieldName:      "Desc",
 						ColumnType:     reflect.String,
 						ColumnTypeName: "string",
 					},

@@ -87,6 +87,7 @@ func ParseModel(entity interface{}) Table {
 	for i := 0; i < entityType.NumField(); i++ {
 		tablecol := Column{}
 		tablecol.Title = entityType.Field(i).Name
+		tablecol.FieldName = entityType.Field(i).Name
 
 		if tag, ok := entityType.Field(i).Tag.Lookup("goedb"); ok {
 			params := strings.Split(tag, ",")
@@ -180,11 +181,11 @@ func getSubStructAddressesWithRules(slice *[]interface{}, value reflect.Value, G
 	if !ok {
 		return
 	}
-	for j := 0; j < value.NumField(); j++ {
+	for j := 0; j < len(tablemodel.Columns); j++ {
 		if tablemodel.Columns[j].Ignore {
 			continue
 		}
-		subField := value.Field(j)
+		subField := value.FieldByName(tablemodel.Columns[j].FieldName)
 		if subField.Kind() == reflect.Struct {
 			getSubStructAddresses(slice, subField)
 			continue

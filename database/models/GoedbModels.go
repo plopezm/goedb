@@ -30,7 +30,10 @@ type MappedByField struct {
 
 // Column represents the metadata of a column
 type Column struct {
-	Title          string
+	// The DB column name
+	Title string
+	// The real struct field name
+	FieldName      string
 	ColumnType     reflect.Kind
 	ColumnTypeName string
 	PrimaryKey     bool

@@ -171,7 +171,7 @@ func (sqld *SQLDatabase) First(instance interface{}, where string, params map[st
 		err = errors.New("Not found")
 	}
 
-	if model.MappedColumns != nil && len(model.MappedColumns) > 0 {
+	if len(model.MappedColumns) > 0 {
 		//TODO: then subqueries
 	}
 
