@@ -1,4 +1,4 @@
-package specifics
+package dialect
 
 import (
 	"reflect"
@@ -13,7 +13,7 @@ func TestSQLiteSpecifics_GetSQLCreateTableColumn(t *testing.T) {
 	}
 	tests := []struct {
 		name              string
-		specifics         *SQLiteSpecifics
+		specifics         *SQLite3Dialect
 		args              args
 		wantSQLColumnLine string
 		wantPrimaryKey    string
@@ -118,20 +118,20 @@ func TestSQLiteSpecifics_GetSQLCreateTableColumn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			specifics := &SQLiteSpecifics{}
+			specifics := &SQLite3Dialect{}
 			gotSQLColumnLine, gotPrimaryKey, gotConstraints, err := specifics.GetSQLCreateTableColumn(tt.args.value)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SQLiteSpecifics.GetSQLCreateTableColumn() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SQLite3Dialect.GetSQLCreateTableColumn() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if gotSQLColumnLine != tt.wantSQLColumnLine {
-				t.Errorf("SQLiteSpecifics.GetSQLCreateTableColumn() gotSqlColumnLine = %v, want %v", gotSQLColumnLine, tt.wantSQLColumnLine)
+				t.Errorf("SQLite3Dialect.GetSQLCreateTableColumn() gotSqlColumnLine = %v, want %v", gotSQLColumnLine, tt.wantSQLColumnLine)
 			}
 			if gotPrimaryKey != tt.wantPrimaryKey {
-				t.Errorf("SQLiteSpecifics.GetSQLCreateTableColumn() gotPrimaryKey = %v, want %v", gotPrimaryKey, tt.wantPrimaryKey)
+				t.Errorf("SQLite3Dialect.GetSQLCreateTableColumn() gotPrimaryKey = %v, want %v", gotPrimaryKey, tt.wantPrimaryKey)
 			}
 			if gotConstraints != tt.wantConstraints {
-				t.Errorf("SQLiteSpecifics.GetSQLCreateTableColumn() gotConstraints = %v, want %v", gotConstraints, tt.wantConstraints)
+				t.Errorf("SQLite3Dialect.GetSQLCreateTableColumn() gotConstraints = %v, want %v", gotConstraints, tt.wantConstraints)
 			}
 		})
 	}

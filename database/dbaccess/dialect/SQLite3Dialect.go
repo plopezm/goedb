@@ -1,4 +1,4 @@
-package specifics
+package dialect
 
 import (
 	"errors"
@@ -7,12 +7,12 @@ import (
 	"github.com/plopezm/goedb/database/models"
 )
 
-//SQLiteSpecifics contains a few functions that are different from standard sql dialect
-type SQLiteSpecifics struct {
+//SQLite3Dialect contains a few functions that are different from standard sql dbaccess
+type SQLite3Dialect struct {
 }
 
 // GetSQLCreateTableColumn returns the model of a column for SQLite3
-func (specifics *SQLiteSpecifics) GetSQLCreateTableColumn(value models.Column) (sqlColumnLine string, primaryKey string, constraints string, err error) {
+func (specifics *SQLite3Dialect) GetSQLCreateTableColumn(value models.Column) (sqlColumnLine string, primaryKey string, constraints string, err error) {
 	sqlColumnLine = value.Title
 
 	switch value.ColumnType {

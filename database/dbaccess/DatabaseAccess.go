@@ -1,9 +1,9 @@
-package dialect
+package dbaccess
 
 import "github.com/plopezm/goedb/database/models"
 
-// Dialect represents a database dialect
-type Dialect interface {
+// DatabaseAccess database access layer functions (could be a sql dbaccess or no-sql database)
+type DatabaseAccess interface {
 	GetModel(name string) (models.Table, bool)
 	SetModel(name string, table models.Table)
 	DeleteModel(name string)
@@ -16,13 +16,13 @@ type Dialect interface {
 	Drop(tableName string) string
 }
 
-// GetDialect returns the dialect depending on the driver used
-func GetDialect(driver string) (dialect Dialect) {
+// GetDatabaseAccess returns the database depending on the driver used (could be a sql dbaccess or no-sql database)
+func GetDatabaseAccess(driver string) (databaseAccess DatabaseAccess) {
 	switch driver {
 	case "sqlite3", "postgres", "pgx":
-		dialect = GetSQLDialectInstance(driver)
+		databaseAccess = GetSQLDatabaseAccess(driver)
 	default:
-		dialect = GetSQLDialectInstance(driver)
+		databaseAccess = GetSQLDatabaseAccess(driver)
 	}
-	return dialect
+	return databaseAccess
 }

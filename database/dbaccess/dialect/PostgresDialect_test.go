@@ -1,4 +1,4 @@
-package specifics
+package dialect
 
 import (
 	"reflect"
@@ -13,7 +13,7 @@ func TestPostgresSpecifics_GetSQLCreateTableColumn(t *testing.T) {
 	}
 	tests := []struct {
 		name              string
-		dialect           *PostgresSpecifics
+		dialect           *PostgresDialect
 		args              args
 		wantSQLColumnLine string
 		wantPrimaryKey    string
@@ -118,20 +118,20 @@ func TestPostgresSpecifics_GetSQLCreateTableColumn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &PostgresSpecifics{}
+			dialect := &PostgresDialect{}
 			got, got1, got2, err := dialect.GetSQLCreateTableColumn(tt.args.value)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("PostgresSpecifics.GetSQLCreateTableColumn() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("PostgresDialect.GetSQLCreateTableColumn() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.wantSQLColumnLine {
-				t.Errorf("PostgresSpecifics.GetSQLCreateTableColumn() got = %v, want %v", got, tt.wantSQLColumnLine)
+				t.Errorf("PostgresDialect.GetSQLCreateTableColumn() got = %v, want %v", got, tt.wantSQLColumnLine)
 			}
 			if got1 != tt.wantPrimaryKey {
-				t.Errorf("PostgresSpecifics.GetSQLCreateTableColumn() got1 = %v, want %v", got1, tt.wantPrimaryKey)
+				t.Errorf("PostgresDialect.GetSQLCreateTableColumn() got1 = %v, want %v", got1, tt.wantPrimaryKey)
 			}
 			if got2 != tt.wantConstraints {
-				t.Errorf("PostgresSpecifics.GetSQLCreateTableColumn() got2 = %v, want %v", got2, tt.wantConstraints)
+				t.Errorf("PostgresDialect.GetSQLCreateTableColumn() got2 = %v, want %v", got2, tt.wantConstraints)
 			}
 		})
 	}

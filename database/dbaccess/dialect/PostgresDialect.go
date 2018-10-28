@@ -1,4 +1,4 @@
-package specifics
+package dialect
 
 import (
 	"errors"
@@ -7,12 +7,12 @@ import (
 	"github.com/plopezm/goedb/database/models"
 )
 
-//PostgresSpecifics contains a few functions that are different from standard sql dialect
-type PostgresSpecifics struct {
+//PostgresDialect contains a few functions that are different from standard sql dbaccess
+type PostgresDialect struct {
 }
 
 // GetSQLCreateTableColumn returns the model of a column for Postgresql
-func (dialect *PostgresSpecifics) GetSQLCreateTableColumn(value models.Column) (string, string, string, error) {
+func (dialect *PostgresDialect) GetSQLCreateTableColumn(value models.Column) (string, string, string, error) {
 	var pksFound string
 	var constraints string
 	column := value.Title

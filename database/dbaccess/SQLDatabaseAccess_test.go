@@ -1,10 +1,10 @@
-package dialect
+package dbaccess
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/plopezm/goedb/database/dialect/specifics"
+	"github.com/plopezm/goedb/database/dbaccess/dialect"
 
 	"github.com/plopezm/goedb/database/models"
 )
@@ -15,18 +15,18 @@ func TestSQLDialect_Create(t *testing.T) {
 	}
 	tests := [...]struct {
 		name      string
-		dialect   *SQLDialect
-		specifics specifics.Specifics
+		dialect   *SQLDatabaseAccess
+		specifics dialect.Dialect
 		args      args
 		want      string
 	}{
 		// TODO: Add test cases.
 		{
 			name: "TestCreateTable",
-			dialect: &SQLDialect{
-				Specifics: new(specifics.SQLiteSpecifics),
+			dialect: &SQLDatabaseAccess{
+				Dialect: new(dialect.SQLite3Dialect),
 			},
-			specifics: new(specifics.SQLiteSpecifics),
+			specifics: new(dialect.SQLite3Dialect),
 			args: args{
 				table: models.Table{
 					Name: "Table1",
@@ -48,8 +48,8 @@ func TestSQLDialect_Create(t *testing.T) {
 		},
 		{
 			name: "TestCreateTableWithPrimaryKeys",
-			dialect: &SQLDialect{
-				Specifics: new(specifics.SQLiteSpecifics),
+			dialect: &SQLDatabaseAccess{
+				Dialect: new(dialect.SQLite3Dialect),
 			},
 			args: args{
 				table: models.Table{
@@ -83,7 +83,7 @@ func TestSQLDialect_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dialect := tt.dialect
 			if got := dialect.Create(tt.args.table); got != tt.want {
-				t.Errorf("SQLDialect.Create() = %v, want %v", got, tt.want)
+				t.Errorf("SQLDatabaseAccess.Create() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -311,7 +311,7 @@ func TestSQLDialect_First(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		dialect *SQLDialect
+		dialect *SQLDatabaseAccess
 		args    args
 		want    string
 		wantErr bool
@@ -325,7 +325,7 @@ func TestSQLDialect_First(t *testing.T) {
 			},
 			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Name='TestTableWithFK-Name' AND TestTableWithFK.TestTableName='TestTableName-Name-ID' AND TestTableWithFK.TestTableName = TestTable.Name",
 			wantErr: false,
-			dialect: &SQLDialect{Models: getGoedbTableMapTest()},
+			dialect: &SQLDatabaseAccess{Models: getGoedbTableMapTest()},
 		},
 		{
 			name: "SQLDialect_First_WithWhere",
@@ -336,7 +336,7 @@ func TestSQLDialect_First(t *testing.T) {
 			},
 			want:    "SELECT TestTableWithFK.Name,TestTable.ID,TestTable.Name,TestTableWithFK.Desc FROM TestTableWithFK,TestTable WHERE TestTableWithFK.Desc = 'description1' AND TestTableWithFK.TestTableName = TestTable.Name",
 			wantErr: false,
-			dialect: &SQLDialect{Models: getGoedbTableMapTest()},
+			dialect: &SQLDatabaseAccess{Models: getGoedbTableMapTest()},
 		},
 		{
 			name: "SQLDialect_First_NoModelFound",
@@ -346,7 +346,7 @@ func TestSQLDialect_First(t *testing.T) {
 			},
 			want:    "",
 			wantErr: true,
-			dialect: &SQLDialect{},
+			dialect: &SQLDatabaseAccess{},
 		},
 	}
 	for _, tt := range tests {
@@ -354,11 +354,11 @@ func TestSQLDialect_First(t *testing.T) {
 			dialect := tt.dialect
 			got, err := dialect.First(tt.args.table, tt.args.where, tt.args.instance)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SQLDialect.First() error = [%v], wantErr [%v]", err, tt.wantErr)
+				t.Errorf("SQLDatabaseAccess.First() error = [%v], wantErr [%v]", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("SQLDialect.First() = [%v], want [%v]", got, tt.want)
+				t.Errorf("SQLDatabaseAccess.First() = [%v], want [%v]", got, tt.want)
 			}
 		})
 	}
@@ -422,16 +422,16 @@ func TestSQLDialect_Find(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &SQLDialect{
+			dialect := &SQLDatabaseAccess{
 				Models: tt.fields.Models,
 			}
 			got, err := dialect.Find(tt.args.table, tt.args.where, tt.args.instance)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SQLDialect.Find() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SQLDatabaseAccess.Find() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("SQLDialect.Find() = %v, want %v", got, tt.want)
+				t.Errorf("SQLDatabaseAccess.Find() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -468,16 +468,16 @@ func TestSQLDialect_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &SQLDialect{
+			dialect := &SQLDatabaseAccess{
 				Models: tt.fields.Models,
 			}
 			got, err := dialect.Update(tt.args.table, tt.args.instance)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SQLDialect.Update() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SQLDatabaseAccess.Update() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("SQLDialect.Update() = %v, want %v", got, tt.want)
+				t.Errorf("SQLDatabaseAccess.Update() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -528,16 +528,16 @@ func TestSQLDialect_Delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &SQLDialect{
+			dialect := &SQLDatabaseAccess{
 				Models: tt.fields.Models,
 			}
 			got, err := dialect.Delete(tt.args.table, tt.args.where, tt.args.instance)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SQLDialect.Delete() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SQLDatabaseAccess.Delete() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("SQLDialect.Delete() = %v, want %v", got, tt.want)
+				t.Errorf("SQLDatabaseAccess.Delete() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -570,11 +570,11 @@ func TestSQLDialect_Drop(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &SQLDialect{
+			dialect := &SQLDatabaseAccess{
 				Models: tt.fields.Models,
 			}
 			if got := dialect.Drop(tt.args.tableName); got != tt.want {
-				t.Errorf("SQLDialect.Drop() = %v, want %v", got, tt.want)
+				t.Errorf("SQLDatabaseAccess.Drop() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -611,16 +611,16 @@ func TestSQLDialect_Insert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dialect := &SQLDialect{
+			dialect := &SQLDatabaseAccess{
 				Models: tt.fields.Models,
 			}
 			got, err := dialect.Insert(tt.args.table, tt.args.instance)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SQLDialect.Insert() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SQLDatabaseAccess.Insert() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("SQLDialect.Insert() = %v, want %v", got, tt.want)
+				t.Errorf("SQLDatabaseAccess.Insert() = %v, want %v", got, tt.want)
 			}
 		})
 	}

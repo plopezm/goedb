@@ -8,14 +8,14 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/plopezm/goedb/config"
-	"github.com/plopezm/goedb/database/dialect"
+	"github.com/plopezm/goedb/database/dbaccess"
 	"github.com/plopezm/goedb/database/models"
 )
 
 //SQLDatabase is the implementation of SQL for a Database interface
 type SQLDatabase struct {
 	db         *sqlx.DB
-	Dialect    dialect.Dialect
+	DBAccess   dbaccess.DatabaseAccess
 	Datasource config.Datasource
 }
 
@@ -68,7 +68,7 @@ func (sqld *SQLDatabase) GetDBConnection() *sqlx.DB {
 // Model returns the metadata of each structure migrated
 func (sqld *SQLDatabase) Model(i interface{}) (models.Table, error) {
 	var table models.Table
-	if table, ok := sqld.Dialect.GetModel(models.GetType(i).Name()); ok {
+	if table, ok := sqld.DBAccess.GetModel(models.GetType(i).Name()); ok {
 		return table, nil
 	}
 	return table, errors.New("Model not found")
@@ -80,9 +80,9 @@ func (sqld *SQLDatabase) Migrate(i interface{}, autoCreate bool, dropIfExists bo
 		sqld.DropTable(i)
 	}
 	table := models.ParseModel(i)
-	sqld.Dialect.SetModel(table.Name, table)
+	sqld.DBAccess.SetModel(table.Name, table)
 	if autoCreate {
-		sqltab := sqld.Dialect.Create(table)
+		sqltab := sqld.DBAccess.Create(table)
 		_, err = sqld.db.Exec(sqltab)
 	}
 	return err
@@ -96,7 +96,7 @@ func (sqld *SQLDatabase) Insert(instance interface{}) (goedbres models.Result, e
 		return goedbres, err
 	}
 
-	sql, err := sqld.Dialect.Insert(model, instance)
+	sql, err := sqld.DBAccess.Insert(model, instance)
 	if err != nil {
 		return goedbres, err
 	}
@@ -118,7 +118,7 @@ func (sqld *SQLDatabase) Update(instance interface{}) (goedbres models.Result, e
 		return goedbres, err
 	}
 
-	sql, err := sqld.Dialect.Update(model, instance)
+	sql, err := sqld.DBAccess.Update(model, instance)
 	fmt.Println("UPDATE SQL: ", sql)
 	if err != nil {
 		return goedbres, err
@@ -139,7 +139,7 @@ func (sqld *SQLDatabase) Remove(i interface{}, where string, params map[string]i
 		return goedbres, err
 	}
 
-	sql, err := sqld.Dialect.Delete(model, where, i)
+	sql, err := sqld.DBAccess.Delete(model, where, i)
 	if err != nil {
 		return goedbres, err
 	}
@@ -156,7 +156,7 @@ func (sqld *SQLDatabase) First(instance interface{}, where string, params map[st
 		return err
 	}
 
-	sql, err := sqld.Dialect.First(model, where, instance)
+	sql, err := sqld.DBAccess.First(model, where, instance)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (sqld *SQLDatabase) First(instance interface{}, where string, params map[st
 	}
 	defer rows.Close()
 	if rows.Next() {
-		instanceValuesAddresses := models.StructToSliceOfAddressesWithRules(instance, sqld.Dialect.GetModel)
+		instanceValuesAddresses := models.StructToSliceOfAddressesWithRules(instance, sqld.DBAccess.GetModel)
 		err = rows.Scan(instanceValuesAddresses...)
 	} else {
 		err = errors.New("Not found")
@@ -202,7 +202,7 @@ func (sqld *SQLDatabase) Find(instance interface{}, where string, params map[str
 		return err
 	}
 
-	sql, err := sqld.Dialect.Find(model, where, instance)
+	sql, err := sqld.DBAccess.Find(model, where, instance)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func (sqld *SQLDatabase) Find(instance interface{}, where string, params map[str
 	for {
 		entityPtr := reflect.New(entityType)
 
-		entityFieldsAsSlice := models.StructToSliceOfAddressesWithRules(entityPtr, sqld.Dialect.GetModel)
+		entityFieldsAsSlice := models.StructToSliceOfAddressesWithRules(entityPtr, sqld.DBAccess.GetModel)
 		rows.Scan(entityFieldsAsSlice...)
 
 		slice.Set(reflect.Append(slice, entityPtr.Elem()))
@@ -284,17 +284,17 @@ func (sqld *SQLDatabase) DropTable(i interface{}) error {
 	typ := models.GetType(i)
 	name := typ.Name()
 
-	table, ok := sqld.Dialect.GetModel(name)
+	table, ok := sqld.DBAccess.GetModel(name)
 	if !ok {
 		return errors.New("Model not found")
 	}
-	sql := sqld.Dialect.Drop(table.Name)
+	sql := sqld.DBAccess.Drop(table.Name)
 
 	_, err := sqld.db.Exec(sql)
 	if err != nil {
 		return err
 	}
-	sqld.Dialect.DeleteModel(name)
+	sqld.DBAccess.DeleteModel(name)
 	return nil
 }
 
