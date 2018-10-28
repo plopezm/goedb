@@ -39,9 +39,8 @@ type Column struct {
 	AutoIncrement  bool
 	IsComplex      bool
 	Ignore         bool
-
-	IsMapped bool
-	MappedBy MappedByField
+	IsMapped       bool
+	MappedBy       MappedByField
 }
 
 // Result is the result for some operation in database

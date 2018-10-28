@@ -82,6 +82,7 @@ func ParseModel(entity interface{}) Table {
 	table := Table{}
 	table.Name = entityType.Name()
 	table.Columns = make([]Column, 0)
+	table.MappedColumns = make([]Column, 0)
 
 	for i := 0; i < entityType.NumField(); i++ {
 		tablecol := Column{}
@@ -115,6 +116,7 @@ func ParseModel(entity interface{}) Table {
 						tablecol.MappedBy.TargetTableName = maps[0]
 						tablecol.MappedBy.TargetTablePK = maps[1]
 						tablecol.IsMapped = true
+						tablecol.Ignore = true
 					}
 				}
 			}
@@ -123,10 +125,10 @@ func ParseModel(entity interface{}) Table {
 		if tablecol.PrimaryKey || tablecol.Unique {
 			table.PrimaryKeys = append(table.PrimaryKeys, PrimaryKey{Name: tablecol.Title, Type: tablecol.ColumnType})
 		}
-		if !tablecol.IsMapped {
-			table.Columns = append(table.Columns, tablecol)
-		} else {
+		if tablecol.IsMapped {
 			table.MappedColumns = append(table.MappedColumns, tablecol)
+		} else {
+			table.Columns = append(table.Columns, tablecol)
 		}
 	}
 	return table

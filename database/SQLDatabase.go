@@ -289,10 +289,13 @@ func (sqld *SQLDatabase) DropTable(i interface{}) error {
 	name := typ.Name()
 
 	table, ok := sqld.DBAccess.GetModel(name)
+
+	var sqlstring string
 	if !ok {
-		return errors.New("Model not found")
+		sqlstring = sqld.DBAccess.Drop(name)
+	} else {
+		sqlstring = sqld.DBAccess.Drop(table.Name)
 	}
-	sqlstring := sqld.DBAccess.Drop(table.Name)
 
 	_, err := sqld.db.Exec(sqlstring)
 	if err != nil {

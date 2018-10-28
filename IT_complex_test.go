@@ -11,7 +11,7 @@ import (
 type troop struct {
 	ID       int       `goedb:"pk,autoincrement"`
 	Name     string    `goedb:"unique"`
-	Soldiers []soldier `goedb:"mappedBy(soldier,ID)"`
+	Soldiers []soldier `goedb:"ignore"`
 }
 
 type soldier struct {

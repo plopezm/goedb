@@ -63,6 +63,7 @@ func TestParseModel(t *testing.T) {
 							TargetTablePK:   "Name",
 							TargetTableName: "testtablewithfk",
 						},
+						Ignore:   true,
 						IsMapped: true,
 					},
 				},
@@ -110,6 +111,7 @@ func TestParseModel(t *testing.T) {
 						ColumnTypeName: "string",
 					},
 				},
+				MappedColumns: []Column{},
 				PrimaryKeys: []PrimaryKey{
 					{
 						Name: "Name", Type: reflect.String,
