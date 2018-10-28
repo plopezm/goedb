@@ -5,18 +5,25 @@ import (
 	"testing"
 )
 
+type testtable struct {
+	ID     uint64            `goedb:"pk,autoincrement"`
+	Name   string            `goedb:"unique"`
+	Childs []testtablewithfk `goedb:"mappedBy=testtablewithfk(Name)"`
+}
+
+type testtablewithfk struct {
+	Name          string    `goedb:"pk"`
+	TestTableName testtable `goedb:"pk,fk=testtable(Name)"`
+	Ignorable     bool      `goedb:"ignore"`
+	Desc          string
+}
+
+type testtablewithfk2 struct {
+	Name                string          `goedb:"pk"`
+	TestTableWithFKName testtablewithfk `goedb:"pk,fk=testtablewithfk(Name)"`
+}
+
 func TestParseModel(t *testing.T) {
-	type TestTable struct {
-		ID   uint64 `goedb:"pk,autoincrement"`
-		Name string `goedb:"unique"`
-	}
-
-	type TestTableWithFK struct {
-		Name          string    `goedb:"pk"`
-		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
-		Ignorable     bool      `goedb:"ignore"`
-	}
-
 	type args struct {
 		entity interface{}
 	}
@@ -29,10 +36,10 @@ func TestParseModel(t *testing.T) {
 		{
 			name: "TestParseModelTestTable",
 			args: args{
-				entity: &TestTable{},
+				entity: &testtable{},
 			},
 			want: Table{
-				Name: "TestTable",
+				Name: "testtable",
 				Columns: []Column{
 					{
 						Title:          "ID",
@@ -48,6 +55,17 @@ func TestParseModel(t *testing.T) {
 						ColumnTypeName: "string",
 					},
 				},
+				MappedColumns: []Column{
+					{
+						Title:      "Childs",
+						ColumnType: reflect.Slice,
+						MappedBy: MappedByField{
+							TargetTablePK:   "Name",
+							TargetTableName: "testtablewithfk",
+						},
+						IsMapped: true,
+					},
+				},
 				PrimaryKeys: []PrimaryKey{
 					{
 						Name: "ID", Type: reflect.Uint64,
@@ -61,10 +79,10 @@ func TestParseModel(t *testing.T) {
 		{
 			name: "TestParseModelForeignKey",
 			args: args{
-				entity: &TestTableWithFK{},
+				entity: &testtablewithfk{},
 			},
 			want: Table{
-				Name: "TestTableWithFK",
+				Name: "testtablewithfk",
 				Columns: []Column{
 					{
 						Title:          "Name",
@@ -76,8 +94,8 @@ func TestParseModel(t *testing.T) {
 						Title:          "TestTableName",
 						PrimaryKey:     true,
 						ColumnType:     reflect.String,
-						ColumnTypeName: "TestTable",
-						ForeignKey:     ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "TestTable", ForeignKeyColumnReference: "Name"},
+						ColumnTypeName: "testtable",
+						ForeignKey:     ForeignKey{IsForeignKey: true, ForeignKeyTableReference: "testtable", ForeignKeyColumnReference: "Name"},
 						IsComplex:      true,
 					},
 					{
@@ -85,6 +103,11 @@ func TestParseModel(t *testing.T) {
 						Ignore:         true,
 						ColumnType:     reflect.Bool,
 						ColumnTypeName: "bool",
+					},
+					{
+						Title:          "Desc",
+						ColumnType:     reflect.String,
+						ColumnTypeName: "string",
 					},
 				},
 				PrimaryKeys: []PrimaryKey{
@@ -108,29 +131,11 @@ func TestParseModel(t *testing.T) {
 }
 
 func getGoedbTableTestParser() interface{} {
-
-	type TestTable struct {
-		ID   uint64 `goedb:"pk,autoincrement"`
-		Name string `goedb:"unique"`
-	}
-
-	type TestTableWithFK struct {
-		Name          string    `goedb:"pk"`
-		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
-		Ignorable     bool      `goedb:"ignore"`
-		Desc          string
-	}
-
-	type TestTableWithFK2 struct {
-		Name                string          `goedb:"pk"`
-		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
-	}
-
-	return &TestTableWithFK2{
+	return &testtablewithfk2{
 		Name: "ExampleMultiStruct",
-		TestTableWithFKName: TestTableWithFK{
-			Name:          "TestTableWithFK-Name",
-			TestTableName: TestTable{ID: 1, Name: "TestTableName-Name-ID"},
+		TestTableWithFKName: testtablewithfk{
+			Name:          "testtablewithfk-Name",
+			TestTableName: testtable{ID: 1, Name: "TestTableName-Name-ID"},
 			Ignorable:     true,
 			Desc:          "testing description",
 		},
@@ -138,42 +143,25 @@ func getGoedbTableTestParser() interface{} {
 }
 
 func MockGetModel(name string) (Table, bool) {
-	type TestTable struct {
-		ID   uint64 `goedb:"pk,autoincrement"`
-		Name string `goedb:"unique"`
-	}
-
-	type TestTableWithFK struct {
-		Name          string    `goedb:"pk"`
-		TestTableName TestTable `goedb:"pk,fk=TestTable(Name)"`
-		Ignorable     bool      `goedb:"ignore"`
-		Desc          string
-	}
-
-	type TestTableWithFK2 struct {
-		Name                string          `goedb:"pk"`
-		TestTableWithFKName TestTableWithFK `goedb:"pk,fk=TestTableWithFK(Name)"`
-	}
-
-	if name == "TestTableWithFK2" {
-		return ParseModel(&TestTableWithFK2{
+	if name == "testtablewithfk2" {
+		return ParseModel(&testtablewithfk2{
 			Name: "ExampleMultiStruct",
-			TestTableWithFKName: TestTableWithFK{
-				Name:          "TestTableWithFK-Name",
-				TestTableName: TestTable{ID: 1, Name: "TestTableName-Name-ID"},
+			TestTableWithFKName: testtablewithfk{
+				Name:          "testtablewithfk-Name",
+				TestTableName: testtable{ID: 1, Name: "TestTableName-Name-ID"},
 				Ignorable:     true,
 				Desc:          "testing description",
 			},
 		}), true
-	} else if name == "TestTableWithFK" {
-		return ParseModel(&TestTableWithFK{
-			Name:          "TestTableWithFK-Name",
-			TestTableName: TestTable{ID: 1, Name: "TestTableName-Name-ID"},
+	} else if name == "testtablewithfk" {
+		return ParseModel(&testtablewithfk{
+			Name:          "testtablewithfk-Name",
+			TestTableName: testtable{ID: 1, Name: "TestTableName-Name-ID"},
 			Ignorable:     true,
 			Desc:          "testing description",
 		}), true
 	} else {
-		return ParseModel(&TestTable{ID: 1, Name: "TestTableName-Name-ID"}), true
+		return ParseModel(&testtable{ID: 1, Name: "TestTableName-Name-ID"}), true
 	}
 }
 
@@ -191,7 +179,7 @@ func TestStructToSliceOfAddressesWithRules(t *testing.T) {
 		{
 			name: "TestStructToSliceOfAddressesWithRules_MultipleStructs",
 			args: args{structPtr: getGoedbTableTestParser(), GetModel: MockGetModel},
-			want: []interface{}{"addr1", "addr2", "addr3", "addr4", "addr5"},
+			want: []interface{}{"addr1", "addr2", "addr3", "addr4", "addr5", "addr6"},
 		},
 	}
 	for _, tt := range tests {

@@ -21,8 +21,7 @@ type SQLDatabase struct {
 
 // SetSchema sets the schema as default schema for a datasource
 func (sqld *SQLDatabase) SetSchema(schema string) (sql.Result, error) {
-	sql := "SET search_path TO " + schema
-	return sqld.db.Exec(sql)
+	return sqld.db.Exec("SET search_path TO " + schema)
 }
 
 // Open creates the connection with the database
@@ -96,11 +95,11 @@ func (sqld *SQLDatabase) Insert(instance interface{}) (goedbres models.Result, e
 		return goedbres, err
 	}
 
-	sql, err := sqld.DBAccess.Insert(model, instance)
+	sqlstring, err := sqld.DBAccess.Insert(model, instance)
 	if err != nil {
 		return goedbres, err
 	}
-	result, err = sqld.db.Exec(sql)
+	result, err = sqld.db.Exec(sqlstring)
 	if err != nil {
 		return goedbres, err
 	}
@@ -118,12 +117,12 @@ func (sqld *SQLDatabase) Update(instance interface{}) (goedbres models.Result, e
 		return goedbres, err
 	}
 
-	sql, err := sqld.DBAccess.Update(model, instance)
-	fmt.Println("UPDATE SQL: ", sql)
+	sqlstring, err := sqld.DBAccess.Update(model, instance)
+	fmt.Println("UPDATE SQL: ", sqlstring)
 	if err != nil {
 		return goedbres, err
 	}
-	result, err = sqld.db.Exec(sql)
+	result, err = sqld.db.Exec(sqlstring)
 	if err != nil {
 		return goedbres, err
 	}
@@ -139,12 +138,12 @@ func (sqld *SQLDatabase) Remove(i interface{}, where string, params map[string]i
 		return goedbres, err
 	}
 
-	sql, err := sqld.DBAccess.Delete(model, where, i)
+	sqlstring, err := sqld.DBAccess.Delete(model, where, i)
 	if err != nil {
 		return goedbres, err
 	}
 
-	result, err := sqld.db.NamedExec(sql, params)
+	result, err := sqld.db.NamedExec(sqlstring, params)
 	goedbres.NumRecordsAffected, _ = result.RowsAffected()
 	return goedbres, err
 }
@@ -156,11 +155,11 @@ func (sqld *SQLDatabase) First(instance interface{}, where string, params map[st
 		return err
 	}
 
-	sql, err := sqld.DBAccess.First(model, where, instance)
+	sqlstring, err := sqld.DBAccess.First(model, where, instance)
 	if err != nil {
 		return err
 	}
-	rows, err := sqld.db.NamedQuery(sql, params)
+	rows, err := sqld.db.NamedQuery(sqlstring, params)
 	if err != nil {
 		return err
 	}
@@ -171,6 +170,11 @@ func (sqld *SQLDatabase) First(instance interface{}, where string, params map[st
 	} else {
 		err = errors.New("Not found")
 	}
+
+	if model.MappedColumns != nil && len(model.MappedColumns) > 0 {
+		//TODO: then subqueries
+	}
+
 	return err
 }
 
@@ -202,12 +206,12 @@ func (sqld *SQLDatabase) Find(instance interface{}, where string, params map[str
 		return err
 	}
 
-	sql, err := sqld.DBAccess.Find(model, where, instance)
+	sqlstring, err := sqld.DBAccess.Find(model, where, instance)
 	if err != nil {
 		return err
 	}
 
-	rows, err := sqld.db.NamedQuery(sql, params)
+	rows, err := sqld.db.NamedQuery(sqlstring, params)
 	if err != nil {
 		return err
 	}
@@ -288,9 +292,9 @@ func (sqld *SQLDatabase) DropTable(i interface{}) error {
 	if !ok {
 		return errors.New("Model not found")
 	}
-	sql := sqld.DBAccess.Drop(table.Name)
+	sqlstring := sqld.DBAccess.Drop(table.Name)
 
-	_, err := sqld.db.Exec(sql)
+	_, err := sqld.db.Exec(sqlstring)
 	if err != nil {
 		return err
 	}

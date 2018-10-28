@@ -57,28 +57,6 @@ func GetGoedbTagTypeAndValueOfForeignKeyReference(instanceType reflect.Type, ins
 	return nil, reflect.Value{}, errors.New(" Goedb:" + goedbTag + " not found")
 }
 
-/*
-// GetGoedbTagTypeAndValue returns the tag and the value of a struct
-func GetGoedbTagTypeAndValue(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string) (reflect.Type, reflect.Value, error) {
-	for i := 0; i < instanceType.NumField(); i++ {
-		field := instanceType.Field(i)
-		value := instanceValue.Field(i)
-		if tagAttributeExists(field.Tag, goedbTag) {
-			return field.Type, value, nil
-		}
-	}
-	return nil, reflect.Value{}, errors.New(" Goedb:" + goedbTag + " not found")
-}
-
-// GetGoedbTagTypeAndValueOfIndexField returns the type and the value of a index field
-func GetGoedbTagTypeAndValueOfIndexField(instanceType reflect.Type, instanceValue reflect.Value, goedbTag string, fieldID int) (reflect.Type, reflect.Value, error) {
-	fieldType := instanceType.Field(fieldID).Type
-	fieldValue := instanceValue.Field(fieldID)
-
-	return GetGoedbTagTypeAndValue(fieldType, fieldValue, goedbTag)
-}
-*/
-
 func processColumnType(column *Column, columnType reflect.Type, columnValue reflect.Value) error {
 
 	column.ColumnTypeName = columnType.Name()
@@ -132,6 +110,11 @@ func ParseModel(entity interface{}) Table {
 						tablecol.ForeignKey.ForeignKeyTableReference = fksubtags[0]
 						tablecol.ForeignKey.ForeignKeyColumnReference = fksubtags[1][:len(fksubtags[1])-1]
 
+					} else if strings.Contains(val, "mappedBy=") {
+						maps := strings.Split(val[9:len(val)-1], "(")
+						tablecol.MappedBy.TargetTableName = maps[0]
+						tablecol.MappedBy.TargetTablePK = maps[1]
+						tablecol.IsMapped = true
 					}
 				}
 			}
@@ -140,7 +123,11 @@ func ParseModel(entity interface{}) Table {
 		if tablecol.PrimaryKey || tablecol.Unique {
 			table.PrimaryKeys = append(table.PrimaryKeys, PrimaryKey{Name: tablecol.Title, Type: tablecol.ColumnType})
 		}
-		table.Columns = append(table.Columns, tablecol)
+		if !tablecol.IsMapped {
+			table.Columns = append(table.Columns, tablecol)
+		} else {
+			table.MappedColumns = append(table.MappedColumns, tablecol)
+		}
 	}
 	return table
 }

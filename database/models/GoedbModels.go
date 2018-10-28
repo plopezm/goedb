@@ -4,9 +4,10 @@ import "reflect"
 
 // Table represents the metadata of a table
 type Table struct {
-	Name        string
-	Columns     []Column
-	PrimaryKeys []PrimaryKey
+	Name          string
+	Columns       []Column
+	MappedColumns []Column
+	PrimaryKeys   []PrimaryKey
 }
 
 //PrimaryKey contains the name and the type of a primary key
@@ -22,6 +23,11 @@ type ForeignKey struct {
 	ForeignKeyColumnReference string
 }
 
+type MappedByField struct {
+	TargetTableName string
+	TargetTablePK   string
+}
+
 // Column represents the metadata of a column
 type Column struct {
 	Title          string
@@ -33,6 +39,9 @@ type Column struct {
 	AutoIncrement  bool
 	IsComplex      bool
 	Ignore         bool
+
+	IsMapped bool
+	MappedBy MappedByField
 }
 
 // Result is the result for some operation in database
