@@ -91,8 +91,8 @@ type EntityManager interface {
 
 # Struct annotations
 
-* `goedb:"fk"` -> It marks a field as primary key. Primary key MUST be integer
-  * `goedb:"fk,autoincrement"` -> Sets the column as primarykey autoincremented in database.
+* `goedb:"pk"` -> It marks a field as primary key. Primary key MUST be integer
+  * `goedb:"pk,autoincrement"` -> Sets the column as primarykey autoincremented in database.
 * `goedb:"unique"` -> It sets the column as unique.
 * `goedb:"ignore"` -> Goedb will ignore the column annotated with ignore.
 * `goedb:"fk=DestinationTable(PKColumn)"` -> It sets the column as foreign key
