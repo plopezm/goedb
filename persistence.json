@@ -12,7 +12,7 @@
     },
     {
       "name": "testPostgres9",
-      "schema": "testing",
+      "schema": "TEST",
       "driver": "postgres",
       "url": "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
     }

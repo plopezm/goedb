@@ -75,18 +75,6 @@ func Test_Goedb_Migrate_Recreate(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func Test_Goedb_Migrate_RecreateWithDrop(t *testing.T) {
-	em, err := GetEntityManager(persistenceUnitItComplexTest)
-	assert.Nil(t, err)
-	assert.NotNil(t, em)
-
-	err = em.Migrate(&TestTroop{}, true, true)
-	assert.Nil(t, err)
-
-	err = em.Migrate(&TestSoldier{}, true, true)
-	assert.Nil(t, err)
-}
-
 func Test_Goedb_Model(t *testing.T) {
 	em, err := GetEntityManager(persistenceUnitItComplexTest)
 	assert.Nil(t, err)
