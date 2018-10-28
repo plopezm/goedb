@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type TestUser struct {
+type testuser struct {
 	Email    string `goedb:"pk"`
 	Password string
 	Role     string
@@ -15,18 +15,18 @@ type TestUser struct {
 	Admin    bool
 }
 
-type TestCompany struct {
-	UserEmail string `goedb:"fk=TestUser(Email)"`
+type testcompany struct {
+	UserEmail string `goedb:"fk=testuser(Email)"`
 	Name      string
 	Cif       string `goedb:"pk"`
 }
 
-type TestUserCompany struct {
-	Email string `goedb:"pk,fk=TestUser(Email)"`
-	Cif   string `goedb:"pk,fk=TestCompany(Cif)"`
+type testusercompany struct {
+	Email string `goedb:"pk,fk=testuser(Email)"`
+	Cif   string `goedb:"pk,fk=testcompany(Cif)"`
 }
 
-type OtherStruct struct {
+type otherstruct struct {
 	Asd   string
 	Other string
 }
@@ -52,17 +52,17 @@ func TestDB_Migrate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.Migrate(&TestUser{}, true, true)
+	err = em.Migrate(&testuser{}, true, true)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = em.Migrate(&TestCompany{}, true, true)
+	err = em.Migrate(&testcompany{}, true, true)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = em.Migrate(&TestUserCompany{}, true, true)
+	err = em.Migrate(&testusercompany{}, true, true)
 	if err != nil {
 		t.Error(err)
 	}
@@ -73,13 +73,13 @@ func TestDB_Model(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	user, _ := em.Model(&TestUser{})
-	if user.Name != "TestUser" || len(user.Columns) == 0 {
+	user, _ := em.Model(&testuser{})
+	if user.Name != "testuser" || len(user.Columns) == 0 {
 		t.Error("Error getting db model")
 	}
 
-	company, _ := em.Model(&TestCompany{})
-	if company.Name != "TestCompany" || len(company.Columns) == 0 {
+	company, _ := em.Model(&testcompany{})
+	if company.Name != "testcompany" || len(company.Columns) == 0 {
 		t.Error("Error getting db model")
 	}
 }
@@ -89,7 +89,7 @@ func TestDB_Model_Not_Found(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	_, err = em.Model(&OtherStruct{})
+	_, err = em.Model(&otherstruct{})
 	if err == nil {
 		t.Error("The result must has a error because the struct was not created")
 	}
@@ -100,7 +100,7 @@ func TestDB_Insert(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newUser1 := &TestUser{
+	newUser1 := &testuser{
 		Email:    "Plm",
 		Password: "asd",
 		Role:     "asd",
@@ -108,7 +108,7 @@ func TestDB_Insert(t *testing.T) {
 		Admin:    true,
 	}
 
-	newUser2 := &TestUser{
+	newUser2 := &testuser{
 		Email:    "Plm2",
 		Password: "asd",
 		Role:     "asd",
@@ -116,7 +116,7 @@ func TestDB_Insert(t *testing.T) {
 		Admin:    true,
 	}
 
-	newUser3 := &TestUser{
+	newUser3 := &testuser{
 		Email:    "Plm3",
 		Password: "asd",
 		Role:     "asd",
@@ -145,13 +145,13 @@ func TestDB_Insert_with_FKs(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newComp1 := &TestCompany{
+	newComp1 := &testcompany{
 		UserEmail: "Plm",
 		Name:      "asd",
 		Cif:       "asd1",
 	}
 
-	newComp2 := &TestCompany{
+	newComp2 := &testcompany{
 		UserEmail: "Plm",
 		Name:      "asd",
 		Cif:       "asd2",
@@ -173,19 +173,19 @@ func TestDB_Insert_Constraints(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newComp1 := &TestCompany{
+	newComp1 := &testcompany{
 		UserEmail: "Plm",
 		Name:      "asd",
 		Cif:       "asd1",
 	}
 
-	newComp2 := &TestCompany{
+	newComp2 := &testcompany{
 		UserEmail: "Plm",
 		Name:      "asd123",
 		Cif:       "asd2",
 	}
 
-	newComp3 := &TestCompany{
+	newComp3 := &testcompany{
 		UserEmail: "Plm23455",
 		Name:      "asd",
 		Cif:       "asd4",
@@ -212,7 +212,7 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newUC := &TestUserCompany{
+	newUC := &testusercompany{
 		Email: "Plm",
 		Cif:   "asd2",
 	}
@@ -222,7 +222,7 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 		t.Error(err)
 	}
 
-	newUC = &TestUserCompany{
+	newUC = &testusercompany{
 		Email: "Plm1",
 		Cif:   "asd4",
 	}
@@ -232,7 +232,7 @@ func TestDB_Insert_Adding_Relations(t *testing.T) {
 		t.Error("Cif does not exist")
 	}
 
-	newUC = &TestUserCompany{
+	newUC = &testusercompany{
 		Email: "Plm1123",
 		Cif:   "asd1",
 	}
@@ -248,7 +248,7 @@ func TestDB_First(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newUser := &TestUser{
+	newUser := &testuser{
 		Email: "Plm",
 	}
 
@@ -264,7 +264,7 @@ func TestDB_First_Not_Found(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newUser := &TestUser{
+	newUser := &testuser{
 		Email: "Plm245",
 	}
 
@@ -284,7 +284,7 @@ func TestDB_Find(t *testing.T) {
 	em, err := GetEntityManager(persistenceUnitItTest)
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
-	foundUsers := make([]TestUser, 0)
+	foundUsers := make([]testuser, 0)
 
 	err = em.Find(&foundUsers, "", nil)
 	if err != nil {
@@ -298,7 +298,7 @@ func TestDB_Find(t *testing.T) {
 
 	where := "Admin = 1"
 
-	foundUsers = make([]TestUser, 0)
+	foundUsers = make([]testuser, 0)
 
 	err = em.Find(&foundUsers, where, nil)
 	if err != nil {
@@ -317,7 +317,7 @@ func TestDB_Find_Not_Found(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	foundUsers := make([]TestUser, 0)
+	foundUsers := make([]testuser, 0)
 
 	err = em.Find(&foundUsers, "Admin = 3", nil)
 	if err == nil {
@@ -330,7 +330,7 @@ func TestDB_Remove(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newUser := &TestUser{
+	newUser := &testuser{
 		Email: "Plm2",
 	}
 
@@ -349,7 +349,7 @@ func TestDB_Remove_Not_Found(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newUser := &TestUser{
+	newUser := &testuser{
 		Email: "Plm2421233",
 	}
 
@@ -365,7 +365,7 @@ func TestDB_Remove_Relation(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	newUC := &TestUserCompany{
+	newUC := &testusercompany{
 		Email: "Plm",
 		Cif:   "asd2",
 	}
@@ -381,30 +381,30 @@ func TestDB_DropTable(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.DropTable(&TestUserCompany{})
+	err = em.DropTable(&testusercompany{})
 	if err != nil {
 		t.Error(err)
 	}
-	err = em.DropTable(&TestUser{})
+	err = em.DropTable(&testuser{})
 	if err != nil {
 		t.Error(err)
 	}
-	err = em.DropTable(&TestCompany{})
+	err = em.DropTable(&testcompany{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = em.Model(&TestUser{})
+	_, err = em.Model(&testuser{})
 	if err == nil {
 		t.Error("Model still exists")
 	}
 
-	_, err = em.Model(&TestCompany{})
+	_, err = em.Model(&testcompany{})
 	if err == nil {
 		t.Error("Model still exists")
 	}
 
-	_, err = em.Model(&TestUserCompany{})
+	_, err = em.Model(&testusercompany{})
 	if err == nil {
 		t.Error("Model still exists")
 	}

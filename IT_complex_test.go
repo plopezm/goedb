@@ -8,19 +8,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type TestTroop struct {
-	ID       int           `goedb:"pk,autoincrement"`
-	Name     string        `goedb:"unique"`
-	Soldiers []TestSoldier `goedb:"ignore"`
+type troop struct {
+	ID       int       `goedb:"pk,autoincrement"`
+	Name     string    `goedb:"unique"`
+	Soldiers []soldier `goedb:"ignore"`
 }
 
-type TestSoldier struct {
-	ID    int       `goedb:"pk,autoincrement"`
-	Name  string    `goedb:"unique"`
-	Troop TestTroop `goedb:"fk=TestTroop(ID)"`
+type soldier struct {
+	ID    int    `goedb:"pk,autoincrement"`
+	Name  string `goedb:"unique"`
+	Troop troop  `goedb:"fk=troop(ID)"`
 }
 
-type TestCustomSoldier struct {
+type testCustomSoldier struct {
 	ID        int
 	Name      string
 	TroopName string
@@ -56,10 +56,10 @@ func Test_Goedb_Migrate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.Migrate(&TestTroop{}, true, true)
+	err = em.Migrate(&troop{}, true, true)
 	assert.Nil(t, err)
 
-	err = em.Migrate(&TestSoldier{}, true, true)
+	err = em.Migrate(&soldier{}, true, true)
 	assert.Nil(t, err)
 }
 
@@ -68,10 +68,10 @@ func Test_Goedb_Migrate_Recreate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.Migrate(&TestTroop{}, true, false)
+	err = em.Migrate(&troop{}, true, false)
 	assert.NotNil(t, err)
 
-	err = em.Migrate(&TestSoldier{}, true, false)
+	err = em.Migrate(&soldier{}, true, false)
 	assert.NotNil(t, err)
 }
 
@@ -80,13 +80,13 @@ func Test_Goedb_Model(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	soldier1, err := em.Model(&TestSoldier{})
+	soldier1, err := em.Model(&soldier{})
 	assert.Nil(t, err)
-	assert.Equal(t, "TestSoldier", soldier1.Name)
+	assert.Equal(t, "soldier", soldier1.Name)
 
-	troop1, err := em.Model(&TestTroop{})
+	troop1, err := em.Model(&troop{})
 	assert.Nil(t, err)
-	assert.Equal(t, "TestTroop", troop1.Name)
+	assert.Equal(t, "troop", troop1.Name)
 }
 
 func Test_Goedb_Insert(t *testing.T) {
@@ -94,11 +94,11 @@ func Test_Goedb_Insert(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	troop1 := &TestTroop{
+	troop1 := &troop{
 		Name: "TheBestTeam",
 	}
 
-	soldier1 := &TestSoldier{
+	soldier1 := &soldier{
 		Name:  "Ryan",
 		Troop: *troop1,
 	}
@@ -121,7 +121,7 @@ func Test_Goedb_First_By_PrimaryKey(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	soldier1 := &TestSoldier{
+	soldier1 := &soldier{
 		ID: 1,
 	}
 
@@ -136,11 +136,11 @@ func Test_Goedb_First_By_Name(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	soldier1 := &TestSoldier{
+	soldier1 := &soldier{
 		Name: "Ryan",
 	}
 
-	err = em.First(soldier1, "TestSoldier.Name = :name", map[string]interface{}{"name": "Ryan"})
+	err = em.First(soldier1, "soldier.Name = :name", map[string]interface{}{"name": "Ryan"})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, soldier1.ID)
 	assert.Equal(t, 1, soldier1.Troop.ID)
@@ -152,39 +152,39 @@ func Test_Goedb_Native_First_By_Name(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	var customSoldier TestCustomSoldier
+	var customSoldier testCustomSoldier
 
-	err = em.NativeFirst(&customSoldier, "SELECT ts.ID, ts.Name, tt.Name FROM TestSoldier ts, TestTroop tt WHERE ts.Name = :name AND ts.Troop = tt.ID", map[string]interface{}{"name": "Ryan"})
+	err = em.NativeFirst(&customSoldier, "SELECT ts.ID, ts.Name, tt.Name FROM soldier ts, troop tt WHERE ts.Name = :name AND ts.Troop = tt.ID", map[string]interface{}{"name": "Ryan"})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, customSoldier.ID)
 	assert.Equal(t, "TheBestTeam", customSoldier.TroopName)
 }
 
-func weaponCall() (*TestSoldier, *TestSoldier, *TestSoldier, *TestSoldier) {
-	soldier2 := &TestSoldier{
+func weaponCall() (*soldier, *soldier, *soldier, *soldier) {
+	soldier2 := &soldier{
 		Name: "Bryan",
-		Troop: TestTroop{
+		Troop: troop{
 			ID:   1,
 			Name: "ExampleTroop",
 		},
 	}
-	soldier3 := &TestSoldier{
+	soldier3 := &soldier{
 		Name: "Steve",
-		Troop: TestTroop{
+		Troop: troop{
 			ID:   1,
 			Name: "ExampleTroop",
 		},
 	}
-	soldier4 := &TestSoldier{
+	soldier4 := &soldier{
 		Name: "Eduard",
-		Troop: TestTroop{
+		Troop: troop{
 			ID:   1,
 			Name: "ExampleTroop",
 		},
 	}
-	soldier5 := &TestSoldier{
+	soldier5 := &soldier{
 		Name: "Chuck",
-		Troop: TestTroop{
+		Troop: troop{
 			ID:   1,
 			Name: "ExampleTroop",
 		},
@@ -203,7 +203,7 @@ func Test_Find_All_Soldiers(t *testing.T) {
 	em.Insert(s3)
 	em.Insert(s4)
 
-	foundSoldiers := make([]TestSoldier, 0)
+	foundSoldiers := make([]soldier, 0)
 
 	err = em.Find(&foundSoldiers, "", nil)
 	assert.Nil(t, err)
@@ -222,9 +222,9 @@ func Test_Native_Find_All_Soldiers(t *testing.T) {
 	em.Insert(s3)
 	em.Insert(s4)
 
-	foundSoldiers := make([]TestCustomSoldier, 0)
+	foundSoldiers := make([]testCustomSoldier, 0)
 
-	err = em.NativeFind(&foundSoldiers, "SELECT ts.ID, ts.Name, tt.Name FROM TestSoldier ts, TestTroop tt WHERE ts.Troop = tt.ID", nil)
+	err = em.NativeFind(&foundSoldiers, "SELECT ts.ID, ts.Name, tt.Name FROM soldier ts, troop tt WHERE ts.Troop = tt.ID", nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 5, len(foundSoldiers))
@@ -235,8 +235,8 @@ func Test_Find_One_Soldier(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	foundSoldiers := make([]TestSoldier, 0)
-	err = em.Find(&foundSoldiers, "TestSoldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Steve"})
+	foundSoldiers := make([]soldier, 0)
+	err = em.Find(&foundSoldiers, "soldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Steve"})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 1, len(foundSoldiers))
@@ -248,8 +248,8 @@ func Test_Native_Find_One_Soldier(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	foundSoldiers := make([]TestCustomSoldier, 0)
-	err = em.NativeFind(&foundSoldiers, "SELECT ts.ID, ts.Name, tt.Name FROM TestSoldier ts, TestTroop tt WHERE ts.Name = :soldier_name AND ts.Troop = tt.ID", map[string]interface{}{"soldier_name": "Steve"})
+	foundSoldiers := make([]testCustomSoldier, 0)
+	err = em.NativeFind(&foundSoldiers, "SELECT ts.ID, ts.Name, tt.Name FROM soldier ts, troop tt WHERE ts.Name = :soldier_name AND ts.Troop = tt.ID", map[string]interface{}{"soldier_name": "Steve"})
 	assert.Nil(t, err)
 	assert.NotNil(t, foundSoldiers)
 	assert.Equal(t, 1, len(foundSoldiers))
@@ -261,10 +261,10 @@ func Test_Update_Soldier_By_PrimaryKey(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	soldier1 := &TestSoldier{
+	soldier1 := &soldier{
 		ID:   3,
 		Name: "UpdateTest",
-		Troop: TestTroop{
+		Troop: troop{
 			ID: 1,
 		},
 	}
@@ -285,7 +285,7 @@ func Test_Delete_Soldier_By_PrimaryKey(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	soldier1 := &TestSoldier{
+	soldier1 := &soldier{
 		ID: 3,
 	}
 	result, err := em.Remove(soldier1, "", nil)
@@ -298,8 +298,8 @@ func Test_Delete_Soldier_By_OtherField(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	soldier1 := &TestSoldier{}
-	result, err := em.Remove(soldier1, "TestSoldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Chuck"})
+	soldier1 := &soldier{}
+	result, err := em.Remove(soldier1, "soldier.Name = :soldier_name", map[string]interface{}{"soldier_name": "Chuck"})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), result.NumRecordsAffected)
 }
@@ -309,12 +309,12 @@ func Test_DropTable(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, em)
 
-	err = em.DropTable(&TestSoldier{})
+	err = em.DropTable(&soldier{})
 	assert.Nil(t, err)
-	err = em.DropTable(&TestTroop{})
+	err = em.DropTable(&troop{})
 	assert.Nil(t, err)
-	_, err = em.Model(&TestTroop{})
+	_, err = em.Model(&troop{})
 	assert.NotNil(t, err)
-	_, err = em.Model(&TestSoldier{})
+	_, err = em.Model(&soldier{})
 	assert.NotNil(t, err)
 }
